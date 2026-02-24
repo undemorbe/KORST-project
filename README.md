@@ -1,3 +1,2 @@
-# korst
-
-A new Flutter project.
+# korst-frontend
+Repository for frontend part of project
