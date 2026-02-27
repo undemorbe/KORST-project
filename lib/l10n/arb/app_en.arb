@@ -1,0 +1,19 @@
+{
+    "@@locale": "en",
+    "appTitle": "Korst Clean Architecture",
+    "@appTitle": {
+        "description": "The title of the application"
+    },
+    "pushedMessage": "You have pushed the button this many times:",
+    "@pushedMessage": {
+        "description": "Message shown above the counter"
+    },
+    "incrementTooltip": "Increment",
+    "@incrementTooltip": {
+        "description": "Tooltip for the increment button"
+    },
+    "decrementTooltip": "Decrement",
+    "@decrementTooltip": {
+        "description": "Tooltip for the decrement button"
+    }
+}
