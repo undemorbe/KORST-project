@@ -1,19 +1,32 @@
 {
     "@@locale": "en",
-    "appTitle": "Korst Clean Architecture",
+    "appTitle": "Korst Services",
     "@appTitle": {
         "description": "The title of the application"
     },
-    "pushedMessage": "You have pushed the button this many times:",
-    "@pushedMessage": {
-        "description": "Message shown above the counter"
-    },
-    "incrementTooltip": "Increment",
-    "@incrementTooltip": {
-        "description": "Tooltip for the increment button"
-    },
-    "decrementTooltip": "Decrement",
-    "@decrementTooltip": {
-        "description": "Tooltip for the decrement button"
-    }
+    "homeTitle": "Services",
+    "settingsTitle": "Settings",
+    "themeTitle": "Theme",
+    "languageTitle": "Language",
+    "lightTheme": "Light",
+    "darkTheme": "Dark",
+    "serviceDetailsTitle": "Service Details",
+    "priceLabel": "Price: ",
+    "errorLoading": "Error loading services",
+    "emptyList": "No services available",
+    "navHome": "Home",
+    "navFavorites": "Favorites",
+    "navBookings": "Bookings",
+    "navSettings": "Settings",
+    "favoritesTitle": "Favorites",
+    "bookingsTitle": "My Bookings",
+    "bookNow": "Book Now",
+    "bookingSuccess": "Service booked successfully!",
+    "noFavorites": "No favorites yet.",
+    "noBookings": "No bookings yet.",
+    "searchHint": "Search services...",
+    "categoryAll": "All",
+    "categoryCleaning": "Cleaning",
+    "categoryRepair": "Repair",
+    "categoryConsulting": "Consulting"
 }
