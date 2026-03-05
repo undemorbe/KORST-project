@@ -34,4 +34,13 @@ class AppTheme {
       labelSmall: AppTextStyles.labelSmall,
     ),
   );
+  static final ThemeData darkTheme = ThemeData(
+    useMaterial3: true,
+    brightness: Brightness.dark,
+    colorScheme: const ColorScheme.dark(
+      primary: AppColors.primary,
+      secondary: AppColors.secondary,
+      error: AppColors.error,
+    ),
+  );
 }

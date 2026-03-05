@@ -6,6 +6,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
 import 'app_localizations_en.dart';
+import 'app_localizations_ru.dart';
 
 // ignore_for_file: type=lint
 
@@ -92,31 +93,166 @@ abstract class AppLocalizations {
       ];
 
   /// A list of this localizations delegate's supported locales.
-  static const List<Locale> supportedLocales = <Locale>[Locale('en')];
+  static const List<Locale> supportedLocales = <Locale>[
+    Locale('en'),
+    Locale('ru'),
+  ];
 
   /// The title of the application
   ///
   /// In en, this message translates to:
-  /// **'Korst Clean Architecture'**
+  /// **'Korst Services'**
   String get appTitle;
 
-  /// Message shown above the counter
+  /// No description provided for @homeTitle.
   ///
   /// In en, this message translates to:
-  /// **'You have pushed the button this many times:'**
-  String get pushedMessage;
+  /// **'Services'**
+  String get homeTitle;
 
-  /// Tooltip for the increment button
+  /// No description provided for @settingsTitle.
   ///
   /// In en, this message translates to:
-  /// **'Increment'**
-  String get incrementTooltip;
+  /// **'Settings'**
+  String get settingsTitle;
 
-  /// Tooltip for the decrement button
+  /// No description provided for @themeTitle.
   ///
   /// In en, this message translates to:
-  /// **'Decrement'**
-  String get decrementTooltip;
+  /// **'Theme'**
+  String get themeTitle;
+
+  /// No description provided for @languageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get languageTitle;
+
+  /// No description provided for @lightTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get lightTheme;
+
+  /// No description provided for @darkTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get darkTheme;
+
+  /// No description provided for @serviceDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Service Details'**
+  String get serviceDetailsTitle;
+
+  /// No description provided for @priceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Price: '**
+  String get priceLabel;
+
+  /// No description provided for @errorLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading services'**
+  String get errorLoading;
+
+  /// No description provided for @emptyList.
+  ///
+  /// In en, this message translates to:
+  /// **'No services available'**
+  String get emptyList;
+
+  /// No description provided for @navHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get navHome;
+
+  /// No description provided for @navFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites'**
+  String get navFavorites;
+
+  /// No description provided for @navBookings.
+  ///
+  /// In en, this message translates to:
+  /// **'Bookings'**
+  String get navBookings;
+
+  /// No description provided for @navSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get navSettings;
+
+  /// No description provided for @favoritesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites'**
+  String get favoritesTitle;
+
+  /// No description provided for @bookingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My Bookings'**
+  String get bookingsTitle;
+
+  /// No description provided for @bookNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Book Now'**
+  String get bookNow;
+
+  /// No description provided for @bookingSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Service booked successfully!'**
+  String get bookingSuccess;
+
+  /// No description provided for @noFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'No favorites yet.'**
+  String get noFavorites;
+
+  /// No description provided for @noBookings.
+  ///
+  /// In en, this message translates to:
+  /// **'No bookings yet.'**
+  String get noBookings;
+
+  /// No description provided for @searchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search services...'**
+  String get searchHint;
+
+  /// No description provided for @categoryAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get categoryAll;
+
+  /// No description provided for @categoryCleaning.
+  ///
+  /// In en, this message translates to:
+  /// **'Cleaning'**
+  String get categoryCleaning;
+
+  /// No description provided for @categoryRepair.
+  ///
+  /// In en, this message translates to:
+  /// **'Repair'**
+  String get categoryRepair;
+
+  /// No description provided for @categoryConsulting.
+  ///
+  /// In en, this message translates to:
+  /// **'Consulting'**
+  String get categoryConsulting;
 }
 
 class _AppLocalizationsDelegate
@@ -130,7 +266,7 @@ class _AppLocalizationsDelegate
 
   @override
   bool isSupported(Locale locale) =>
-      <String>['en'].contains(locale.languageCode);
+      <String>['en', 'ru'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -141,6 +277,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   switch (locale.languageCode) {
     case 'en':
       return AppLocalizationsEn();
+    case 'ru':
+      return AppLocalizationsRu();
   }
 
   throw FlutterError(
