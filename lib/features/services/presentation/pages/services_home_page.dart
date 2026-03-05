@@ -23,7 +23,6 @@ class _ServicesHomePageState extends State<ServicesHomePage> {
   @override
   void initState() {
     super.initState();
-    // Initial load handled by MainShellPage, but we can set listeners here if needed
     _searchController.addListener(() {
       _store.setSearchQuery(_searchController.text);
     });
