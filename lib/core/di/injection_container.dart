@@ -7,6 +7,9 @@ import '../../features/services/presentation/store/service_store.dart';
 import '../../features/settings/presentation/store/settings_store.dart';
 import '../../features/favorites/presentation/store/favorites_store.dart';
 import '../../features/bookings/presentation/store/bookings_store.dart';
+import '../../features/auth/data/repositories/auth_repository_impl.dart';
+import '../../features/auth/domain/repositories/auth_repository.dart';
+import '../../features/auth/presentation/store/auth_store.dart';
 
 final sl = GetIt.instance;
 
@@ -15,6 +18,10 @@ Future<void> init() async {
   final storageService = LocalStorageServiceImpl();
   await storageService.init();
   sl.registerSingleton<LocalStorageService>(storageService);
+
+  // Features - Auth
+  sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(sl()));
+  sl.registerLazySingleton(() => AuthStore(sl()));
 
   // Features - Services
   sl.registerLazySingleton<ServiceRepository>(() => ServiceRepositoryImpl());

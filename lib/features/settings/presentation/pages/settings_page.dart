@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../core/di/injection_container.dart';
 import '../store/settings_store.dart';
+import '../../../auth/presentation/store/auth_store.dart';
+import '../widgets/profile_banner.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -11,16 +14,20 @@ class SettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final store = sl<SettingsStore>();
+    final authStore = sl<AuthStore>();
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.settingsTitle),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            const ProfileBanner(),
+            const SizedBox(height: 24),
+            
             // Theme Switcher
             Text(
               l10n.themeTitle,
@@ -81,9 +88,31 @@ class SettingsPage extends StatelessWidget {
                 },
               ),
             ),
+            
+            const SizedBox(height: 48),
+            
+            // Logout Button
+            OutlinedButton.icon(
+              onPressed: () async {
+                await authStore.logout();
+                if (context.mounted) {
+                  context.go('/onboarding');
+                }
+              },
+              icon: const Icon(Icons.logout, color: Colors.red),
+              label: const Text(
+                'Выйти из аккаунта',
+                style: TextStyle(color: Colors.red),
+              ),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Colors.red),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 }
+

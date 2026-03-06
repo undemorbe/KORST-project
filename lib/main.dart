@@ -7,9 +7,12 @@ import 'core/theme/app_theme.dart';
 import 'core/di/injection_container.dart' as di;
 import 'features/settings/presentation/store/settings_store.dart';
 
+import 'features/auth/presentation/store/auth_store.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await di.init();
+  await di.sl<AuthStore>().checkLoginStatus();
   runApp(const MyApp());
 }
 
