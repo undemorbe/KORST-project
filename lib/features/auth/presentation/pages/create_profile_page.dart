@@ -24,21 +24,23 @@ class _CreateProfilePageState extends State<CreateProfilePage> {
     super.dispose();
   }
 
-  void _onSave() {
+  Future<void> _onSave() async {
     if (_formKey.currentState!.validate()) {
-      _authStore.register(
+      await _authStore.register(
         _nameController.text,
         null, // Photo URL placeholder
         _contactsController.text,
-      ).then((_) {
-        if (_authStore.errorMessage == null) {
-          context.go('/');
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(_authStore.errorMessage!)),
-          );
-        }
-      });
+      );
+      
+      if (!mounted) return;
+
+      if (_authStore.errorMessage == null) {
+        context.go('/');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(_authStore.errorMessage!)),
+        );
+      }
     }
   }
 

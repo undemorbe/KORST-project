@@ -21,6 +21,24 @@ void main() {
       expect(store.bookings, isEmpty);
     });
 
+    test('loads bookings from storage on initialization', () {
+      final storedBookings = [
+        {
+          'id': '1',
+          'serviceId': 's1',
+          'serviceTitle': 'Test Service',
+          'price': 100.0,
+          'date': DateTime.now().toIso8601String(),
+        }
+      ];
+      when(() => mockStorage.get('bookings')).thenReturn(storedBookings);
+      
+      final newStore = BookingsStore(mockStorage);
+      
+      expect(newStore.bookings.length, 1);
+      expect(newStore.bookings.first.id, '1');
+    });
+
     test('addBooking adds and saves', () async {
       when(() => mockStorage.put(any(), any())).thenAnswer((_) async {});
 

@@ -4,6 +4,7 @@ import '../../domain/entities/booking_entity.dart';
 
 part 'bookings_store.g.dart';
 
+// ignore: library_private_types_in_public_api
 class BookingsStore = _BookingsStore with _$BookingsStore;
 
 abstract class _BookingsStore with Store {
