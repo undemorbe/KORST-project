@@ -28,18 +28,20 @@ class _PhoneNumberPageState extends State<PhoneNumberPage> {
     super.dispose();
   }
 
-  void _onContinue() {
+  Future<void> _onContinue() async {
     final phone = _maskFormatter.getUnmaskedText();
     if (phone.length == 10) { 
-       _authStore.sendOtp('+7$phone').then((_) {
-         if (_authStore.errorMessage == null) {
-           context.push('/auth/otp');
-         } else {
-           ScaffoldMessenger.of(context).showSnackBar(
-             SnackBar(content: Text(_authStore.errorMessage!)),
-           );
-         }
-       });
+       await _authStore.sendOtp('+7$phone');
+       
+       if (!mounted) return;
+
+       if (_authStore.errorMessage == null) {
+         context.push('/auth/otp');
+       } else {
+         ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(content: Text(_authStore.errorMessage!)),
+         );
+       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Пожалуйста, введите корректный номер')),

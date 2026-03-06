@@ -23,51 +23,53 @@ class _OtpPageState extends State<OtpPage> {
     super.dispose();
   }
 
-  void _onCompleted(String pin) {
+  Future<void> _onCompleted(String pin) async {
     // Hide previous banners/snackbars
     _scaffoldMessengerKey.currentState?.hideCurrentMaterialBanner();
     _scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
 
-    _authStore.verifyOtp(pin).then((exists) {
-      if (_authStore.errorMessage == null) {
-        if (exists) {
-          context.go('/'); // Home page
-        } else {
-          context.push('/auth/create-profile');
-        }
+    final exists = await _authStore.verifyOtp(pin);
+    
+    if (!mounted) return;
+
+    if (_authStore.errorMessage == null) {
+      if (exists) {
+        context.go('/'); // Home page
       } else {
-        // Clear pin on error
-        _otpController.clear();
-        
-        _scaffoldMessengerKey.currentState?.showMaterialBanner(
-          MaterialBanner(
-            content: Text(
-              _authStore.errorMessage!,
-              style: const TextStyle(color: Colors.white),
-            ),
-            backgroundColor: Colors.red,
-            actions: [
-              TextButton(
-                onPressed: () {
-                  _scaffoldMessengerKey.currentState?.hideCurrentMaterialBanner();
-                },
-                child: const Text(
-                  'Закрыть',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ],
-          ),
-        );
-        
-        // Auto-hide after 3 seconds
-        Future.delayed(const Duration(seconds: 3), () {
-          if (mounted) {
-            _scaffoldMessengerKey.currentState?.hideCurrentMaterialBanner();
-          }
-        });
+        context.push('/auth/create-profile');
       }
-    });
+    } else {
+      // Clear pin on error
+      _otpController.clear();
+      
+      _scaffoldMessengerKey.currentState?.showMaterialBanner(
+        MaterialBanner(
+          content: Text(
+            _authStore.errorMessage!,
+            style: const TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Colors.red,
+          actions: [
+            TextButton(
+              onPressed: () {
+                _scaffoldMessengerKey.currentState?.hideCurrentMaterialBanner();
+              },
+              child: const Text(
+                'Закрыть',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+      );
+      
+      // Auto-hide after 3 seconds
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted) {
+          _scaffoldMessengerKey.currentState?.hideCurrentMaterialBanner();
+        }
+      });
+    }
   }
 
   @override

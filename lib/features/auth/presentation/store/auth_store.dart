@@ -3,6 +3,7 @@ import '../../domain/repositories/auth_repository.dart';
 
 part 'auth_store.g.dart';
 
+// ignore: library_private_types_in_public_api
 class AuthStore = _AuthStore with _$AuthStore;
 
 abstract class _AuthStore with Store {
@@ -67,7 +68,7 @@ abstract class _AuthStore with Store {
       return exists;
     } catch (e) {
       errorMessage = e.toString();
-      rethrow;
+      return false;
     } finally {
       isLoading = false;
     }

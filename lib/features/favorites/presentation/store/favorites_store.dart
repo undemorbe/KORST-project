@@ -3,6 +3,7 @@ import '../../../../core/storage/local_storage.dart';
 
 part 'favorites_store.g.dart';
 
+// ignore: library_private_types_in_public_api
 class FavoritesStore = _FavoritesStore with _$FavoritesStore;
 
 abstract class _FavoritesStore with Store {

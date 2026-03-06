@@ -5,6 +5,7 @@ import '../../domain/usecases/get_services.dart';
 
 part 'service_store.g.dart';
 
+// ignore: library_private_types_in_public_api
 class ServiceStore = _ServiceStore with _$ServiceStore;
 
 abstract class _ServiceStore with Store {
