@@ -1,0 +1,26 @@
+// requests - пакет, содержащий структуры запросов по Api
+package requests
+
+// PhoneNumberRequests - структура для запроса,
+// содержащего только номер телефона
+type PhoneNumberRequest struct {
+	Phone string `json:"phone" binding:"required"`
+}
+
+// VerifyOTPRequest - структура для запроса на подтверждение OTP кода
+type VerifyOTPRequest struct {
+	Phone string `json:"phone" binding:"required"`
+	OTP   string `json:"otp" binding:"required"`
+}
+
+// RegisterRequest - структура для запроса на регистрацию пользователя
+type RegisterRequest struct {
+	Phone   string `json:"phone" binding:"required"`
+	Name    string `json:"name" binding:"required"`
+	Surname string `json:"surname" binding:"required"`
+}
+
+// RefreshRequest - структура для запроса на обновление refresh токена
+type RefreshRequest struct {
+	RefreshToken string `json:"refersh-token" binding:"required"`
+}
