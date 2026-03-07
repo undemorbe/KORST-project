@@ -16,18 +16,28 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/nyaruka/phonenumbers"
 )
 
 // OTPService - объект, содержащий методы для отправки и подтверждения Otp
 type OTPService struct {
-	otpRepo ports.OTPRepository
+	otpRepo      ports.OTPRepository
+	userRepo     ports.UserRepository
+	tokenService ports.TokenService
 }
 
 // NewOTPService создает и возвращает новый объект OTPService
-func NewOTPService(otpRepo ports.OTPRepository) ports.OTPService {
-	return &OTPService{otpRepo: otpRepo}
+func NewOTPService(
+	otpRepo ports.OTPRepository,
+	userRepo ports.UserRepository,
+	tokenService ports.TokenService) ports.OTPService {
+	return &OTPService{
+		otpRepo:      otpRepo,
+		userRepo:     userRepo,
+		tokenService: tokenService,
+	}
 }
 
 // SendOTP отправляет Otp-код по номеру телефона и сохраняет его
@@ -74,13 +84,44 @@ func (s *OTPService) VerifyOTP(rawPhone string, otp string) (
 			errors.ErrorInvalidPhone
 	}
 
-	// phone := phonenumbers.Format(num, phonenumbers.E164)
+	phone := phonenumbers.Format(num, phonenumbers.E164)
 
-	// TODO: подтверждение кода верефикации
+	otpEntity, err := s.otpRepo.FindByPhone(phone)
+	if err != nil {
+		return responses.VerifyOTPResponse{}, err
+	}
 
-	accessToken := "someToken"
-	refreshToken := "someToken"
-	status := "someStatus"
+	if otpEntity.Code != otp {
+		return responses.VerifyOTPResponse{},
+			errors.ErrorOTPIncorrect
+	}
+
+	if time.Now().After(otpEntity.ExpiresAt) {
+		return responses.VerifyOTPResponse{},
+			errors.ErrorOTPExpired
+	}
+
+	user, err := s.userRepo.FindByPhone(phone)
+	if err != nil {
+		return responses.VerifyOTPResponse{}, err
+	}
+
+	status := "registered"
+	if user == nil {
+		newUser := &entities.User{
+			Phone:        phone,
+			IsRegistered: false,
+		}
+
+		err := s.userRepo.CreateUser(newUser)
+		if err != nil {
+			return responses.VerifyOTPResponse{}, err
+		}
+
+		status = "notRegistered"
+	}
+
+	accessToken, refreshToken, err := s.tokenService.CreateTokens(user)
 
 	response := responses.VerifyOTPResponse{
 		AccessToken:  accessToken,

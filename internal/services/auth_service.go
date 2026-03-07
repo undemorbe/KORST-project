@@ -33,20 +33,14 @@ func (s *AuthService) CheckUser(rawPhone string) (
 	phone := phonenumbers.Format(num, phonenumbers.E164)
 
 	user, err := s.userRepo.FindByPhone(phone)
-
 	if err != nil {
 		return responses.IsUserResponse{Status: "notFound"},
-			errors.ErrorInternal
+			err
 	}
 
-	switch {
-	case user == nil:
-		return responses.IsUserResponse{Status: "notFound"}, nil
-	case !user.IsRegistered:
-		return responses.IsUserResponse{Status: "notRegistered"}, nil
-	default:
-		return responses.IsUserResponse{Status: "registered"}, nil
-	}
+	status := s.GetUserStatus(user)
+	return responses.IsUserResponse{Status: status},
+		nil
 }
 
 // RegisterUser добавляет пользователя в БД или дополняет информацию о нем
@@ -73,7 +67,7 @@ func (s *AuthService) RegisterUser(req requests.RegisterRequest) error {
 		}
 
 		err = s.userRepo.CreateUser(newUser)
-		return nil
+		return err
 	}
 
 	if user.IsRegistered == true {
@@ -86,4 +80,16 @@ func (s *AuthService) RegisterUser(req requests.RegisterRequest) error {
 
 	err = s.userRepo.UpdateUser(user)
 	return err
+}
+
+// GetUserStatus проверяет, зарегистрирован ли пользователь
+func (s *AuthService) GetUserStatus(user *entities.User) string {
+	switch {
+	case user == nil:
+		return "notFound"
+	case !user.IsRegistered:
+		return "notRegistered"
+	default:
+		return "registered"
+	}
 }

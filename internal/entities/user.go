@@ -16,7 +16,7 @@ type User struct {
 	Surname      string
 	IsRegistered bool `gorm:"default:false"`
 
-	RefreshToken *RefreshToken `gorm:"constraint:OnDelete:CASCADE"`
+	RefreshToken *RefreshToken `gorm:"foreignKey:UserID"`
 }
 
 // BeforeCreate создает необходимые отсутствющие поля при создании сущности

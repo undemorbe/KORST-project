@@ -17,3 +17,10 @@ type OTPRepository interface {
 	FindByPhone(phone string) (*entities.Otp, error)
 	CreateOTP(otp *entities.Otp) error
 }
+
+// RefreshTokenRepository содержит порты для взаимодействия с
+// refresh-токенами в БД
+type RefreshTokenRepository interface {
+	FindByToken(token string) (*entities.RefreshToken, error)
+	UpdateRefreshToken(refreshToken *entities.RefreshToken) error
+}

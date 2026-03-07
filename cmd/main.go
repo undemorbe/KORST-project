@@ -49,10 +49,12 @@ func main() {
 	// Подключение репозиториев
 	userRepo := repositories.NewUserRepository(db)
 	otpRepo := repositories.NewOTPRepository(db)
+	refreshTokenRepo := repositories.NewRefreshTokenRepository(db)
 
 	// Подключение сервисов
+	tokenService := services.NewJWTTokenService(userRepo, refreshTokenRepo)
 	authService := services.NewAuthService(userRepo)
-	otpService := services.NewOTPService(otpRepo)
+	otpService := services.NewOTPService(otpRepo, userRepo, tokenService)
 
 	// Подключение хэндлеров
 	authHandler := handlers.NewAuthHandler(otpService, authService)

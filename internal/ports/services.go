@@ -4,6 +4,7 @@ package ports
 import (
 	"korst-backend/internal/dto/requests"
 	"korst-backend/internal/dto/responses"
+	"korst-backend/internal/entities"
 )
 
 // OTPService содержит порты для методов отправки и подтверждения OTP
@@ -19,4 +20,9 @@ type AuthService interface {
 	CheckUser(rawPhone string) (
 		responses.IsUserResponse, error)
 	RegisterUser(req requests.RegisterRequest) error
+}
+
+// TokenService содержит порты для методов создания/обновления токенов
+type TokenService interface {
+	CreateTokens(user *entities.User) (string, string, error)
 }
