@@ -18,3 +18,8 @@ type RefreshResponse struct {
 	AccessToken  string `json:"access-token"`
 	RefreshToken string `json:"refresh-token"`
 }
+
+// NotisendResponse - структура для получения ответа при отправке кода
+type NotisendResponse struct {
+	Status string `json:"status"`
+}

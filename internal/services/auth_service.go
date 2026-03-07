@@ -39,18 +39,14 @@ func (s *AuthService) CheckUser(rawPhone string) (
 			errors.ErrorInternal
 	}
 
-	if user == nil {
-		return responses.IsUserResponse{Status: "notFound"},
-			nil
+	switch {
+	case user == nil:
+		return responses.IsUserResponse{Status: "notFound"}, nil
+	case !user.IsRegistered:
+		return responses.IsUserResponse{Status: "notRegistered"}, nil
+	default:
+		return responses.IsUserResponse{Status: "registered"}, nil
 	}
-
-	if user.IsRegistered == false {
-		return responses.IsUserResponse{Status: "notRegistered"},
-			nil
-	}
-
-	return responses.IsUserResponse{Status: "registered"},
-		nil
 }
 
 // RegisterUser добавляет пользователя в БД или дополняет информацию о нем
