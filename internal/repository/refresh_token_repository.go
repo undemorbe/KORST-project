@@ -6,6 +6,7 @@ import (
 	"korst-backend/internal/entities"
 	"korst-backend/internal/ports"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -34,8 +35,21 @@ func (r *refreshTokenRepo) FindByToken(
 	return &refreshToken, nil
 }
 
+// CreateRefreshToken создает новый объект токена в БД
+func (r *refreshTokenRepo) CreateRefreshToken(
+	refreshToken *entities.RefreshToken) error {
+	return r.db.Create(refreshToken).Error
+}
+
 // UpdateRefreshToken изменяет данные определенного refresh-токена
 func (r *refreshTokenRepo) UpdateRefreshToken(
 	refreshToken *entities.RefreshToken) error {
 	return r.db.Save(refreshToken).Error
+}
+
+// DeleteByUserID удаляет все refresh-токены c определенным userID
+func (r *refreshTokenRepo) DeleteByUserID(
+	userID uuid.UUID) error {
+	return r.db.Where("user_id = ?", userID).
+		Delete(&entities.RefreshToken{}).Error
 }

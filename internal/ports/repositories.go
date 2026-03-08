@@ -3,6 +3,8 @@ package ports
 
 import (
 	"korst-backend/internal/entities"
+
+	"github.com/google/uuid"
 )
 
 // UserRepository содержит порты для взаимодействия с User в БД
@@ -22,5 +24,7 @@ type OTPRepository interface {
 // refresh-токенами в БД
 type RefreshTokenRepository interface {
 	FindByToken(token string) (*entities.RefreshToken, error)
+	CreateRefreshToken(refreshToken *entities.RefreshToken) error
 	UpdateRefreshToken(refreshToken *entities.RefreshToken) error
+	DeleteByUserID(userID uuid.UUID) error
 }

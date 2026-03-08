@@ -5,6 +5,8 @@ import (
 	"korst-backend/internal/dto/requests"
 	"korst-backend/internal/dto/responses"
 	"korst-backend/internal/entities"
+
+	"github.com/google/uuid"
 )
 
 // OTPService содержит порты для методов отправки и подтверждения OTP
@@ -25,4 +27,5 @@ type AuthService interface {
 // TokenService содержит порты для методов создания/обновления токенов
 type TokenService interface {
 	CreateTokens(user *entities.User) (string, string, error)
+	DecodeAccessToken(rawToken string) (uuid.UUID, error)
 }

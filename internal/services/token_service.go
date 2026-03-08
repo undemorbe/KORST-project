@@ -2,11 +2,13 @@
 package services
 
 import (
+	"encoding/hex"
 	"korst-backend/internal/entities"
 	"korst-backend/internal/errors"
 	"korst-backend/internal/infrastructure/logger"
 	"korst-backend/internal/ports"
 
+	"crypto/rand"
 	"os"
 	"time"
 
@@ -31,16 +33,66 @@ func NewJWTTokenService(
 	}
 }
 
-// CreateTokens создает (или обновляет) refresh-токен,
-// создает новый access-токен
+// CreateTokens создает новый access-токен,
+// обновляет (или создает новый) refresh-токен.
 func (s *TokenService) CreateTokens(
 	user *entities.User) (string, string, error) {
-	// TODO: сделать TokenSerive
-	return "", "", nil
+
+	refreshToken, err := s.generateRefreshToken()
+	if err != nil {
+		logger.Log.Error("Ошибка при генерации refresh-токена: ", err)
+		return "", "", errors.ErrorInternal
+	}
+
+	err = s.refreshTokenRepo.DeleteByUserID(user.ID)
+	if err != nil {
+		logger.Log.Error("Ошибка при обращении к БД: ", err)
+		return "", "", errors.ErrorInternal
+	}
+
+	newRefreshToken := &entities.RefreshToken{
+		UserID: user.ID,
+		Token:  refreshToken,
+	}
+
+	err = s.refreshTokenRepo.CreateRefreshToken(newRefreshToken)
+	if err != nil {
+		logger.Log.Error("Ошибка при обращении к БД: ", err)
+		return "", "", errors.ErrorInternal
+	}
+
+	user.RefreshToken = newRefreshToken
+
+	err = s.userRepo.UpdateUser(user)
+	if err != nil {
+		logger.Log.Error("Ошибка при обращении к БД: ", err)
+		return "", "", errors.ErrorInternal
+	}
+
+	accessToken, err := s.generateAccessToken(user.ID)
+	if err != nil {
+		logger.Log.Error("Ошибка при генерации access-токена: ", err)
+		return "", "", errors.ErrorInternal
+	}
+
+	return accessToken, refreshToken, nil
+}
+
+// GenerateRefreshToken генерирует новый refresh-токен для пользователя
+func (s *TokenService) generateRefreshToken() (string, error) {
+	bytes := make([]byte, 32)
+
+	_, err := rand.Read(bytes)
+	if err != nil {
+		return "", err
+	}
+
+	token := hex.EncodeToString(bytes)
+	return token, nil
 }
 
 // GenerateAccessToken создает новый access-токен для пользователя
-func (s *TokenService) GenerateAccessToken(
+func (s *TokenService) generateAccessToken(
 	userID uuid.UUID) (string, error) {
 
 	jwtTokenKey := []byte(os.Getenv("JWT_TOKEN_KEY"))
@@ -53,7 +105,6 @@ func (s *TokenService) GenerateAccessToken(
 
 	accessToken, err := token.SignedString(jwtTokenKey)
 	if err != nil {
-		logger.Log.Error("Ошибка при генерации access-токена: ", err)
 		return "", err
 	}
 
@@ -64,6 +115,7 @@ func (s *TokenService) GenerateAccessToken(
 // проверяет его валидность
 func (s *TokenService) DecodeAccessToken(
 	rawToken string) (uuid.UUID, error) {
+
 	jwtTokenKey := []byte(os.Getenv("JWT_TOKEN_KEY"))
 
 	token, err := jwt.Parse(rawToken, func(token *jwt.Token) (interface{}, error) {
