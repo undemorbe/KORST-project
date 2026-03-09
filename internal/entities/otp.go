@@ -23,7 +23,7 @@ func (o *Otp) BeforeCreate(db *gorm.DB) error {
 		o.ID = uuid.New()
 	}
 	if o.ExpiresAt.IsZero() {
-		o.ExpiresAt = time.Now().Add(2 * time.Minute)
+		o.ExpiresAt = time.Now().UTC().Add(2 * time.Minute)
 	}
 	return nil
 }

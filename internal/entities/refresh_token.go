@@ -24,7 +24,7 @@ func (r *RefreshToken) BeforeCreate(db *gorm.DB) error {
 		r.ID = uuid.New()
 	}
 	if r.ExpiresAt.IsZero() {
-		r.ExpiresAt = time.Now().Add(15 * 24 * time.Hour)
+		r.ExpiresAt = time.Now().UTC().Add(15 * 24 * time.Hour)
 	}
 	return nil
 }

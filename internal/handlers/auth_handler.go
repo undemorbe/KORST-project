@@ -89,6 +89,7 @@ func (h *AuthHandler) CheckUser(c *gin.Context) {
 		return
 	}
 
+	logger.Log.Info("Проверка статуса пользователя успешно выполнена")
 	c.JSON(http.StatusOK, response)
 }
 
@@ -111,4 +112,24 @@ func (h *AuthHandler) RegisterUser(c *gin.Context) {
 
 	logger.Log.Info("Пользователь успешно зарегистрирован")
 	c.JSON(http.StatusOK, responses.GenericResponse{})
+}
+
+// RefreshTokens обрабатывает запрос обновления токенов
+func (h *AuthHandler) RefreshTokens(c *gin.Context) {
+	var req requests.RefreshRequest
+
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		c.Error(errors.ErrorInvalidInput)
+		return
+	}
+
+	response, err := h.authService.GetNewTokens(req.RefreshToken)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	logger.Log.Info("Обновление токенов успешно выполнено")
+	c.JSON(http.StatusOK, response)
 }

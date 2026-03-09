@@ -53,7 +53,7 @@ func main() {
 
 	// Подключение сервисов
 	tokenService := services.NewJWTTokenService(userRepo, refreshTokenRepo)
-	authService := services.NewAuthService(userRepo)
+	authService := services.NewAuthService(userRepo, refreshTokenRepo, tokenService)
 	otpService := services.NewOTPService(otpRepo, userRepo, tokenService)
 
 	// Подключение хэндлеров

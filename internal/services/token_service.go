@@ -100,7 +100,7 @@ func (s *TokenService) generateAccessToken(
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256,
 		jwt.MapClaims{
 			"user_id":    userID.String(),
-			"expires_at": time.Now().Add(time.Hour).Unix(),
+			"expires_at": time.Now().UTC().Add(time.Hour).Unix(),
 		})
 
 	accessToken, err := token.SignedString(jwtTokenKey)
@@ -150,7 +150,7 @@ func (s *TokenService) DecodeAccessToken(
 	}
 	expiresAt := time.Unix(int64(rawExpiresAt), 0)
 
-	if time.Now().After(expiresAt) {
+	if time.Now().UTC().After(expiresAt) {
 		return uuid.Nil, errors.ErrorAccessExpired
 	}
 

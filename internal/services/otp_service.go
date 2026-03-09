@@ -96,7 +96,7 @@ func (s *OTPService) VerifyOTP(rawPhone string, otp string) (
 			errors.ErrorOTPIncorrect
 	}
 
-	if time.Now().After(otpEntity.ExpiresAt) {
+	if time.Now().UTC().After(otpEntity.ExpiresAt) {
 		return responses.VerifyOTPResponse{},
 			errors.ErrorOTPExpired
 	}

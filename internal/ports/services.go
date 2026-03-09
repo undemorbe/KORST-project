@@ -22,6 +22,7 @@ type AuthService interface {
 	CheckUser(rawPhone string) (
 		responses.IsUserResponse, error)
 	RegisterUser(req requests.RegisterRequest) error
+	GetNewTokens(refreshTokenStr string) (responses.RefreshResponse, error)
 }
 
 // TokenService содержит порты для методов создания/обновления токенов

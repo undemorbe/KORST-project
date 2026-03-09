@@ -6,6 +6,7 @@ import (
 	"korst-backend/internal/entities"
 	"korst-backend/internal/ports"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -19,9 +20,25 @@ func NewUserRepository(db *gorm.DB) ports.UserRepository {
 	return &userRepo{db: db}
 }
 
+// // FindByID находит пользователя по его ID
+func (r *userRepo) FindByID(userID uuid.UUID) (*entities.User, error) {
+	var user entities.User
+
+	err := r.db.First(&user, userID).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 // FindByPhone находит пользователя по номеру телефона
 func (r *userRepo) FindByPhone(phone string) (*entities.User, error) {
 	var user entities.User
+
 	err := r.db.Where("phone = ?", phone).First(&user).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {

@@ -9,6 +9,7 @@ import (
 
 // UserRepository содержит порты для взаимодействия с User в БД
 type UserRepository interface {
+	FindByID(userID uuid.UUID) (*entities.User, error)
 	FindByPhone(phone string) (*entities.User, error)
 	CreateUser(user *entities.User) error
 	UpdateUser(user *entities.User) error
