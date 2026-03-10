@@ -52,7 +52,7 @@ func main() {
 	refreshTokenRepo := repositories.NewRefreshTokenRepository(db)
 
 	// Подключение сервисов
-	tokenService := services.NewJWTTokenService(userRepo, refreshTokenRepo)
+	tokenService := services.NewTokenService(userRepo, refreshTokenRepo)
 	authService := services.NewAuthService(userRepo, refreshTokenRepo, tokenService)
 	otpService := services.NewOTPService(otpRepo, userRepo, tokenService)
 
@@ -64,6 +64,7 @@ func main() {
 	{
 		api.GET("/is-user", authHandler.CheckUser)
 		api.POST("/register", authHandler.RegisterUser)
+		api.GET("/refresh", authHandler.RefreshTokens)
 
 		api.POST("/send-otp", authHandler.SendOTP)
 		api.POST("/verify-otp", authHandler.VerifyOTP)

@@ -23,7 +23,7 @@ type TokenService struct {
 }
 
 // NewTokenService создает и возвращает новый объект TokenService
-func NewJWTTokenService(
+func NewTokenService(
 	userRepo ports.UserRepository,
 	refreshTokenRepo ports.RefreshTokenRepository,
 ) ports.TokenService {
@@ -127,30 +127,36 @@ func (s *TokenService) DecodeAccessToken(
 		return jwtTokenKey, nil
 	})
 	if err != nil {
-		return uuid.Nil, err
+		logger.Log.Warn("Некорректный access-токен: ", err)
+		return uuid.Nil, errors.ErrorInvalidInput
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok || !token.Valid {
+		logger.Log.Warn("Некорректный access-токен")
 		return uuid.Nil, errors.ErrorInvalidInput
 	}
 
 	rawUserID, ok := claims["user_id"].(string)
 	if !ok {
+		logger.Log.Warn("Access-токен не содержит ID пользователя")
 		return uuid.Nil, errors.ErrorInvalidInput
 	}
 	userID, err := uuid.Parse(rawUserID)
 	if err != nil {
+		logger.Log.Warn("Некорректный ID пользователя в токене: ", err)
 		return uuid.Nil, errors.ErrorInvalidInput
 	}
 
 	rawExpiresAt, ok := claims["expires_at"].(float64)
 	if !ok {
+		logger.Log.Warn("Access-токен не содержит срок действия")
 		return uuid.Nil, errors.ErrorInvalidInput
 	}
 	expiresAt := time.Unix(int64(rawExpiresAt), 0)
 
 	if time.Now().UTC().After(expiresAt) {
+		logger.Log.Warn("Время действия токена истекло")
 		return uuid.Nil, errors.ErrorAccessExpired
 	}
 
