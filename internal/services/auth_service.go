@@ -47,7 +47,7 @@ func (s *AuthService) CheckUser(rawPhone string) (
 			err
 	}
 
-	status := s.GetUserStatus(user)
+	status := s.getUserStatus(user)
 	return responses.IsUserResponse{Status: status},
 		nil
 }
@@ -129,7 +129,7 @@ func (s *AuthService) GetNewTokens(
 }
 
 // GetUserStatus проверяет, зарегистрирован ли пользователь
-func (s *AuthService) GetUserStatus(user *entities.User) string {
+func (s *AuthService) getUserStatus(user *entities.User) string {
 	switch {
 	case user == nil:
 		return "notFound"
