@@ -16,6 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestSendOTP проверяет работу хэндлера SendOTP
 func TestSendOTP(t *testing.T) {
 	logger.InitLoggerTest()
 
@@ -49,6 +50,7 @@ func TestSendOTP(t *testing.T) {
 	require.Equal(t, http.StatusOK, writer.Code)
 }
 
+// TestVerifyOTP проверяет работу хэндлера VerifyOTP
 func TestVerifyOTP(t *testing.T) {
 	mockOTPService := new(mocks.MockOTPService)
 

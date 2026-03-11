@@ -30,7 +30,8 @@ func NewAuthService(userRepo ports.UserRepository,
 	}
 }
 
-// CheckUser находит пользователя по телефону и проверяет его статус (notFound / notRegistered / registered)
+// CheckUser находит пользователя по телефону и проверяет его
+// статус (notFound / notRegistered / registered)
 func (s *AuthService) CheckUser(rawPhone string) (
 	responses.IsUserResponse, error) {
 	num, err := phonenumbers.Parse(rawPhone, "RU")

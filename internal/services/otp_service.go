@@ -42,7 +42,6 @@ func NewOTPService(
 
 // SendOTP отправляет Otp-код по номеру телефона и сохраняет его
 func (s *OTPService) SendOTP(rawPhone string) error {
-	// TODO: отправка и сохранение кода
 	num, err := phonenumbers.Parse(rawPhone, "RU")
 	if err != nil || !phonenumbers.IsValidNumber(num) {
 		return errors.ErrorInvalidPhone

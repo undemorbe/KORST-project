@@ -1,3 +1,4 @@
+// services - пакет, содержащий внутреннюю логику приложения
 package services
 
 import (
@@ -11,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestVerifyOtp gроверяет подтверждение корректного Otp
 func TestVerifyOtp(t *testing.T) {
 	mockOTPRepo := &mocks.MockOtpRepo{}
 	mockUserRepo := &mocks.MockUserRepo{}
@@ -47,6 +49,7 @@ func TestVerifyOtp(t *testing.T) {
 	require.Equal(t, response.Status, "notRegistered")
 }
 
+// TestVerifyExpiredOTP проверяет обработку истекшего Otp
 func TestVerifyExpiredOTP(t *testing.T) {
 	mockOTPRepo := &mocks.MockOtpRepo{}
 	mockUserRepo := &mocks.MockUserRepo{}
@@ -80,6 +83,7 @@ func TestVerifyExpiredOTP(t *testing.T) {
 	require.Equal(t, err, errors.ErrorOTPExpired)
 }
 
+// TestVerifyIncorrectOTP проверяет обработку неверного Otp
 func TestVerifyIncorrectOTP(t *testing.T) {
 	mockOTPRepo := &mocks.MockOtpRepo{}
 	mockUserRepo := &mocks.MockUserRepo{}

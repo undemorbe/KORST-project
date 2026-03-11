@@ -14,6 +14,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestGenerateAndDecodeAccessToken проверяет
+// генерацию и декодирование access-токена
 func TestGenerateAndDecodeAccessToken(t *testing.T) {
 	logger.InitLoggerTest()
 
@@ -33,6 +35,7 @@ func TestGenerateAndDecodeAccessToken(t *testing.T) {
 	require.Equal(t, userID, decodedUserID)
 }
 
+// TestGenerateRefreshToken проверяет генерацию refresh-токена
 func TestGenerateRefreshToken(t *testing.T) {
 	logger.InitLoggerTest()
 
@@ -44,6 +47,8 @@ func TestGenerateRefreshToken(t *testing.T) {
 	require.Equal(t, len(token), 64)
 }
 
+// TestDecodingInvalidAccessToken проверяет декодирование
+// некорректного access-токена
 func TestDecodingInvalidAccessToken(t *testing.T) {
 	logger.InitLoggerTest()
 
@@ -69,6 +74,7 @@ func TestDecodingInvalidAccessToken(t *testing.T) {
 	require.Equal(t, err, errors.ErrorInvalidInput)
 }
 
+// TestCreateToken проверяет общую работу TokenService
 func TestCreateTokens(t *testing.T) {
 	mockUserRepo := &mocks.MockUserRepo{}
 	mockRefreshTokenRepo := &mocks.MockRefreshTokenRepo{}

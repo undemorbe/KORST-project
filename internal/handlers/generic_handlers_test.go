@@ -18,6 +18,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestInvalidRequest проверяет работу хэндлеров
+// (на примере одного) при некорректном запросе
 func TestInvalidRequest(t *testing.T) {
 	logger.InitLoggerTest()
 
@@ -58,6 +60,8 @@ func TestInvalidRequest(t *testing.T) {
 	require.Equal(t, "Некоректный формат входных данных", response.Message)
 }
 
+// TestExpectedError проверяет обработку хэндлерами
+// ожидаемой (установленной заранее в errors) ошибки
 func TestExpectedError(t *testing.T) {
 	mockOTPService := new(mocks.MockOTPService)
 
@@ -96,6 +100,8 @@ func TestExpectedError(t *testing.T) {
 	require.Equal(t, "Пользователь не найден", response.Message)
 }
 
+// TestUnexpectedError проверяет обработку хэндлерами
+// случайной (непредвиденной) ошибки
 func TestUnexpectedError(t *testing.T) {
 	mockOTPService := new(mocks.MockOTPService)
 

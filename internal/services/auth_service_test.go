@@ -1,3 +1,4 @@
+// services - пакет, содержащий внутреннюю логику приложения
 package services
 
 import (
@@ -10,6 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestCheckRegisteredUser проверяет проверку статуса
+// зарегистрированного пользователя
 func TestCheckRegisteredUser(t *testing.T) {
 	mockUserRepo := &mocks.MockUserRepo{}
 	mockRefreshTokenRepo := &mocks.MockRefreshTokenRepo{}
@@ -32,6 +35,8 @@ func TestCheckRegisteredUser(t *testing.T) {
 	require.Equal(t, response.Status, "registered")
 }
 
+// TestCheckRegisteredUser проверяет проверку статуса
+// незарегистрированного пользователя
 func TestCheckNotRegisteredUser(t *testing.T) {
 	mockUserRepo := &mocks.MockUserRepo{}
 	mockRefreshTokenRepo := &mocks.MockRefreshTokenRepo{}
@@ -53,6 +58,8 @@ func TestCheckNotRegisteredUser(t *testing.T) {
 	require.Equal(t, response.Status, "notRegistered")
 }
 
+// TestCheckRegisteredUser проверяет проверку статуса
+// несуществующего пользователя
 func TestCheckNotFoundUser(t *testing.T) {
 	mockUserRepo := &mocks.MockUserRepo{}
 	mockRefreshTokenRepo := &mocks.MockRefreshTokenRepo{}
@@ -70,6 +77,8 @@ func TestCheckNotFoundUser(t *testing.T) {
 	require.Equal(t, response.Status, "notFound")
 }
 
+// TestRegisterExistingUser проверяет дополнения
+// информации о существующем пользователе
 func TestRegisterExistingUser(t *testing.T) {
 	mockUserRepo := &mocks.MockUserRepo{}
 	mockRefreshTokenRepo := &mocks.MockRefreshTokenRepo{}
@@ -109,6 +118,8 @@ func TestRegisterExistingUser(t *testing.T) {
 	require.Equal(t, user.Surname, surname)
 }
 
+// TestRegisterNewUser проверяет регистрацию
+// нового пользователя
 func TestRegisterNewUser(t *testing.T) {
 	mockUserRepo := &mocks.MockUserRepo{}
 	mockRefreshTokenRepo := &mocks.MockRefreshTokenRepo{}

@@ -17,6 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestCheckUser проверяет работу хэндлера CheckUser
 func TestCheckUser(t *testing.T) {
 	logger.InitLoggerTest()
 
@@ -58,6 +59,7 @@ func TestCheckUser(t *testing.T) {
 	require.Equal(t, "registered", response.Status)
 }
 
+// TestRegisterUser проверяет работу хэндлера RegisterUser
 func TestRegisterUser(t *testing.T) {
 	mockAuthService := new(mocks.MockAuthService)
 
@@ -91,6 +93,7 @@ func TestRegisterUser(t *testing.T) {
 	require.Equal(t, http.StatusOK, writer.Code)
 }
 
+// TestRefreshTokens проверяет работу хэндлера RefreshTokens
 func TestRefreshTokens(t *testing.T) {
 	mockAuthService := new(mocks.MockAuthService)
 

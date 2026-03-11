@@ -20,7 +20,7 @@ func NewUserRepository(db *gorm.DB) ports.UserRepository {
 	return &userRepo{db: db}
 }
 
-// // FindByID находит пользователя по его ID
+// FindByID находит пользователя по его ID
 func (r *userRepo) FindByID(userID uuid.UUID) (*entities.User, error) {
 	var user entities.User
 
