@@ -52,8 +52,8 @@ class _CreateServicePageState extends State<CreateServicePage> {
         title: _titleController.text,
         description: _descriptionController.text,
         price: double.tryParse(_priceController.text) ?? 0.0,
-        currency: 'RUB', // Default
-        type: 'service', // Default
+        currency: 'RUB',
+        type: 'service',
         author: user,
         timesBooked: 0,
         rating: 0,
@@ -62,7 +62,7 @@ class _CreateServicePageState extends State<CreateServicePage> {
         created: DateTime.now(),
         updated: DateTime.now(),
         category: _selectedCategory,
-        imageUrl: 'https://placehold.co/600x400', // Placeholder
+        imageUrl: 'https://placehold.co/600x400',
       );
 
       await _serviceStore.createService(service);
@@ -119,7 +119,7 @@ class _CreateServicePageState extends State<CreateServicePage> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<ServiceCategory>(
-                value: _selectedCategory,
+                initialValue: _selectedCategory,
                 decoration: const InputDecoration(labelText: 'Категория'),
                 items: ServiceCategory.values.map((c) {
                   return DropdownMenuItem(

@@ -10,7 +10,6 @@ class AuthRepositoryImpl implements AuthRepository {
 
   static const String _isLoggedInKey = 'is_logged_in';
   static const String _userKey = 'user_data';
-  // Keeping phone key for temporary storage during auth flow
   static const String _tempPhoneKey = 'temp_phone';
 
   @override
@@ -35,7 +34,6 @@ class AuthRepositoryImpl implements AuthRepository {
     if (code == '1111') {
       await _localStorage.put(_isLoggedInKey, true);
       
-      // Create mock existing user if not exists
       if (_localStorage.get(_userKey) == null) {
         final phone = _localStorage.get(_tempPhoneKey) ?? '+79990000000';
         final user = UserEntity(
@@ -73,7 +71,7 @@ class AuthRepositoryImpl implements AuthRepository {
       phone: phone,
       photoUrl: photoUrl,
       contacts: {
-        'other': contactsStr, // Storing raw string in 'other' for now as per simple register flow
+        'other': contactsStr,
       },
       createdCards: [],
       bookings: {
@@ -100,16 +98,12 @@ class AuthRepositoryImpl implements AuthRepository {
     final jsonStr = _localStorage.get(_userKey);
     if (jsonStr != null) {
       try {
-        // Handle if stored value is String (json encoded) or Map (direct hive object)
-        // Hive might store Map directly if put as Map, but here we plan to use json.encode string
         if (jsonStr is String) {
           return UserEntity.fromJson(json.decode(jsonStr));
         } else if (jsonStr is Map) {
           return UserEntity.fromJson(Map<String, dynamic>.from(jsonStr));
         }
-      } catch (e) {
-        print('Error parsing user profile: $e');
-      }
+      } catch (_) {}
     }
     return null;
   }
