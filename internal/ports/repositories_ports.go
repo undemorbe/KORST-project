@@ -49,3 +49,16 @@ type RefreshTokenRepository interface {
 	// DeleteByUserID удаляет все refresh-токены c определенным userID
 	DeleteByUserID(userID uuid.UUID) error
 }
+
+// CardRepository содержит порты для взаимодействия с
+// карточками объявлений с услугами/товарами в БД
+type CardRepository interface {
+	// FindByID находит карточку по ее ID
+	FindByID(cardID uuid.UUID) (*entities.Card, error)
+
+	// CreateCard создает новый объект карточки объявления в БД
+	CreateCard(card *entities.Card) error
+
+	// UpdateCard изменяет данные карточки в БД
+	UpdateCard(card *entities.Card) error
+}

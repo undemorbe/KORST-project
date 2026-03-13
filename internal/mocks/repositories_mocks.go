@@ -106,3 +106,30 @@ func (m *MockRefreshTokenRepo) DeleteByUserID(userID uuid.UUID) error {
 	args := m.Called(userID)
 	return args.Error(0)
 }
+
+// MockCardRepository - структура для передачи в тестах
+// фиктивной структуры репозитория CardRepository
+type MockCardRepository struct{ mock.Mock }
+
+// FindByID задает фиктивную реализацию поиска карточки по ID
+func (m *MockCardRepository) FindByID(cardID uuid.UUID) (*entities.Card, error) {
+	args := m.Called(cardID)
+
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+
+	return args.Get(0).(*entities.Card), args.Error(1)
+}
+
+// CreateCard задает фиктивную реализацию создания сущности карточки
+func (m *MockCardRepository) CreateCard(card *entities.Card) error {
+	args := m.Called(card)
+	return args.Error(0)
+}
+
+// UpdateCard задает фиктивную реализацию обновления карточки в БД
+func (m *MockCardRepository) UpdateCard(card *entities.Card) error {
+	args := m.Called(card)
+	return args.Error(0)
+}

@@ -8,6 +8,9 @@ import (
 	"gorm.io/gorm"
 )
 
+// Profile - структура профиля пользователя в БД.
+// Содержит описание пользователя, контакты,
+// рейтинг, время создания и обновления
 type Profile struct {
 	ID     uuid.UUID `gorm:"type:uuid;primaryKey"`
 	UserID uuid.UUID `gorm:"type:uuid;uniqueIndex"`
