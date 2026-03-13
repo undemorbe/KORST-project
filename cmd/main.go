@@ -49,22 +49,26 @@ func main() {
 	// Подключение репозиториев
 	userRepo := repositories.NewUserRepository(db)
 	otpRepo := repositories.NewOTPRepository(db)
+	refreshTokenRepo := repositories.NewRefreshTokenRepository(db)
 
 	// Подключение сервисов
-	authService := services.NewAuthService(userRepo)
-	otpService := services.NewOTPService(otpRepo)
+	tokenService := services.NewTokenService(userRepo, refreshTokenRepo)
+	authService := services.NewAuthService(userRepo, refreshTokenRepo, tokenService)
+	otpService := services.NewOTPService(otpRepo, userRepo, tokenService)
 
 	// Подключение хэндлеров
-	authHandler := handlers.NewAuthHandler(otpService, authService)
+	authHandler := handlers.NewAuthHandler(authService)
+	otpHandler := handlers.NewOTPHandler(otpService)
 
 	// Регистрация маршрутов
 	api := r.Group("/authorize")
 	{
 		api.GET("/is-user", authHandler.CheckUser)
 		api.POST("/register", authHandler.RegisterUser)
+		api.GET("/refresh", authHandler.RefreshTokens)
 
-		api.POST("/send-otp", authHandler.SendOTP)
-		api.POST("/verify-otp", authHandler.VerifyOTP)
+		api.POST("/send-otp", otpHandler.SendOTP)
+		api.POST("/verify-otp", otpHandler.VerifyOTP)
 	}
 
 	// Запуск сервера

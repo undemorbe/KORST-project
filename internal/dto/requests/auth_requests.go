@@ -22,5 +22,5 @@ type RegisterRequest struct {
 
 // RefreshRequest - структура для запроса на обновление refresh токена
 type RefreshRequest struct {
-	RefreshToken string `json:"refersh-token" binding:"required"`
+	RefreshToken string `json:"refresh-token" binding:"required"`
 }

@@ -5,4 +5,5 @@ package responses
 // Используется для пустых ответов / ответов с message
 type GenericResponse struct {
 	Message string `json:"message,omitempty"`
+	Code    string `json:"code,omitempty"`
 }
