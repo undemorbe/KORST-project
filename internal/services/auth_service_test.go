@@ -23,8 +23,9 @@ func TestCheckRegisteredUser(t *testing.T) {
 	rawPhone := "+79123456789"
 
 	user := &entities.User{
-		Phone:        rawPhone,
-		IsRegistered: true,
+		Phone:   rawPhone,
+		Name:    "Олег",
+		Surname: "Олегович",
 	}
 
 	mockUserRepo.On("FindByPhone", rawPhone).Return(user, nil)
@@ -46,8 +47,7 @@ func TestCheckNotRegisteredUser(t *testing.T) {
 
 	rawPhone := "+79121111111"
 	user := &entities.User{
-		Phone:        rawPhone,
-		IsRegistered: false,
+		Phone: rawPhone,
 	}
 
 	mockUserRepo.On("FindByPhone", rawPhone).Return(user, nil)
@@ -91,8 +91,7 @@ func TestRegisterExistingUser(t *testing.T) {
 	surname := "Олегович"
 
 	user := &entities.User{
-		Phone:        rawPhone,
-		IsRegistered: false,
+		Phone: rawPhone,
 	}
 
 	req := requests.RegisterRequest{

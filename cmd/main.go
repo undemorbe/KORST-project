@@ -61,14 +61,16 @@ func main() {
 	otpHandler := handlers.NewOTPHandler(otpService)
 
 	// Регистрация маршрутов
-	api := r.Group("/authorize")
-	{
-		api.GET("/is-user", authHandler.CheckUser)
-		api.POST("/register", authHandler.RegisterUser)
-		api.GET("/refresh", authHandler.RefreshTokens)
+	api := r.Group("/api")
 
-		api.POST("/send-otp", otpHandler.SendOTP)
-		api.POST("/verify-otp", otpHandler.VerifyOTP)
+	authorize := api.Group("/authorize")
+	{
+		authorize.GET("/is-user", authHandler.CheckUser)
+		authorize.POST("/register", authHandler.RegisterUser)
+		authorize.GET("/refresh", authHandler.RefreshTokens)
+
+		authorize.POST("/send-otp", otpHandler.SendOTP)
+		authorize.POST("/verify-otp", otpHandler.VerifyOTP)
 	}
 
 	// Запуск сервера

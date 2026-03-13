@@ -68,6 +68,12 @@ func (m *MockOtpRepo) CreateOTP(otp *entities.Otp) error {
 	return args.Error(0)
 }
 
+// UpdateOTP задает фиктивную реализацию обновления Otp
+func (m *MockOtpRepo) UpdateOTP(otp *entities.Otp) error {
+	args := m.Called(otp)
+	return args.Error(0)
+}
+
 // MockRefreshTokenRepo - структура для передачи в тестах
 // фиктивной структуры репозитория RefreshTokenRepo
 type MockRefreshTokenRepo struct{ mock.Mock }

@@ -29,6 +29,9 @@ type OTPRepository interface {
 
 	// CreateOTP создает новый объект Otp в БД
 	CreateOTP(otp *entities.Otp) error
+
+	// UpdateOTP изменяет данные для сущности OTP
+	UpdateOTP(otp *entities.Otp) error
 }
 
 // RefreshTokenRepository содержит порты для взаимодействия с

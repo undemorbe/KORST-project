@@ -55,6 +55,9 @@ func (s *AuthService) CheckUser(rawPhone string) (
 
 // RegisterUser добавляет пользователя в БД или дополняет информацию о нем
 func (s *AuthService) RegisterUser(req requests.RegisterRequest) error {
+
+	// TODO: полностью переработать регистрацию
+
 	num, err := phonenumbers.Parse(req.Phone, "RU")
 	if err != nil || !phonenumbers.IsValidNumber(num) {
 		return errors.ErrorInvalidPhone
@@ -70,23 +73,17 @@ func (s *AuthService) RegisterUser(req requests.RegisterRequest) error {
 
 	if user == nil {
 		newUser := &entities.User{
-			Phone:        req.Phone,
-			Name:         req.Name,
-			Surname:      req.Surname,
-			IsRegistered: true,
+			Phone:   req.Phone,
+			Name:    req.Name,
+			Surname: req.Surname,
 		}
 
 		err = s.userRepo.CreateUser(newUser)
 		return err
 	}
 
-	if user.IsRegistered == true {
-		return nil
-	}
-
 	user.Name = req.Name
 	user.Surname = req.Surname
-	user.IsRegistered = true
 
 	err = s.userRepo.UpdateUser(user)
 	return err
@@ -134,7 +131,7 @@ func (s *AuthService) getUserStatus(user *entities.User) string {
 	switch {
 	case user == nil:
 		return "notFound"
-	case !user.IsRegistered:
+	case len(user.Name) == 0 || len(user.Surname) == 0:
 		return "notRegistered"
 	default:
 		return "registered"

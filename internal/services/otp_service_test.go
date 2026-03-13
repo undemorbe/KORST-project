@@ -33,6 +33,10 @@ func TestVerifyOtp(t *testing.T) {
 
 	mockUserRepo.On("FindByPhone", rawPhone).Return(nil, nil)
 
+	mockOTPRepo.
+		On("UpdateOTP", mock.AnythingOfType("*entities.Otp")).
+		Return(nil)
+
 	mockUserRepo.
 		On("CreateUser", mock.AnythingOfType("*entities.User")).
 		Return(nil)
@@ -70,6 +74,10 @@ func TestVerifyExpiredOTP(t *testing.T) {
 
 	mockUserRepo.On("FindByPhone", rawPhone).Return(nil, nil)
 
+	mockOTPRepo.
+		On("UpdateOTP", mock.AnythingOfType("*entities.Otp")).
+		Return(nil)
+
 	mockUserRepo.
 		On("CreateUser", mock.AnythingOfType("*entities.User")).
 		Return(nil)
@@ -103,6 +111,10 @@ func TestVerifyIncorrectOTP(t *testing.T) {
 	mockOTPRepo.On("FindByPhone", rawPhone).Return(otpEntity, nil)
 
 	mockUserRepo.On("FindByPhone", rawPhone).Return(nil, nil)
+
+	mockOTPRepo.
+		On("UpdateOTP", mock.AnythingOfType("*entities.Otp")).
+		Return(nil)
 
 	mockUserRepo.
 		On("CreateUser", mock.AnythingOfType("*entities.User")).

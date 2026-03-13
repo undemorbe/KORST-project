@@ -77,6 +77,7 @@ func (s *OTPService) SendOTP(rawPhone string) error {
 // VerifyOTP сравнивает полученный Otp-код c сохраненным в БД
 func (s *OTPService) VerifyOTP(rawPhone string, otp string) (
 	responses.VerifyOTPResponse, error) {
+
 	num, err := phonenumbers.Parse(rawPhone, "RU")
 	if err != nil || !phonenumbers.IsValidNumber(num) {
 		return responses.VerifyOTPResponse{},
@@ -90,7 +91,7 @@ func (s *OTPService) VerifyOTP(rawPhone string, otp string) (
 		return responses.VerifyOTPResponse{}, err
 	}
 
-	if otpEntity.Code != otp {
+	if otpEntity.Code != otp || otpEntity.IsUsed {
 		return responses.VerifyOTPResponse{},
 			errors.ErrorOTPIncorrect
 	}
@@ -98,6 +99,13 @@ func (s *OTPService) VerifyOTP(rawPhone string, otp string) (
 	if time.Now().UTC().After(otpEntity.ExpiresAt) {
 		return responses.VerifyOTPResponse{},
 			errors.ErrorOTPExpired
+	}
+
+	otpEntity.IsUsed = true
+
+	err = s.otpRepo.UpdateOTP(otpEntity)
+	if err != nil {
+		return responses.VerifyOTPResponse{}, err
 	}
 
 	user, err := s.userRepo.FindByPhone(phone)
@@ -108,8 +116,7 @@ func (s *OTPService) VerifyOTP(rawPhone string, otp string) (
 	status := "registered"
 	if user == nil {
 		newUser := &entities.User{
-			Phone:        phone,
-			IsRegistered: false,
+			Phone: phone,
 		}
 
 		err := s.userRepo.CreateUser(newUser)

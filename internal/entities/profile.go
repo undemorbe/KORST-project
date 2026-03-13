@@ -1,0 +1,38 @@
+// entities - пакет с сущностями для БД
+package entities
+
+import (
+	"time"
+
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+)
+
+type Profile struct {
+	ID     uuid.UUID `gorm:"type:uuid;primaryKey"`
+	UserID uuid.UUID `gorm:"type:uuid;uniqueIndex"`
+
+	Description string
+	Rating      float64
+
+	Email         string
+	Telegram      string
+	OtherContacts map[string]string `gorm:"type:jsonb"`
+
+	CreatedAt time.Time `gorm:"not null"`
+	UpdatedAt time.Time `gorm:"not null"`
+}
+
+// BeforeCreate создает необходимые отсутствющие поля при создании сущности
+func (p *Profile) BeforeCreate(db *gorm.DB) error {
+	if p.ID == uuid.Nil {
+		p.ID = uuid.New()
+	}
+	if p.CreatedAt.IsZero() {
+		p.CreatedAt = time.Now().UTC()
+	}
+	if p.UpdatedAt.IsZero() {
+		p.UpdatedAt = time.Now().UTC()
+	}
+	return nil
+}

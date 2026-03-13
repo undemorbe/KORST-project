@@ -10,13 +10,15 @@ import (
 // Содержит ID, телефон, имя и фамилию пользователя,
 // значение IsRegistered, ссылку на refresh токен
 type User struct {
-	ID           uuid.UUID `gorm:"type:uuid;primaryKey"`
-	Phone        string    `gorm:"unique;not null"`
-	Name         string
-	Surname      string
-	IsRegistered bool `gorm:"default:false"`
+	ID    uuid.UUID `gorm:"type:uuid;primaryKey"`
+	Phone string    `gorm:"unique;not null"`
 
-	RefreshToken *RefreshToken `gorm:"foreignKey:UserID"`
+	Name    string
+	Surname string
+
+	RefreshToken *RefreshToken `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
+	Profile      *Profile      `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
+	Cards        []Card        `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
 }
 
 // BeforeCreate создает необходимые отсутствющие поля при создании сущности
