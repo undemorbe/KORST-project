@@ -23,7 +23,6 @@ class _ServicesHomePageState extends State<ServicesHomePage> {
   @override
   void initState() {
     super.initState();
-    // Initial load handled by MainShellPage, but we can set listeners here if needed
     _searchController.addListener(() {
       _store.setSearchQuery(_searchController.text);
     });
@@ -38,10 +37,17 @@ class _ServicesHomePageState extends State<ServicesHomePage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-
+    final services = _store.filteredServices; // Observe this in Observer or build
+    
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.homeTitle),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          context.push('/create-service');
+        },
+        child: const Icon(Icons.add),
       ),
       body: Column(
         children: [
@@ -103,7 +109,7 @@ class _ServicesHomePageState extends State<ServicesHomePage> {
                   itemCount: _store.filteredServices.length,
                   itemBuilder: (context, index) {
                     final service = _store.filteredServices[index];
-                    return Observer(
+                    return Observer( // Add observer for favorites
                       builder: (_) => ServiceCard(
                         service: service,
                         isFavorite: _favoritesStore.isFavorite(service.id),
@@ -124,28 +130,32 @@ class _ServicesHomePageState extends State<ServicesHomePage> {
   }
 
   Widget _buildCategoryChip(BuildContext context, String label, ServiceCategory? category) {
-    final isSelected = _store.selectedCategory == category;
-    return FilterChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (bool selected) {
-        _store.setCategory(selected ? category : null);
-      },
-      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-      selectedColor: Theme.of(context).colorScheme.primaryContainer,
-      checkmarkColor: Theme.of(context).colorScheme.onPrimaryContainer,
-      labelStyle: TextStyle(
-        color: isSelected
-            ? Theme.of(context).colorScheme.onPrimaryContainer
-            : Theme.of(context).colorScheme.onSurfaceVariant,
-      ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(
-          color: isSelected ? Colors.transparent : Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
-        ),
-      ),
-      showCheckmark: false,
+    return Observer(
+      builder: (_) {
+        final isSelected = _store.selectedCategory == category;
+        return FilterChip(
+          label: Text(label),
+          selected: isSelected,
+          onSelected: (bool selected) {
+            _store.setCategory(selected ? category : null);
+          },
+          backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+          selectedColor: Theme.of(context).colorScheme.primaryContainer,
+          checkmarkColor: Theme.of(context).colorScheme.onPrimaryContainer,
+          labelStyle: TextStyle(
+            color: isSelected
+                ? Theme.of(context).colorScheme.onPrimaryContainer
+                : Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(
+              color: isSelected ? Colors.transparent : Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
+            ),
+          ),
+          showCheckmark: false,
+        );
+      }
     );
   }
 }
