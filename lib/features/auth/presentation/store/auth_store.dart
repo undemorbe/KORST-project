@@ -1,5 +1,6 @@
 import 'package:mobx/mobx.dart';
 import '../../domain/repositories/auth_repository.dart';
+import '../../domain/entities/user_entity.dart';
 
 part 'auth_store.g.dart';
 
@@ -18,7 +19,7 @@ abstract class _AuthStore with Store {
   bool isLoggedIn = false;
 
   @observable
-  Map<String, String?> userProfile = {};
+  UserEntity? userProfile;
 
   @observable
   String? errorMessage;
@@ -40,6 +41,7 @@ abstract class _AuthStore with Store {
       isLoading = false;
     }
   }
+
 
   @action
   Future<void> sendOtp(String phone) async {
@@ -90,9 +92,23 @@ abstract class _AuthStore with Store {
   }
 
   @action
+  Future<void> updateProfile(UserEntity user) async {
+    isLoading = true;
+    errorMessage = null;
+    try {
+      await _authRepository.updateProfile(user);
+      userProfile = user;
+    } catch (e) {
+      errorMessage = e.toString();
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  @action
   Future<void> logout() async {
     await _authRepository.logout();
     isLoggedIn = false;
-    userProfile = {};
+    userProfile = null;
   }
 }

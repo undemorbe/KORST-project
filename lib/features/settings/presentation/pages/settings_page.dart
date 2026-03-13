@@ -26,6 +26,15 @@ class SettingsPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const ProfileBanner(),
+            const SizedBox(height: 16),
+            
+            OutlinedButton(
+              onPressed: () {
+                context.push('/edit-profile');
+              },
+              child: const Text('Редактировать профиль'),
+            ),
+            
             const SizedBox(height: 24),
             
             // Theme Switcher

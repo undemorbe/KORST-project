@@ -1,7 +1,8 @@
 import 'package:mobx/mobx.dart';
 import '../../domain/entities/service_entity.dart';
 import '../../domain/entities/service_category.dart';
-import '../../domain/usecases/get_services.dart';
+import '../../domain/entities/review_entity.dart';
+import '../../domain/repositories/service_repository.dart';
 
 part 'service_store.g.dart';
 
@@ -9,9 +10,9 @@ part 'service_store.g.dart';
 class ServiceStore = _ServiceStore with _$ServiceStore;
 
 abstract class _ServiceStore with Store {
-  final GetServices _getServices;
+  final ServiceRepository _serviceRepository;
 
-  _ServiceStore(this._getServices);
+  _ServiceStore(this._serviceRepository);
 
   @observable
   ObservableList<ServiceEntity> services = ObservableList<ServiceEntity>();
@@ -42,8 +43,36 @@ abstract class _ServiceStore with Store {
     isLoading = true;
     errorMessage = null;
     try {
-      final result = await _getServices();
+      final result = await _serviceRepository.getServices();
       services = ObservableList.of(result);
+    } catch (e) {
+      errorMessage = e.toString();
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  @action
+  Future<void> createService(ServiceEntity service) async {
+    isLoading = true;
+    errorMessage = null;
+    try {
+      await _serviceRepository.createService(service);
+      await loadServices();
+    } catch (e) {
+      errorMessage = e.toString();
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  @action
+  Future<void> addReview(String serviceId, ReviewEntity review) async {
+    isLoading = true;
+    errorMessage = null;
+    try {
+      await _serviceRepository.addReview(serviceId, review);
+      await loadServices();
     } catch (e) {
       errorMessage = e.toString();
     } finally {

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../features/services/presentation/pages/create_service_page.dart';
+import '../../features/settings/presentation/pages/edit_profile_page.dart';
 import '../../features/auth/presentation/pages/onboarding_page.dart';
 import '../../features/auth/presentation/pages/phone_number_page.dart';
 import '../../features/auth/presentation/pages/otp_page.dart';
@@ -97,6 +99,16 @@ class AppRouter {
           final service = state.extra as ServiceEntity;
           return ServiceDetailsPage(service: service);
         },
+      ),
+      GoRoute(
+        path: '/create-service',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const CreateServicePage(),
+      ),
+      GoRoute(
+        path: '/edit-profile',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const EditProfilePage(),
       ),
     ],
   );
