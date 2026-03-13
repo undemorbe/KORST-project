@@ -2,7 +2,6 @@ import 'package:get_it/get_it.dart';
 import '../../core/storage/local_storage.dart';
 import '../../features/services/data/repositories/service_repository_impl.dart';
 import '../../features/services/domain/repositories/service_repository.dart';
-import '../../features/services/domain/usecases/get_services.dart';
 import '../../features/services/presentation/store/service_store.dart';
 import '../../features/settings/presentation/store/settings_store.dart';
 import '../../features/favorites/presentation/store/favorites_store.dart';
@@ -25,7 +24,7 @@ Future<void> init() async {
 
   // Features - Services
   sl.registerLazySingleton<ServiceRepository>(() => ServiceRepositoryImpl());
-  sl.registerLazySingleton(() => GetServices(sl()));
+  // sl.registerLazySingleton(() => GetServices(sl())); // Removed as we use Repo directly in Store
   sl.registerLazySingleton(() => ServiceStore(sl()));
 
   // Features - Settings

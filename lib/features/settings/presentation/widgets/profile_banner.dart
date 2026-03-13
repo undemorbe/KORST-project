@@ -17,9 +17,11 @@ class ProfileBanner extends StatelessWidget {
         }
 
         final profile = authStore.userProfile;
-        final name = profile['name'] ?? 'Пользователь';
-        final phone = profile['phone'] ?? '';
-        final photoUrl = profile['photoUrl'];
+        if (profile == null) return const SizedBox.shrink();
+
+        final name = profile.name;
+        final phone = profile.phone;
+        final photoUrl = profile.photoUrl;
 
         return Container(
           padding: const EdgeInsets.all(16),

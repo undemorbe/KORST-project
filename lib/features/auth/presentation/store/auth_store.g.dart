@@ -41,6 +41,22 @@ mixin _$AuthStore on _AuthStore, Store {
     });
   }
 
+  late final _$userProfileAtom =
+      Atom(name: '_AuthStore.userProfile', context: context);
+
+  @override
+  UserEntity? get userProfile {
+    _$userProfileAtom.reportRead();
+    return super.userProfile;
+  }
+
+  @override
+  set userProfile(UserEntity? value) {
+    _$userProfileAtom.reportWrite(value, super.userProfile, () {
+      super.userProfile = value;
+    });
+  }
+
   late final _$errorMessageAtom =
       Atom(name: '_AuthStore.errorMessage', context: context);
 
@@ -106,6 +122,14 @@ mixin _$AuthStore on _AuthStore, Store {
         .run(() => super.register(name, photoUrl, contacts));
   }
 
+  late final _$updateProfileAsyncAction =
+      AsyncAction('_AuthStore.updateProfile', context: context);
+
+  @override
+  Future<void> updateProfile(UserEntity user) {
+    return _$updateProfileAsyncAction.run(() => super.updateProfile(user));
+  }
+
   late final _$logoutAsyncAction =
       AsyncAction('_AuthStore.logout', context: context);
 
@@ -119,6 +143,7 @@ mixin _$AuthStore on _AuthStore, Store {
     return '''
 isLoading: ${isLoading},
 isLoggedIn: ${isLoggedIn},
+userProfile: ${userProfile},
 errorMessage: ${errorMessage},
 phoneNumber: ${phoneNumber}
     ''';
