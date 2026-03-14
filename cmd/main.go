@@ -65,7 +65,7 @@ func main() {
 
 	authorize := api.Group("/authorize")
 	{
-		authorize.GET("/is-user", authHandler.CheckUser)
+		authorize.GET("/check-user", authHandler.CheckUser)
 		authorize.POST("/register", authHandler.RegisterUser)
 		authorize.GET("/refresh", authHandler.RefreshTokens)
 

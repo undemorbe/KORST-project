@@ -113,7 +113,7 @@ func (s *OTPService) VerifyOTP(rawPhone string, otp string) (
 		return responses.VerifyOTPResponse{}, err
 	}
 
-	status := "registered"
+	var status string
 	if user == nil {
 		newUser := &entities.User{
 			Phone: phone,
@@ -125,6 +125,9 @@ func (s *OTPService) VerifyOTP(rawPhone string, otp string) (
 		}
 
 		status = "notRegistered"
+
+	} else {
+		status = user.Status
 	}
 
 	accessToken, refreshToken, err := s.tokenService.CreateTokens(user)

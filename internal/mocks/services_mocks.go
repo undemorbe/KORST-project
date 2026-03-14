@@ -65,3 +65,7 @@ func (m *MockTokenService) DecodeAccessToken(rawToken string) (uuid.UUID, error)
 	args := m.Called(rawToken)
 	return args.Get(0).(uuid.UUID), args.Error(1)
 }
+
+// MockCardService - структура для передачи в тестах
+// фиктивной структуры сервиса CardService
+type MockCardService struct{ mock.Mock }

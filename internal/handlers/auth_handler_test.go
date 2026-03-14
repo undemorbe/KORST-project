@@ -27,7 +27,7 @@ func TestCheckUser(t *testing.T) {
 
 	router := gin.New()
 	router.Use(middleware.ErrorHandler())
-	router.POST("/is-user", authHandler.CheckUser)
+	router.POST("/check-user", authHandler.CheckUser)
 
 	body := `{
 		"phone": "+79123456789"
@@ -41,7 +41,7 @@ func TestCheckUser(t *testing.T) {
 
 	req := httptest.NewRequest(
 		http.MethodPost,
-		"/is-user",
+		"/check-user",
 		bytes.NewBufferString(body),
 	)
 	req.Header.Set("Content-Type", "application/json")

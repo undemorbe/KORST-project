@@ -44,3 +44,8 @@ type TokenService interface {
 	// проверяет его валидность
 	DecodeAccessToken(rawToken string) (uuid.UUID, error)
 }
+
+// CardService содержит порты для методов просмотра,
+// создания и обновления карточек
+type CardService interface {
+}

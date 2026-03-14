@@ -15,6 +15,7 @@ type User struct {
 
 	Name    string
 	Surname string
+	Status  string `gorm:"not null"`
 
 	RefreshToken *RefreshToken `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
 	Profile      *Profile      `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
@@ -25,6 +26,13 @@ type User struct {
 func (u *User) BeforeCreate(db *gorm.DB) error {
 	if u.ID == uuid.Nil {
 		u.ID = uuid.New()
+	}
+	if len(u.Status) == 0 {
+		if len(u.Name) == 0 || len(u.Surname) == 0 {
+			u.Status = "notRegistered"
+		} else {
+			u.Status = "user"
+		}
 	}
 	return nil
 }

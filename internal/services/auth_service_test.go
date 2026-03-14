@@ -26,6 +26,7 @@ func TestCheckRegisteredUser(t *testing.T) {
 		Phone:   rawPhone,
 		Name:    "Олег",
 		Surname: "Олегович",
+		Status:  "user",
 	}
 
 	mockUserRepo.On("FindByPhone", rawPhone).Return(user, nil)
@@ -33,7 +34,7 @@ func TestCheckRegisteredUser(t *testing.T) {
 	response, err := authService.CheckUser(rawPhone)
 
 	require.NoError(t, err)
-	require.Equal(t, response.Status, "registered")
+	require.Equal(t, response.Status, "user")
 }
 
 // TestCheckRegisteredUser проверяет проверку статуса
@@ -47,7 +48,8 @@ func TestCheckNotRegisteredUser(t *testing.T) {
 
 	rawPhone := "+79121111111"
 	user := &entities.User{
-		Phone: rawPhone,
+		Phone:  rawPhone,
+		Status: "notRegistered",
 	}
 
 	mockUserRepo.On("FindByPhone", rawPhone).Return(user, nil)

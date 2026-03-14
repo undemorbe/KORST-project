@@ -48,9 +48,12 @@ func (s *AuthService) CheckUser(rawPhone string) (
 			err
 	}
 
-	status := s.getUserStatus(user)
-	return responses.IsUserResponse{Status: status},
-		nil
+	status := "notFound"
+	if user != nil {
+		status = user.Status
+	}
+
+	return responses.IsUserResponse{Status: status}, nil
 }
 
 // RegisterUser добавляет пользователя в БД или дополняет информацию о нем
@@ -84,6 +87,7 @@ func (s *AuthService) RegisterUser(req requests.RegisterRequest) error {
 
 	user.Name = req.Name
 	user.Surname = req.Surname
+	user.Status = "user"
 
 	err = s.userRepo.UpdateUser(user)
 	return err
@@ -124,16 +128,4 @@ func (s *AuthService) GetNewTokens(
 		RefreshToken: refreshTokenStr,
 	}
 	return response, err
-}
-
-// GetUserStatus проверяет, зарегистрирован ли пользователь
-func (s *AuthService) getUserStatus(user *entities.User) string {
-	switch {
-	case user == nil:
-		return "notFound"
-	case len(user.Name) == 0 || len(user.Surname) == 0:
-		return "notRegistered"
-	default:
-		return "registered"
-	}
 }
