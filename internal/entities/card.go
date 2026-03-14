@@ -21,7 +21,7 @@ type Card struct {
 	Price    float64 `gorm:"not null"`
 	Currency string  `gorm:"not null"`
 	Type     string
-	Tags     []string
+	Tags     []string `gorm:"type:text[]"`
 
 	CreatedAt time.Time `gorm:"not null"`
 	UpdatedAt time.Time `gorm:"not null"`
