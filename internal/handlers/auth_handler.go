@@ -3,7 +3,6 @@ package handlers
 
 import (
 	"korst-backend/internal/dto/requests"
-	"korst-backend/internal/dto/responses"
 	"korst-backend/internal/errors"
 	"korst-backend/internal/infrastructure/logger"
 	"korst-backend/internal/ports"
@@ -12,7 +11,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// AuthHandler - объект, содержащий методы для обработки Api запросов
+// AuthHandler - объект, содержащий методы для обработки
+// Api запросов, связанных с авторизацией
 type AuthHandler struct {
 	authService ports.AuthService
 }
@@ -44,27 +44,6 @@ func (h *AuthHandler) CheckUser(c *gin.Context) {
 
 	logger.Log.Info("Проверка статуса пользователя успешно выполнена")
 	c.JSON(http.StatusOK, response)
-}
-
-// RegisterUser обрабатывает запрос регистрации пользователя
-func (h *AuthHandler) RegisterUser(c *gin.Context) {
-	var req requests.RegisterRequest
-
-	err := c.ShouldBindJSON(&req)
-	if err != nil {
-		c.Error(errors.ErrorInvalidInput)
-		return
-	}
-
-	err = h.authService.RegisterUser(req)
-
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	logger.Log.Info("Пользователь успешно зарегистрирован")
-	c.JSON(http.StatusOK, responses.GenericResponse{})
 }
 
 // RefreshTokens обрабатывает запрос обновления токенов

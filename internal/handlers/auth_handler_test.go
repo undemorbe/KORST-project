@@ -13,7 +13,6 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -60,38 +59,38 @@ func TestCheckUser(t *testing.T) {
 }
 
 // TestRegisterUser проверяет работу хэндлера RegisterUser
-func TestRegisterUser(t *testing.T) {
-	mockAuthService := new(mocks.MockAuthService)
+// func TestRegisterUser(t *testing.T) {
+// 	mockAuthService := new(mocks.MockAuthService)
 
-	authHandler := NewAuthHandler(mockAuthService)
+// 	authHandler := NewAuthHandler(mockAuthService)
 
-	router := gin.New()
-	router.Use(middleware.ErrorHandler())
-	router.POST("/register", authHandler.RegisterUser)
+// 	router := gin.New()
+// 	router.Use(middleware.ErrorHandler())
+// 	router.POST("/register", authHandler.RegisterUser)
 
-	body := `{
-		"phone": "+79123456789",
-		"name": "Олег",
-		"surname": "Олегович"
-	}`
+// 	body := `{
+// 		"phone": "+79123456789",
+// 		"name": "Олег",
+// 		"surname": "Олегович"
+// 	}`
 
-	mockAuthService.
-		On("RegisterUser", mock.AnythingOfType("requests.RegisterRequest")).
-		Return(nil)
+// 	mockAuthService.
+// 		On("RegisterUser", mock.AnythingOfType("requests.RegisterRequest")).
+// 		Return(nil)
 
-	req := httptest.NewRequest(
-		http.MethodPost,
-		"/register",
-		bytes.NewBufferString(body),
-	)
-	req.Header.Set("Content-Type", "application/json")
+// 	req := httptest.NewRequest(
+// 		http.MethodPost,
+// 		"/register",
+// 		bytes.NewBufferString(body),
+// 	)
+// 	req.Header.Set("Content-Type", "application/json")
 
-	writer := httptest.NewRecorder()
+// 	writer := httptest.NewRecorder()
 
-	router.ServeHTTP(writer, req)
+// 	router.ServeHTTP(writer, req)
 
-	require.Equal(t, http.StatusOK, writer.Code)
-}
+// 	require.Equal(t, http.StatusOK, writer.Code)
+// }
 
 // TestRefreshTokens проверяет работу хэндлера RefreshTokens
 func TestRefreshTokens(t *testing.T) {

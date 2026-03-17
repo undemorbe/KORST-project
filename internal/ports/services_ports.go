@@ -27,9 +27,6 @@ type AuthService interface {
 	CheckUser(rawPhone string) (
 		responses.IsUserResponse, error)
 
-	// RegisterUser добавляет пользователя в БД или дополняет информацию о нем
-	RegisterUser(req requests.RegisterRequest) error
-
 	// GetNewTokens получает новые access и refresh токены для пользователя
 	GetNewTokens(refreshTokenStr string) (responses.RefreshResponse, error)
 }
@@ -48,4 +45,13 @@ type TokenService interface {
 // CardService содержит порты для методов просмотра,
 // создания и обновления карточек
 type CardService interface {
+}
+
+// UserService содержит порты для методов, необходимыз для
+// работы с пользователем и его профилем
+type UserService interface {
+	// UpdateUserInfo обновляет (или дополняет) информацию
+	// о каком-то конкретном пользователе
+	UpdateUserInfo(userID uuid.UUID,
+		req *requests.UpdateUserRequest) error
 }

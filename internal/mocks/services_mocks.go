@@ -38,12 +38,6 @@ func (m *MockAuthService) CheckUser(rawPhone string) (responses.IsUserResponse, 
 	return args.Get(0).(responses.IsUserResponse), args.Error(1)
 }
 
-// RegisterUser задает фиктивную реализацию регистрации пользователя
-func (m *MockAuthService) RegisterUser(req requests.RegisterRequest) error {
-	args := m.Called(req)
-	return args.Error(0)
-}
-
 // GetNewTokens задает фиктивную реализацию генерации токенов
 func (m *MockAuthService) GetNewTokens(refreshTokenStr string) (responses.RefreshResponse, error) {
 	args := m.Called(refreshTokenStr)
@@ -69,3 +63,13 @@ func (m *MockTokenService) DecodeAccessToken(rawToken string) (uuid.UUID, error)
 // MockCardService - структура для передачи в тестах
 // фиктивной структуры сервиса CardService
 type MockCardService struct{ mock.Mock }
+
+// MockCardService - структура для передачи в тестах
+// фиктивной структуры сервиса UserService
+type MockUserService struct{ mock.Mock }
+
+// UpdateUserInfo задает фиктивную реализацию обновления данных пользователя
+func (m *MockUserService) UpdateUserInfo(userID uuid.UUID, req *requests.UpdateUserRequest) error {
+	args := m.Called(req)
+	return args.Error(0)
+}

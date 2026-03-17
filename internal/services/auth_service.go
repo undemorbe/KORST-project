@@ -2,9 +2,7 @@
 package services
 
 import (
-	"korst-backend/internal/dto/requests"
 	"korst-backend/internal/dto/responses"
-	"korst-backend/internal/entities"
 	"korst-backend/internal/errors"
 	"korst-backend/internal/infrastructure/logger"
 	"korst-backend/internal/ports"
@@ -54,43 +52,6 @@ func (s *AuthService) CheckUser(rawPhone string) (
 	}
 
 	return responses.IsUserResponse{Status: status}, nil
-}
-
-// RegisterUser добавляет пользователя в БД или дополняет информацию о нем
-func (s *AuthService) RegisterUser(req requests.RegisterRequest) error {
-
-	// TODO: полностью переработать регистрацию
-
-	num, err := phonenumbers.Parse(req.Phone, "RU")
-	if err != nil || !phonenumbers.IsValidNumber(num) {
-		return errors.ErrorInvalidPhone
-	}
-
-	phone := phonenumbers.Format(num, phonenumbers.E164)
-
-	user, err := s.userRepo.FindByPhone(phone)
-
-	if err != nil {
-		return errors.ErrorInternal
-	}
-
-	if user == nil {
-		newUser := &entities.User{
-			Phone:   req.Phone,
-			Name:    req.Name,
-			Surname: req.Surname,
-		}
-
-		err = s.userRepo.CreateUser(newUser)
-		return err
-	}
-
-	user.Name = req.Name
-	user.Surname = req.Surname
-	user.Status = "user"
-
-	err = s.userRepo.UpdateUser(user)
-	return err
 }
 
 // GetNewTokens получает новые access и refresh токены для пользователя

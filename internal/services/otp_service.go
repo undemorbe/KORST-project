@@ -78,6 +78,8 @@ func (s *OTPService) SendOTP(rawPhone string) error {
 func (s *OTPService) VerifyOTP(rawPhone string, otp string) (
 	responses.VerifyOTPResponse, error) {
 
+	// TODO: добавить создание профиля при подтверждении кода
+
 	num, err := phonenumbers.Parse(rawPhone, "RU")
 	if err != nil || !phonenumbers.IsValidNumber(num) {
 		return responses.VerifyOTPResponse{},
@@ -115,11 +117,11 @@ func (s *OTPService) VerifyOTP(rawPhone string, otp string) (
 
 	var status string
 	if user == nil {
-		newUser := &entities.User{
+		user = &entities.User{
 			Phone: phone,
 		}
 
-		err := s.userRepo.CreateUser(newUser)
+		err := s.userRepo.CreateUser(user)
 		if err != nil {
 			return responses.VerifyOTPResponse{}, err
 		}

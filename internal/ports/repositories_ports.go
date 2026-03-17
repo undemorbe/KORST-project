@@ -62,3 +62,13 @@ type CardRepository interface {
 	// UpdateCard изменяет данные карточки в БД
 	UpdateCard(card *entities.Card) error
 }
+
+// ProfileRepository содержит порты для взаимодействия с
+// профилем пользователя в БД
+type ProfileRepository interface {
+	// CreateProfile создает новый объект профиля в БД
+	CreateProfile(profile *entities.Profile) error
+
+	// UpdateProfile обновляет данные профиля пользователя в БД
+	UpdateProfile(profile *entities.Profile) error
+}

@@ -2,12 +2,10 @@
 package services
 
 import (
-	"korst-backend/internal/dto/requests"
 	"korst-backend/internal/entities"
 	"korst-backend/internal/mocks"
 	"testing"
 
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -77,78 +75,4 @@ func TestCheckNotFoundUser(t *testing.T) {
 
 	require.NoError(t, err)
 	require.Equal(t, response.Status, "notFound")
-}
-
-// TestRegisterExistingUser проверяет дополнения
-// информации о существующем пользователе
-func TestRegisterExistingUser(t *testing.T) {
-	mockUserRepo := &mocks.MockUserRepo{}
-	mockRefreshTokenRepo := &mocks.MockRefreshTokenRepo{}
-	mockTokenService := &mocks.MockTokenService{}
-
-	authService := NewAuthService(mockUserRepo, mockRefreshTokenRepo, mockTokenService)
-
-	rawPhone := "+79123456789"
-	name := "Олег"
-	surname := "Олегович"
-
-	user := &entities.User{
-		Phone: rawPhone,
-	}
-
-	req := requests.RegisterRequest{
-		Name:    name,
-		Surname: surname,
-		Phone:   rawPhone,
-	}
-
-	mockUserRepo.On("FindByPhone", rawPhone).Return(user, nil)
-
-	mockUserRepo.
-		On("CreateUser", mock.AnythingOfType("*entities.User")).
-		Return(nil)
-
-	mockUserRepo.
-		On("UpdateUser", mock.AnythingOfType("*entities.User")).
-		Return(nil)
-
-	err := authService.RegisterUser(req)
-
-	require.NoError(t, err)
-	require.Equal(t, user.Name, name)
-	require.Equal(t, user.Surname, surname)
-}
-
-// TestRegisterNewUser проверяет регистрацию
-// нового пользователя
-func TestRegisterNewUser(t *testing.T) {
-	mockUserRepo := &mocks.MockUserRepo{}
-	mockRefreshTokenRepo := &mocks.MockRefreshTokenRepo{}
-	mockTokenService := &mocks.MockTokenService{}
-
-	authService := NewAuthService(mockUserRepo, mockRefreshTokenRepo, mockTokenService)
-
-	rawPhone := "+79123456789"
-	name := "Олег"
-	surname := "Олегович"
-
-	req := requests.RegisterRequest{
-		Name:    surname,
-		Surname: name,
-		Phone:   rawPhone,
-	}
-
-	mockUserRepo.On("FindByPhone", rawPhone).Return(nil, nil)
-
-	mockUserRepo.
-		On("CreateUser", mock.AnythingOfType("*entities.User")).
-		Return(nil)
-
-	mockUserRepo.
-		On("UpdateUser", mock.AnythingOfType("*entities.User")).
-		Return(nil)
-
-	err := authService.RegisterUser(req)
-
-	require.NoError(t, err)
 }

@@ -109,10 +109,10 @@ func (m *MockRefreshTokenRepo) DeleteByUserID(userID uuid.UUID) error {
 
 // MockCardRepository - структура для передачи в тестах
 // фиктивной структуры репозитория CardRepository
-type MockCardRepository struct{ mock.Mock }
+type MockCardRepo struct{ mock.Mock }
 
 // FindByID задает фиктивную реализацию поиска карточки по ID
-func (m *MockCardRepository) FindByID(cardID uuid.UUID) (*entities.Card, error) {
+func (m *MockCardRepo) FindByID(cardID uuid.UUID) (*entities.Card, error) {
 	args := m.Called(cardID)
 
 	if args.Get(0) == nil {
@@ -123,13 +123,29 @@ func (m *MockCardRepository) FindByID(cardID uuid.UUID) (*entities.Card, error) 
 }
 
 // CreateCard задает фиктивную реализацию создания сущности карточки
-func (m *MockCardRepository) CreateCard(card *entities.Card) error {
+func (m *MockCardRepo) CreateCard(card *entities.Card) error {
 	args := m.Called(card)
 	return args.Error(0)
 }
 
 // UpdateCard задает фиктивную реализацию обновления карточки в БД
-func (m *MockCardRepository) UpdateCard(card *entities.Card) error {
+func (m *MockCardRepo) UpdateCard(card *entities.Card) error {
 	args := m.Called(card)
+	return args.Error(0)
+}
+
+// MockCardRepository - структура для передачи в тестах
+// фиктивной структуры репозитория ProfileRepository
+type MockProfileRepo struct{ mock.Mock }
+
+// CreateProfile задает фиктивную реализацию обновления профиля пользователя в БД
+func (m *MockProfileRepo) CreateProfile(profile *entities.Profile) error {
+	args := m.Called(profile)
+	return args.Error(0)
+}
+
+// UpdateProfile задает фиктивную реализацию обновления профиля пользователя в БД
+func (m *MockProfileRepo) UpdateProfile(profile *entities.Profile) error {
+	args := m.Called(profile)
 	return args.Error(0)
 }
