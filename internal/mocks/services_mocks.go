@@ -70,6 +70,6 @@ type MockUserService struct{ mock.Mock }
 
 // UpdateUserInfo задает фиктивную реализацию обновления данных пользователя
 func (m *MockUserService) UpdateUserInfo(userID uuid.UUID, req *requests.UpdateUserRequest) error {
-	args := m.Called(req)
+	args := m.Called(userID, req)
 	return args.Error(0)
 }

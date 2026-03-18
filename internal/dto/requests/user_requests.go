@@ -4,16 +4,16 @@ package requests
 // UpdateRequest - структура для запроса
 // на обновление профиля пользователя
 type UpdateUserRequest struct {
-	Name        *string `json:"name" binding:"required"`
-	Surname     *string `json:"surname" binding:"required"`
-	Description *string `json:"description" binding:"required"`
+	Name        *string `json:"name"`
+	Surname     *string `json:"surname"`
+	Description *string `json:"description"`
 
-	Contacts *Contacts `json:"contacts" binding:"required"`
+	Contacts *Contacts `json:"contacts"`
 }
 
 type Contacts struct {
-	Email    *string `json:"email" binding:"required"`
-	Telegram *string `json:"telegram" binding:"required"`
+	Email    *string `json:"email"`
+	Telegram *string `json:"telegram"`
 
-	Others *map[string]string `json:"others" binding:"required"`
+	Others *map[string]string `json:"others"`
 }

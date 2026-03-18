@@ -18,6 +18,7 @@ import (
 
 // TestSendOTP проверяет работу хэндлера SendOTP
 func TestSendOTP(t *testing.T) {
+	gin.SetMode(gin.TestMode)
 	logger.InitLoggerTest()
 
 	mockOTPService := new(mocks.MockOTPService)

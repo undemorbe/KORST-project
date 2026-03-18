@@ -18,6 +18,7 @@ import (
 
 // TestCheckUser проверяет работу хэндлера CheckUser
 func TestCheckUser(t *testing.T) {
+	gin.SetMode(gin.TestMode)
 	logger.InitLoggerTest()
 
 	mockAuthService := new(mocks.MockAuthService)
@@ -57,40 +58,6 @@ func TestCheckUser(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "registered", response.Status)
 }
-
-// TestRegisterUser проверяет работу хэндлера RegisterUser
-// func TestRegisterUser(t *testing.T) {
-// 	mockAuthService := new(mocks.MockAuthService)
-
-// 	authHandler := NewAuthHandler(mockAuthService)
-
-// 	router := gin.New()
-// 	router.Use(middleware.ErrorHandler())
-// 	router.POST("/register", authHandler.RegisterUser)
-
-// 	body := `{
-// 		"phone": "+79123456789",
-// 		"name": "Олег",
-// 		"surname": "Олегович"
-// 	}`
-
-// 	mockAuthService.
-// 		On("RegisterUser", mock.AnythingOfType("requests.RegisterRequest")).
-// 		Return(nil)
-
-// 	req := httptest.NewRequest(
-// 		http.MethodPost,
-// 		"/register",
-// 		bytes.NewBufferString(body),
-// 	)
-// 	req.Header.Set("Content-Type", "application/json")
-
-// 	writer := httptest.NewRecorder()
-
-// 	router.ServeHTTP(writer, req)
-
-// 	require.Equal(t, http.StatusOK, writer.Code)
-// }
 
 // TestRefreshTokens проверяет работу хэндлера RefreshTokens
 func TestRefreshTokens(t *testing.T) {
