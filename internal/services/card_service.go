@@ -2,38 +2,59 @@
 package services
 
 import (
+	"korst-backend/internal/dto/requests"
 	"korst-backend/internal/dto/responses"
 	"korst-backend/internal/entities"
 	"korst-backend/internal/errors"
 	"korst-backend/internal/infrastructure/logger"
 	"korst-backend/internal/ports"
+	"time"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 )
 
 // CardService - объект, содержащий методы для просмотра,
 // создания и изменения карточек объявлений
 type CardService struct {
-	cardRepo     ports.CardRepository
-	userRepo     ports.UserRepository
-	tokenService ports.TokenService
+	cardRepo ports.CardRepository
+	userRepo ports.UserRepository
 }
 
-// NewCardRepository создает и возвращает новый объект CardService
-func NewCardRepository(
+// NewCardService создает и возвращает новый объект CardService
+func NewCardService(
 	cardRepo ports.CardRepository,
-	userRepo ports.UserRepository,
-	tokenService ports.TokenService) ports.CardService {
+	userRepo ports.UserRepository) ports.CardService {
 	return &CardService{
-		cardRepo:     cardRepo,
-		userRepo:     userRepo,
-		tokenService: tokenService,
+		cardRepo: cardRepo,
+		userRepo: userRepo,
 	}
+}
+
+// SaveCard сохраняет каторчку объявления, созданную пользователем
+func (s *CardService) SaveCard(userID uuid.UUID,
+	req *requests.SaveCardRequest) error {
+
+	newCard := entities.Card{
+		UserID: userID,
+		Name:   req.Name,
+
+		Price:    req.Price,
+		Currency: req.Currency,
+		Type:     req.Type,
+		Tags:     pq.StringArray(req.Tags),
+	}
+
+	if req.Description != nil {
+		newCard.Description = *req.Description
+	}
+
+	return s.cardRepo.CreateCard(&newCard)
 }
 
 // GetCards возвращает несколько сжатых карточек
 // с объявлениями для просмотра пользователями
-func (s *CardService) GetCards(page int) (
+func (s *CardService) GetCards(key time.Time) (
 	responses.GetCardsResponse, error) {
 
 	// TODO: нормально сделать пагинацию
@@ -93,12 +114,14 @@ func (s *CardService) getAuthor(userID uuid.UUID) (
 	}
 
 	if user == nil {
+		logger.Log.Warn("Автор карточки не был найден")
 		return &responses.Author{},
 			errors.ErrorUserNotFound
 	}
 
 	profile := user.Profile
 	if profile == nil {
+		logger.Log.Warn("Профиль автора не был найден")
 		return &responses.Author{},
 			errors.ErrorUserNotFound
 	}

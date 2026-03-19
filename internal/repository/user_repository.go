@@ -24,7 +24,10 @@ func NewUserRepository(db *gorm.DB) ports.UserRepository {
 func (r *userRepo) FindByID(userID uuid.UUID) (*entities.User, error) {
 	var user entities.User
 
-	err := r.db.First(&user, userID).Error
+	err := r.db.
+		Preload("Profile").
+		First(&user, userID).
+		Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
@@ -39,7 +42,11 @@ func (r *userRepo) FindByID(userID uuid.UUID) (*entities.User, error) {
 func (r *userRepo) FindByPhone(phone string) (*entities.User, error) {
 	var user entities.User
 
-	err := r.db.Where("phone = ?", phone).First(&user).Error
+	err := r.db.
+		Preload("Profile").
+		Where("phone = ?", phone).
+		First(&user).
+		Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil

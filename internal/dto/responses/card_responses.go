@@ -1,7 +1,11 @@
 // responses - пакет, содержащий структуры ответов на Api запросы
 package responses
 
-import "time"
+import (
+	"time"
+
+	"gorm.io/datatypes"
+)
 
 // GetCardsResponse - структура для ответа на запрос
 // просмотра карточек объявлений
@@ -68,5 +72,5 @@ type Contacts struct {
 	Email    string `json:"email"`
 	Telegram string `json:"telegram"`
 
-	Others map[string]string `json:"others"`
+	Others datatypes.JSONMap `json:"others"`
 }

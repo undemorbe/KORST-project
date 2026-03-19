@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
 
@@ -16,12 +17,12 @@ type Card struct {
 	UserID uuid.UUID `gorm:"type:uuid;uniqueIndex"`
 
 	Name        string `gorm:"not null"`
-	Description string
+	Description string `gorm:"default:''"`
 
 	Price    float64 `gorm:"not null"`
 	Currency string  `gorm:"not null"`
 	Type     string
-	Tags     []string `gorm:"type:text[]"`
+	Tags     pq.StringArray `gorm:"type:text[]"`
 
 	CreatedAt time.Time `gorm:"not null"`
 	UpdatedAt time.Time `gorm:"not null"`
@@ -33,7 +34,7 @@ func (c *Card) BeforeCreate(db *gorm.DB) error {
 		c.ID = uuid.New()
 	}
 	if c.Tags == nil {
-		c.Tags = []string{}
+		c.Tags = pq.StringArray{}
 	}
 	if c.CreatedAt.IsZero() {
 		c.CreatedAt = time.Now().UTC()

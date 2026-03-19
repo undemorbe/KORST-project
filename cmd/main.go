@@ -50,15 +50,21 @@ func main() {
 	userRepo := repositories.NewUserRepository(db)
 	otpRepo := repositories.NewOTPRepository(db)
 	refreshTokenRepo := repositories.NewRefreshTokenRepository(db)
+	cardRepo := repositories.NewCardRepository(db)
+	profileRepo := repositories.NewProfileRepository(db)
 
 	// Подключение сервисов
 	tokenService := services.NewTokenService(userRepo, refreshTokenRepo)
 	authService := services.NewAuthService(userRepo, refreshTokenRepo, tokenService)
 	otpService := services.NewOTPService(otpRepo, userRepo, tokenService)
+	cardService := services.NewCardService(cardRepo, userRepo)
+	userService := services.NewUserService(userRepo, profileRepo)
 
 	// Подключение хэндлеров
 	authHandler := handlers.NewAuthHandler(authService)
 	otpHandler := handlers.NewOTPHandler(otpService)
+	cardHandler := handlers.NewCardHandler(cardService, tokenService)
+	userHandler := handlers.NewUserHandler(userService, tokenService)
 
 	// Регистрация маршрутов
 	api := r.Group("/api")
@@ -70,6 +76,18 @@ func main() {
 
 		authorize.POST("/send-otp", otpHandler.SendOTP)
 		authorize.POST("/verify-otp", otpHandler.VerifyOTP)
+	}
+
+	cards := api.Group("/cards")
+	{
+		cards.POST("/save-card", cardHandler.SaveCard)
+		cards.GET("/get-cards", cardHandler.GetCards)
+		cards.GET("/card-info", cardHandler.GetCardInfo)
+	}
+
+	user := api.Group("/user")
+	{
+		user.POST("/update", userHandler.UpdateUserInfo)
 	}
 
 	// Запуск сервера

@@ -61,6 +61,8 @@ func (s *UserService) UpdateUserInfo(
 		profile.Description = *req.Description
 	}
 
+	user.Status = "user"
+
 	if req.Contacts != nil {
 		contacts := req.Contacts
 
@@ -74,6 +76,8 @@ func (s *UserService) UpdateUserInfo(
 			profile.OtherContacts = *contacts.Others
 		}
 	}
+
+	user.Profile = profile
 
 	err = s.profileRepo.UpdateProfile(profile)
 	if err != nil {

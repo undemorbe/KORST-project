@@ -5,6 +5,7 @@ import (
 	"korst-backend/internal/dto/requests"
 	"korst-backend/internal/dto/responses"
 	"korst-backend/internal/entities"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -45,6 +46,16 @@ type TokenService interface {
 // CardService содержит порты для методов просмотра,
 // создания и обновления карточек
 type CardService interface {
+	// SaveCard сохраняет каторчку объявления, созданную пользователем
+	SaveCard(userID uuid.UUID, req *requests.SaveCardRequest) error
+
+	// GetCards возвращает несколько сжатых карточек
+	// с объявлениями для просмотра пользователями
+	GetCards(key time.Time) (responses.GetCardsResponse, error)
+
+	// GetCardInfo возвращает подробную информацию
+	// об одной конкретной карточке объявления
+	GetCardInfo(cardID uuid.UUID) (responses.CardInfoResponse, error)
 }
 
 // UserService содержит порты для методов, необходимыз для

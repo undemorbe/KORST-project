@@ -4,8 +4,10 @@ package entities
 import (
 	"time"
 
-	"github.com/google/uuid"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
+
+	"github.com/google/uuid"
 )
 
 // Profile - структура профиля пользователя в БД.
@@ -20,7 +22,7 @@ type Profile struct {
 
 	Email         string
 	Telegram      string
-	OtherContacts map[string]string `gorm:"type:jsonb"`
+	OtherContacts datatypes.JSONMap `gorm:"type:jsonb"`
 
 	CreatedAt time.Time `gorm:"not null"`
 	UpdatedAt time.Time `gorm:"not null"`
