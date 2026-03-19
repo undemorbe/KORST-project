@@ -5,6 +5,7 @@ import (
 	"errors"
 	"korst-backend/internal/entities"
 	"korst-backend/internal/ports"
+	"time"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -33,6 +34,27 @@ func (r *cardRepo) FindByID(cardID uuid.UUID) (*entities.Card, error) {
 		return nil, err
 	}
 	return &card, nil
+}
+
+// FindСardsByTime находит заданное количество карточек,
+// которые больше ключа и отсортированны по времени.
+func (r *cardRepo) FindСardsByTime(key *time.Time,
+	limit int) ([]entities.Card, error) {
+
+	var cards []entities.Card
+
+	db := r.db.Order("updated_at DESC").Limit(limit)
+
+	if key != nil {
+		db = db.Where("updated_at < ?", *key)
+	}
+
+	err := db.Find(&cards).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return cards, nil
 }
 
 // CreateCard создает новый объект карточки объявления в БД

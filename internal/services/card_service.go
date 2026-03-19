@@ -8,6 +8,8 @@ import (
 	"korst-backend/internal/errors"
 	"korst-backend/internal/infrastructure/logger"
 	"korst-backend/internal/ports"
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -54,11 +56,36 @@ func (s *CardService) SaveCard(userID uuid.UUID,
 
 // GetCards возвращает несколько сжатых карточек
 // с объявлениями для просмотра пользователями
-func (s *CardService) GetCards(key time.Time) (
+func (s *CardService) GetCards(key *time.Time) (
 	responses.GetCardsResponse, error) {
 
-	// TODO: нормально сделать пагинацию
-	return responses.GetCardsResponse{}, nil
+	response := responses.GetCardsResponse{
+		Cards: []responses.CompressedCard{},
+	}
+
+	limit, err := strconv.Atoi(os.Getenv("CARD_LIMIT"))
+	if err != nil {
+		return responses.GetCardsResponse{},
+			errors.ErrorInternal
+	}
+
+	cards, err := s.cardRepo.FindСardsByTime(key, limit)
+	if err != nil {
+		return responses.GetCardsResponse{},
+			err
+	}
+
+	for i := 0; i < len(cards); i++ {
+		card, err := s.getCompressedCard(&cards[i])
+		if err != nil {
+			return responses.GetCardsResponse{},
+				err
+		}
+
+		response.Cards = append(response.Cards, card)
+	}
+
+	return response, nil
 }
 
 // GetCardInfo возвращает подробную информацию
@@ -104,6 +131,8 @@ func (s *CardService) GetCardInfo(cardID uuid.UUID) (
 	return response, nil
 }
 
+// getAuthor находит автора карточки и приводит его к
+// формату Author, необходимому для response
 func (s *CardService) getAuthor(userID uuid.UUID) (
 	*responses.Author, error) {
 
@@ -147,16 +176,17 @@ func (s *CardService) getAuthor(userID uuid.UUID) (
 	return author, nil
 }
 
-func (s *CardService) getCompressedCard(card entities.Card) (
-	*responses.CompressedCard, error) {
+// getCompressedCard приводит карточку объявления к формату CompressedCard
+func (s *CardService) getCompressedCard(card *entities.Card) (
+	responses.CompressedCard, error) {
 
 	author, err := s.getCompressedAuthor(card.UserID)
 	if err != nil {
 		logger.Log.Warn("Ошибка при получении сжатой карточки: ", err)
-		return &responses.CompressedCard{}, err
+		return responses.CompressedCard{}, err
 	}
 
-	compressedCard := &responses.CompressedCard{
+	compressedCard := responses.CompressedCard{
 		ID:   card.ID.String(),
 		Name: card.Name,
 
@@ -173,6 +203,8 @@ func (s *CardService) getCompressedCard(card entities.Card) (
 	return compressedCard, nil
 }
 
+// getCompressedAuthor приводит автора карточки к формату
+// CompressedAuthor, необходимому для response
 func (s *CardService) getCompressedAuthor(userID uuid.UUID) (
 	*responses.CompressedAuthor, error) {
 

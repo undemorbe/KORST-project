@@ -4,6 +4,7 @@ package mocks
 
 import (
 	"korst-backend/internal/entities"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
@@ -120,6 +121,12 @@ func (m *MockCardRepo) FindByID(cardID uuid.UUID) (*entities.Card, error) {
 	}
 
 	return args.Get(0).(*entities.Card), args.Error(1)
+}
+
+// FindСardsByTime задает фиктивную реализацию пагинации по времени
+func (m *MockCardRepo) FindСardsByTime(key *time.Time, limit int) ([]entities.Card, error) {
+	args := m.Called(key, limit)
+	return args.Get(0).([]entities.Card), args.Error(1)
 }
 
 // CreateCard задает фиктивную реализацию создания сущности карточки

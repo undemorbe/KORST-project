@@ -51,14 +51,14 @@ type CardService interface {
 
 	// GetCards возвращает несколько сжатых карточек
 	// с объявлениями для просмотра пользователями
-	GetCards(key time.Time) (responses.GetCardsResponse, error)
+	GetCards(key *time.Time) (responses.GetCardsResponse, error)
 
 	// GetCardInfo возвращает подробную информацию
 	// об одной конкретной карточке объявления
 	GetCardInfo(cardID uuid.UUID) (responses.CardInfoResponse, error)
 }
 
-// UserService содержит порты для методов, необходимыз для
+// UserService содержит порты для методов, необходимых для
 // работы с пользователем и его профилем
 type UserService interface {
 	// UpdateUserInfo обновляет (или дополняет) информацию

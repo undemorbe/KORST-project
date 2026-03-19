@@ -3,6 +3,7 @@ package ports
 
 import (
 	"korst-backend/internal/entities"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -55,6 +56,10 @@ type RefreshTokenRepository interface {
 type CardRepository interface {
 	// FindByID находит карточку по ее ID
 	FindByID(cardID uuid.UUID) (*entities.Card, error)
+
+	// FindСardsByTime находит заданное количество карточек,
+	// которые больше ключа и отсортированны по времени.
+	FindСardsByTime(key *time.Time, limit int) ([]entities.Card, error)
 
 	// CreateCard создает новый объект карточки объявления в БД
 	CreateCard(card *entities.Card) error

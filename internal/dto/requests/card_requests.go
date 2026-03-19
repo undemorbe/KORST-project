@@ -9,7 +9,7 @@ import (
 
 // GetCardsRequest - структура для запроса на просмотр карточек
 type GetCardsRequest struct {
-	Key time.Time `json:"key" binding:"required"`
+	Key *time.Time `json:"key"`
 }
 
 // CardInfoRequest - структура для запроса на просмотр конкретной карточки
