@@ -4,6 +4,7 @@ package services
 import (
 	"korst-backend/internal/entities"
 	"korst-backend/internal/errors"
+	"korst-backend/internal/infrastructure/logger"
 	"korst-backend/internal/mocks"
 	"testing"
 	"time"
@@ -12,8 +13,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestVerifyOtp gроверяет подтверждение корректного Otp
+// TestVerifyOtp проверяет подтверждение корректного Otp
 func TestVerifyOtp(t *testing.T) {
+	logger.InitLoggerTest()
+
 	mockOTPRepo := &mocks.MockOtpRepo{}
 	mockUserRepo := &mocks.MockUserRepo{}
 	mockTokenService := &mocks.MockTokenService{}

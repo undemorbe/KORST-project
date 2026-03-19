@@ -38,7 +38,7 @@ func (r *cardRepo) FindByID(cardID uuid.UUID) (*entities.Card, error) {
 
 // FindСardsByTime находит заданное количество карточек,
 // которые больше ключа и отсортированны по времени.
-func (r *cardRepo) FindСardsByTime(key *time.Time,
+func (r *cardRepo) FindCardsByTime(key *time.Time,
 	limit int) ([]entities.Card, error) {
 
 	var cards []entities.Card

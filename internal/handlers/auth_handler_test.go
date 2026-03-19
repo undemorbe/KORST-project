@@ -21,7 +21,7 @@ func TestCheckUser(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	logger.InitLoggerTest()
 
-	mockAuthService := new(mocks.MockAuthService)
+	mockAuthService := &mocks.MockAuthService{}
 
 	authHandler := NewAuthHandler(mockAuthService)
 

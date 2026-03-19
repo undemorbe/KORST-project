@@ -124,7 +124,7 @@ func (m *MockCardRepo) FindByID(cardID uuid.UUID) (*entities.Card, error) {
 }
 
 // FindСardsByTime задает фиктивную реализацию пагинации по времени
-func (m *MockCardRepo) FindСardsByTime(key *time.Time, limit int) ([]entities.Card, error) {
+func (m *MockCardRepo) FindCardsByTime(key *time.Time, limit int) ([]entities.Card, error) {
 	args := m.Called(key, limit)
 	return args.Get(0).([]entities.Card), args.Error(1)
 }

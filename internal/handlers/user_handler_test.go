@@ -21,8 +21,8 @@ func TestUpdateUser(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	logger.InitLoggerTest()
 
-	mockUserService := new(mocks.MockUserService)
-	mockTokenService := new(mocks.MockTokenService)
+	mockUserService := &mocks.MockUserService{}
+	mockTokenService := &mocks.MockTokenService{}
 
 	userHandler := NewUserHandler(mockUserService, mockTokenService)
 

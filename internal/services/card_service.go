@@ -69,13 +69,13 @@ func (s *CardService) GetCards(key *time.Time) (
 			errors.ErrorInternal
 	}
 
-	cards, err := s.cardRepo.FindСardsByTime(key, limit)
+	cards, err := s.cardRepo.FindCardsByTime(key, limit)
 	if err != nil {
 		return responses.GetCardsResponse{},
 			err
 	}
 
-	for i := 0; i < len(cards); i++ {
+	for i := range cards {
 		card, err := s.getCompressedCard(&cards[i])
 		if err != nil {
 			return responses.GetCardsResponse{},

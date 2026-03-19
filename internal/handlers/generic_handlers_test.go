@@ -24,7 +24,7 @@ func TestInvalidRequest(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	logger.InitLoggerTest()
 
-	mockOTPService := new(mocks.MockOTPService)
+	mockOTPService := &mocks.MockOTPService{}
 
 	otpHandler := NewOTPHandler(mockOTPService)
 
