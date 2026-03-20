@@ -198,6 +198,7 @@ func (s *CardService) getCompressedCard(card *entities.Card) (
 
 		Tags:      card.Tags,
 		CreatedAt: card.CreatedAt,
+		UpdatedAt: card.UpdatedAt,
 	}
 
 	return compressedCard, nil

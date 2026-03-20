@@ -27,6 +27,7 @@ type CompressedCard struct {
 	Tags []string `json:"tags"`
 
 	CreatedAt time.Time `json:"created"`
+	UpdatedAt time.Time `json:"updated"`
 }
 
 // CompressedAuthor - структура с краткой информацией об авторе карточки
