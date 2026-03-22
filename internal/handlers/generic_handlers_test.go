@@ -21,9 +21,10 @@ import (
 // TestInvalidRequest проверяет работу хэндлеров
 // (на примере одного) при некорректном запросе
 func TestInvalidRequest(t *testing.T) {
+	gin.SetMode(gin.TestMode)
 	logger.InitLoggerTest()
 
-	mockOTPService := new(mocks.MockOTPService)
+	mockOTPService := &mocks.MockOTPService{}
 
 	otpHandler := NewOTPHandler(mockOTPService)
 

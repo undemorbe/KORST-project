@@ -3,6 +3,7 @@ package ports
 
 import (
 	"korst-backend/internal/entities"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -29,6 +30,9 @@ type OTPRepository interface {
 
 	// CreateOTP создает новый объект Otp в БД
 	CreateOTP(otp *entities.Otp) error
+
+	// UpdateOTP изменяет данные для сущности OTP
+	UpdateOTP(otp *entities.Otp) error
 }
 
 // RefreshTokenRepository содержит порты для взаимодействия с
@@ -45,4 +49,31 @@ type RefreshTokenRepository interface {
 
 	// DeleteByUserID удаляет все refresh-токены c определенным userID
 	DeleteByUserID(userID uuid.UUID) error
+}
+
+// CardRepository содержит порты для взаимодействия с
+// карточками объявлений с услугами/товарами в БД
+type CardRepository interface {
+	// FindByID находит карточку по ее ID
+	FindByID(cardID uuid.UUID) (*entities.Card, error)
+
+	// FindСardsByTime находит заданное количество карточек,
+	// которые больше ключа и отсортированны по времени.
+	FindCardsByTime(key *time.Time, limit int) ([]entities.Card, error)
+
+	// CreateCard создает новый объект карточки объявления в БД
+	CreateCard(card *entities.Card) error
+
+	// UpdateCard изменяет данные карточки в БД
+	UpdateCard(card *entities.Card) error
+}
+
+// ProfileRepository содержит порты для взаимодействия с
+// профилем пользователя в БД
+type ProfileRepository interface {
+	// CreateProfile создает новый объект профиля в БД
+	CreateProfile(profile *entities.Profile) error
+
+	// UpdateProfile обновляет данные профиля пользователя в БД
+	UpdateProfile(profile *entities.Profile) error
 }

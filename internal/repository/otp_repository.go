@@ -39,3 +39,8 @@ func (r *otpRepo) FindByPhone(phone string) (*entities.Otp, error) {
 func (r *otpRepo) CreateOTP(otp *entities.Otp) error {
 	return r.db.Create(otp).Error
 }
+
+// UpdateOTP изменяет данные для сущности OTP
+func (r *otpRepo) UpdateOTP(otp *entities.Otp) error {
+	return r.db.Save(otp).Error
+}

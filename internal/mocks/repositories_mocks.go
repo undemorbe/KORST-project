@@ -4,6 +4,7 @@ package mocks
 
 import (
 	"korst-backend/internal/entities"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
@@ -68,6 +69,12 @@ func (m *MockOtpRepo) CreateOTP(otp *entities.Otp) error {
 	return args.Error(0)
 }
 
+// UpdateOTP задает фиктивную реализацию обновления Otp
+func (m *MockOtpRepo) UpdateOTP(otp *entities.Otp) error {
+	args := m.Called(otp)
+	return args.Error(0)
+}
+
 // MockRefreshTokenRepo - структура для передачи в тестах
 // фиктивной структуры репозитория RefreshTokenRepo
 type MockRefreshTokenRepo struct{ mock.Mock }
@@ -98,5 +105,54 @@ func (m *MockRefreshTokenRepo) UpdateRefreshToken(refreshToken *entities.Refresh
 // DeleteByUserID задает фиктивную реализацию удаления refresh-токенов
 func (m *MockRefreshTokenRepo) DeleteByUserID(userID uuid.UUID) error {
 	args := m.Called(userID)
+	return args.Error(0)
+}
+
+// MockCardRepository - структура для передачи в тестах
+// фиктивной структуры репозитория CardRepository
+type MockCardRepo struct{ mock.Mock }
+
+// FindByID задает фиктивную реализацию поиска карточки по ID
+func (m *MockCardRepo) FindByID(cardID uuid.UUID) (*entities.Card, error) {
+	args := m.Called(cardID)
+
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+
+	return args.Get(0).(*entities.Card), args.Error(1)
+}
+
+// FindСardsByTime задает фиктивную реализацию пагинации по времени
+func (m *MockCardRepo) FindCardsByTime(key *time.Time, limit int) ([]entities.Card, error) {
+	args := m.Called(key, limit)
+	return args.Get(0).([]entities.Card), args.Error(1)
+}
+
+// CreateCard задает фиктивную реализацию создания сущности карточки
+func (m *MockCardRepo) CreateCard(card *entities.Card) error {
+	args := m.Called(card)
+	return args.Error(0)
+}
+
+// UpdateCard задает фиктивную реализацию обновления карточки в БД
+func (m *MockCardRepo) UpdateCard(card *entities.Card) error {
+	args := m.Called(card)
+	return args.Error(0)
+}
+
+// MockCardRepository - структура для передачи в тестах
+// фиктивной структуры репозитория ProfileRepository
+type MockProfileRepo struct{ mock.Mock }
+
+// CreateProfile задает фиктивную реализацию обновления профиля пользователя в БД
+func (m *MockProfileRepo) CreateProfile(profile *entities.Profile) error {
+	args := m.Called(profile)
+	return args.Error(0)
+}
+
+// UpdateProfile задает фиктивную реализацию обновления профиля пользователя в БД
+func (m *MockProfileRepo) UpdateProfile(profile *entities.Profile) error {
+	args := m.Called(profile)
 	return args.Error(0)
 }

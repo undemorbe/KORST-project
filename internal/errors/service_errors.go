@@ -39,6 +39,11 @@ var (
 		Message: "Пользователь не найден",
 	}
 
+	ErrorCardNotFound = AppError{
+		Code:    CodeNotFound,
+		Message: "Карточка не найдена",
+	}
+
 	ErrorInternal = AppError{
 		Code:    CodeInternalError,
 		Message: "Непредвиденная ошибка сервера. Попробуйте позже",

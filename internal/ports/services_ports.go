@@ -5,6 +5,7 @@ import (
 	"korst-backend/internal/dto/requests"
 	"korst-backend/internal/dto/responses"
 	"korst-backend/internal/entities"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -27,9 +28,6 @@ type AuthService interface {
 	CheckUser(rawPhone string) (
 		responses.IsUserResponse, error)
 
-	// RegisterUser добавляет пользователя в БД или дополняет информацию о нем
-	RegisterUser(req requests.RegisterRequest) error
-
 	// GetNewTokens получает новые access и refresh токены для пользователя
 	GetNewTokens(refreshTokenStr string) (responses.RefreshResponse, error)
 }
@@ -43,4 +41,28 @@ type TokenService interface {
 	// DecodeAccessToken декодирует полученный access-токен,
 	// проверяет его валидность
 	DecodeAccessToken(rawToken string) (uuid.UUID, error)
+}
+
+// CardService содержит порты для методов просмотра,
+// создания и обновления карточек
+type CardService interface {
+	// SaveCard сохраняет каторчку объявления, созданную пользователем
+	SaveCard(userID uuid.UUID, req *requests.SaveCardRequest) error
+
+	// GetCards возвращает несколько сжатых карточек
+	// с объявлениями для просмотра пользователями
+	GetCards(key *time.Time) (responses.GetCardsResponse, error)
+
+	// GetCardInfo возвращает подробную информацию
+	// об одной конкретной карточке объявления
+	GetCardInfo(cardID uuid.UUID) (responses.CardInfoResponse, error)
+}
+
+// UserService содержит порты для методов, необходимых для
+// работы с пользователем и его профилем
+type UserService interface {
+	// UpdateUserInfo обновляет (или дополняет) информацию
+	// о каком-то конкретном пользователе
+	UpdateUserInfo(userID uuid.UUID,
+		req *requests.UpdateUserRequest) error
 }

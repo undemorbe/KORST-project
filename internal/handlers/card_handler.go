@@ -1,0 +1,102 @@
+// handlers - пакет, содержащий в себе обработчики Api запросов
+package handlers
+
+import (
+	"korst-backend/internal/dto/requests"
+	"korst-backend/internal/dto/responses"
+	"korst-backend/internal/errors"
+	"korst-backend/internal/infrastructure/logger"
+	"korst-backend/internal/ports"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
+
+// CardHandler - объект, содержащий методы для обработки
+// Api запросов, связанных с карточками объявлений
+type CardHandler struct {
+	cardService  ports.CardService
+	tokenService ports.TokenService
+}
+
+// NewCardHandler создает и возвращает новый объект CardHandler
+func NewCardHandler(cardService ports.CardService,
+	tokenService ports.TokenService) *CardHandler {
+	return &CardHandler{
+		cardService:  cardService,
+		tokenService: tokenService,
+	}
+}
+
+// SaveCard обрабатывает запрос на сохрание карточки объявления
+func (h *CardHandler) SaveCard(c *gin.Context) {
+	var req requests.SaveCardRequest
+
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		c.Error(errors.ErrorInvalidInput)
+		return
+	}
+
+	accessToken := c.GetHeader("Authorization")
+
+	userID, err := h.tokenService.DecodeAccessToken(accessToken)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	err = h.cardService.SaveCard(userID, &req)
+
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	logger.Log.Info("Создание новой карточки прошло успешно")
+	c.JSON(http.StatusOK, responses.GenericResponse{})
+}
+
+// GetCards обрабатывает запрос на получение
+// карточек для отображения пользователям
+func (h *CardHandler) GetCards(c *gin.Context) {
+	var req requests.GetCardsRequest
+
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		c.Error(errors.ErrorInvalidInput)
+		return
+	}
+
+	response, err := h.cardService.GetCards(req.Key)
+
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	logger.Log.Info("Получение карточек прошло успешно")
+	c.JSON(http.StatusOK, response)
+}
+
+// GetCardInfo обрабатывает запрос на получение подробной
+// информации об определенной карточке
+func (h *CardHandler) GetCardInfo(c *gin.Context) {
+	var req requests.CardInfoRequest
+
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		c.Error(errors.ErrorInvalidInput)
+		return
+	}
+
+	response, err := h.cardService.GetCardInfo(req.CardID)
+
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	logger.Log.Info("Успешно получена информация о карточке")
+	c.JSON(http.StatusOK, response)
+}

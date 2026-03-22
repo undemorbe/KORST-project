@@ -7,6 +7,7 @@ import (
 	"korst-backend/internal/errors"
 	"korst-backend/internal/infrastructure/logger"
 	"korst-backend/internal/ports"
+	"strings"
 
 	"crypto/rand"
 	"os"
@@ -115,6 +116,12 @@ func (s *TokenService) generateAccessToken(
 // проверяет его валидность
 func (s *TokenService) DecodeAccessToken(
 	rawToken string) (uuid.UUID, error) {
+
+	prefix := "Bearer "
+
+	if after, ok := strings.CutPrefix(rawToken, prefix); ok {
+		rawToken = after
+	}
 
 	jwtTokenKey := []byte(os.Getenv("JWT_TOKEN_KEY"))
 

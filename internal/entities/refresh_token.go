@@ -12,8 +12,9 @@ import (
 // Содержит ID, ID привязанного к нему пользователя,
 // сам токен, время истечения срока действия
 type RefreshToken struct {
-	ID        uuid.UUID `gorm:"type:uuid;primaryKey"`
-	UserID    uuid.UUID `gorm:"type:uuid;uniqueIndex"`
+	ID     uuid.UUID `gorm:"type:uuid;primaryKey"`
+	UserID uuid.UUID `gorm:"type:uuid;uniqueIndex"`
+
 	Token     string    `gorm:"not null"`
 	ExpiresAt time.Time `gorm:"not null"`
 }

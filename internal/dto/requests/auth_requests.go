@@ -13,13 +13,6 @@ type VerifyOTPRequest struct {
 	OTP   string `json:"otp" binding:"required"`
 }
 
-// RegisterRequest - структура для запроса на регистрацию пользователя
-type RegisterRequest struct {
-	Phone   string `json:"phone" binding:"required"`
-	Name    string `json:"name" binding:"required"`
-	Surname string `json:"surname" binding:"required"`
-}
-
 // RefreshRequest - структура для запроса на обновление refresh токена
 type RefreshRequest struct {
 	RefreshToken string `json:"refresh-token" binding:"required"`

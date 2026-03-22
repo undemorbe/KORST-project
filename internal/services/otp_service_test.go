@@ -4,6 +4,7 @@ package services
 import (
 	"korst-backend/internal/entities"
 	"korst-backend/internal/errors"
+	"korst-backend/internal/infrastructure/logger"
 	"korst-backend/internal/mocks"
 	"testing"
 	"time"
@@ -12,8 +13,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestVerifyOtp gроверяет подтверждение корректного Otp
+// TestVerifyOtp проверяет подтверждение корректного Otp
 func TestVerifyOtp(t *testing.T) {
+	logger.InitLoggerTest()
+
 	mockOTPRepo := &mocks.MockOtpRepo{}
 	mockUserRepo := &mocks.MockUserRepo{}
 	mockTokenService := &mocks.MockTokenService{}
@@ -32,6 +35,10 @@ func TestVerifyOtp(t *testing.T) {
 	mockOTPRepo.On("FindByPhone", rawPhone).Return(otpEntity, nil)
 
 	mockUserRepo.On("FindByPhone", rawPhone).Return(nil, nil)
+
+	mockOTPRepo.
+		On("UpdateOTP", mock.AnythingOfType("*entities.Otp")).
+		Return(nil)
 
 	mockUserRepo.
 		On("CreateUser", mock.AnythingOfType("*entities.User")).
@@ -70,6 +77,10 @@ func TestVerifyExpiredOTP(t *testing.T) {
 
 	mockUserRepo.On("FindByPhone", rawPhone).Return(nil, nil)
 
+	mockOTPRepo.
+		On("UpdateOTP", mock.AnythingOfType("*entities.Otp")).
+		Return(nil)
+
 	mockUserRepo.
 		On("CreateUser", mock.AnythingOfType("*entities.User")).
 		Return(nil)
@@ -103,6 +114,10 @@ func TestVerifyIncorrectOTP(t *testing.T) {
 	mockOTPRepo.On("FindByPhone", rawPhone).Return(otpEntity, nil)
 
 	mockUserRepo.On("FindByPhone", rawPhone).Return(nil, nil)
+
+	mockOTPRepo.
+		On("UpdateOTP", mock.AnythingOfType("*entities.Otp")).
+		Return(nil)
 
 	mockUserRepo.
 		On("CreateUser", mock.AnythingOfType("*entities.User")).
