@@ -17,6 +17,8 @@ type CardInfoRequest struct {
 	CardID uuid.UUID `json:"card-id" binding:"required"`
 }
 
+// SaveCardRequest - структура для запроса на
+// сохранение карточки объявления
 type SaveCardRequest struct {
 	Name        string  `json:"name" binding:"required"`
 	Description *string `json:"description"`
