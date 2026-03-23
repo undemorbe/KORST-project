@@ -77,3 +77,13 @@ type ProfileRepository interface {
 	// UpdateProfile обновляет данные профиля пользователя в БД
 	UpdateProfile(profile *entities.Profile) error
 }
+
+// ReviewRepository содержит порты для взаимодействия с
+// отзывами на пользователя в БД
+type ReviewRepository interface {
+	// CreateReview создает новый объект отзыва на пользователя в БД
+	CreateReview(review *entities.Review) error
+
+	// UpdateReview изменяет содержимое отзыва на пользователя в БД
+	UpdateReview(review *entities.Review) error
+}
