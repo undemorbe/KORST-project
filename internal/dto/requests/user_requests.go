@@ -2,7 +2,6 @@
 package requests
 
 import (
-	"github.com/google/uuid"
 	"gorm.io/datatypes"
 )
 
@@ -22,12 +21,4 @@ type Contacts struct {
 	Telegram *string `json:"telegram"`
 
 	Others *datatypes.JSONMap `json:"others"`
-}
-
-// PostReviewRequest - структура для запроса на
-// размещение отзыва о пользователе
-type PostReviewRequest struct {
-	UserID  uuid.UUID `json:"user-id" binding:"required"`
-	Rating  float64   `json:"rating" binding:"required"`
-	Comment *string   `json:"comment"`
 }

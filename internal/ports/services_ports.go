@@ -71,3 +71,8 @@ type UserService interface {
 	GetUserInfo(userID uuid.UUID) (
 		responses.GetUserInfoResponse, error)
 }
+
+// ReviewService содержит порты для методов для
+// создания и просмотра отзывов на пользователе1
+type ReviewService interface {
+}

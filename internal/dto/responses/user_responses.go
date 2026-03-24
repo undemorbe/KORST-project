@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+// GetUserInfoResponse - структура для ответа
+// на запрос для получения информации о пользователе
 type GetUserInfoResponse struct {
 	Name    string `json:"name"`
 	Surname string `json:"surname"`
@@ -19,15 +21,4 @@ type GetUserInfoResponse struct {
 	CreatedAt time.Time `json:"created"`
 
 	Cards []CompressedCard `json:"cards"`
-}
-
-type GetReviewsResponse struct {
-	Reviews []Review `json:"reviews"`
-}
-
-type Review struct {
-	Rating  float64 `json:"rating"`
-	Comment string  `json:"comment"`
-
-	Author CompressedAuthor `json:"author"`
 }

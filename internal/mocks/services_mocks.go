@@ -93,6 +93,7 @@ func (m *MockUserService) UpdateUserInfo(userID uuid.UUID, req *requests.UpdateU
 	return args.Error(0)
 }
 
+// GetUserInfo задает фиктивную реализацию получения информации о пользователе
 func (m *MockUserService) GetUserInfo(userID uuid.UUID) (responses.GetUserInfoResponse, error) {
 	args := m.Called(userID)
 	return args.Get(0).(responses.GetUserInfoResponse), args.Error(1)

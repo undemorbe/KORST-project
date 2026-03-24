@@ -6,6 +6,7 @@ import (
 	"korst-backend/internal/dto/responses"
 	"korst-backend/internal/entities"
 	"korst-backend/internal/errors"
+	"korst-backend/internal/infrastructure/logger"
 	"korst-backend/internal/ports"
 
 	"github.com/google/uuid"
@@ -33,9 +34,11 @@ func (s *UserService) UpdateUserInfo(
 
 	user, err := s.userRepo.FindByID(userID)
 	if err != nil {
+		logger.Log.Error("Ошибка при поиске пользователя: ", err)
 		return err
 	}
 	if user == nil {
+		logger.Log.Warn("Пользователь с указанным ID не найден")
 		return errors.ErrorUserNotFound
 	}
 
@@ -48,6 +51,7 @@ func (s *UserService) UpdateUserInfo(
 
 		err = s.profileRepo.CreateProfile(profile)
 		if err != nil {
+			logger.Log.Error("Ошибка при создании профиля: ", err)
 			return err
 		}
 	}
@@ -82,11 +86,13 @@ func (s *UserService) UpdateUserInfo(
 
 	err = s.profileRepo.UpdateProfile(profile)
 	if err != nil {
+		logger.Log.Error("Ошибка при обновлении прифиля пользователя: ", err)
 		return err
 	}
 
 	err = s.userRepo.UpdateUser(user)
 	if err != nil {
+		logger.Log.Error("Ошибка при обновлении пользователя: ", err)
 		return err
 	}
 
@@ -102,7 +108,13 @@ func (s *UserService) GetUserInfo(userID uuid.UUID) (
 
 	user, err := s.userRepo.FindByID(userID)
 	if err != nil {
+		logger.Log.Error("Ошибка при поиске пользователя: ", err)
 		return responses.GetUserInfoResponse{}, err
+	}
+	if user == nil {
+		logger.Log.Warn("Пользователь с указанным ID не найден")
+		return responses.GetUserInfoResponse{},
+			errors.ErrorUserNotFound
 	}
 
 	response.Name = user.Name

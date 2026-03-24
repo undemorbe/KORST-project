@@ -27,6 +27,7 @@ func (r *userRepo) FindByID(userID uuid.UUID) (*entities.User, error) {
 	err := r.db.
 		Preload("Profile").
 		Preload("Cards").
+		Preload("RelatedReviews").
 		First(&user, userID).
 		Error
 
