@@ -24,12 +24,6 @@ type Contacts struct {
 	Others *datatypes.JSONMap `json:"others"`
 }
 
-// UserIDRequest - структура для запросов, содержащих
-// только ID пользователя в Body
-type UserIDRequest struct {
-	UserID uuid.UUID `json:"user-id" binding:"required"`
-}
-
 // PostReviewRequest - структура для запроса на
 // размещение отзыва о пользователе
 type PostReviewRequest struct {

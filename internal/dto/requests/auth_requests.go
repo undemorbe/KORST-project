@@ -1,12 +1,6 @@
 // requests - пакет, содержащий структуры запросов по Api
 package requests
 
-// PhoneNumberRequests - структура для запроса,
-// содержащего только номер телефона
-type PhoneNumberRequest struct {
-	Phone string `json:"phone" binding:"required"`
-}
-
 // VerifyOTPRequest - структура для запроса на подтверждение OTP кода
 type VerifyOTPRequest struct {
 	Phone string `json:"phone" binding:"required"`

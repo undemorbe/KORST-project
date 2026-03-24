@@ -19,7 +19,10 @@ type User struct {
 
 	RefreshToken *RefreshToken `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
 	Profile      *Profile      `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
-	Cards        []Card        `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
+
+	CreatedReviews []Review `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
+	RelatedReviews []Review `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
+	Cards          []Card   `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
 }
 
 // BeforeCreate создает необходимые отсутствющие поля при создании сущности

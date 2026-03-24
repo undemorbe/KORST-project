@@ -3,6 +3,7 @@ package services
 
 import (
 	"korst-backend/internal/dto/requests"
+	"korst-backend/internal/dto/responses"
 	"korst-backend/internal/entities"
 	"korst-backend/internal/errors"
 	"korst-backend/internal/ports"
@@ -90,4 +91,69 @@ func (s *UserService) UpdateUserInfo(
 	}
 
 	return nil
+}
+
+// GetUserInfo получает подробную информацию
+// о каком-то конкретном пользователе
+func (s *UserService) GetUserInfo(userID uuid.UUID) (
+	responses.GetUserInfoResponse, error) {
+
+	var response responses.GetUserInfoResponse
+
+	user, err := s.userRepo.FindByID(userID)
+	if err != nil {
+		return responses.GetUserInfoResponse{}, err
+	}
+
+	response.Name = user.Name
+	response.Surname = user.Surname
+	response.Phone = user.Phone
+
+	profile := user.Profile
+
+	if profile != nil {
+		response.Description = profile.Description
+		response.Rating = profile.Rating
+
+		contacts := &responses.Contacts{
+			Telegram: profile.Telegram,
+			Email:    profile.Email,
+
+			Others: profile.OtherContacts,
+		}
+
+		response.Contacts = contacts
+		response.UpdatedAt = profile.UpdatedAt
+		response.CreatedAt = profile.CreatedAt
+	}
+
+	cards := user.Cards
+
+	for i := range cards {
+		card := s.getCompressedCard(&cards[i])
+
+		response.Cards = append(response.Cards, card)
+	}
+
+	return response, nil
+}
+
+func (s *UserService) getCompressedCard(
+	card *entities.Card) responses.CompressedCard {
+
+	compressedCard := responses.CompressedCard{
+		ID:   card.ID.String(),
+		Name: card.Name,
+
+		Price:    card.Price,
+		Currency: card.Currency,
+		Type:     card.Type,
+
+		Tags: card.Tags,
+
+		CreatedAt: card.CreatedAt,
+		UpdatedAt: card.UpdatedAt,
+	}
+
+	return compressedCard
 }

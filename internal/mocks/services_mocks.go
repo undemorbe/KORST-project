@@ -92,3 +92,8 @@ func (m *MockUserService) UpdateUserInfo(userID uuid.UUID, req *requests.UpdateU
 	args := m.Called(userID, req)
 	return args.Error(0)
 }
+
+func (m *MockUserService) GetUserInfo(userID uuid.UUID) (responses.GetUserInfoResponse, error) {
+	args := m.Called(userID)
+	return args.Get(0).(responses.GetUserInfoResponse), args.Error(1)
+}

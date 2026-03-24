@@ -65,4 +65,9 @@ type UserService interface {
 	// о каком-то конкретном пользователе
 	UpdateUserInfo(userID uuid.UUID,
 		req *requests.UpdateUserRequest) error
+
+	// GetUserInfo получает подробную информацию
+	// о каком-то конкретном пользователе
+	GetUserInfo(userID uuid.UUID) (
+		responses.GetUserInfoResponse, error)
 }
