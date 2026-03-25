@@ -60,7 +60,7 @@ func main() {
 	otpService := services.NewOTPService(otpRepo, userRepo, tokenService)
 	cardService := services.NewCardService(cardRepo, userRepo)
 	userService := services.NewUserService(userRepo, profileRepo)
-	reviewService := services.NewReviewService(userRepo, reviewRepo)
+	reviewService := services.NewReviewService(userRepo, profileRepo, reviewRepo)
 
 	// Подключение хэндлеров
 	authHandler := handlers.NewAuthHandler(authService)

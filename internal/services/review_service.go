@@ -14,16 +14,19 @@ import (
 
 // UserService - объект, содержащий методы для работы с отзывами
 type ReviewService struct {
-	userRepo   ports.UserRepository
-	reviewRepo ports.ReviewRepository
+	userRepo    ports.UserRepository
+	profileRepo ports.ProfileRepository
+	reviewRepo  ports.ReviewRepository
 }
 
 // NewReviewService создает и возвращает новый объект ReviewService
 func NewReviewService(userRepo ports.UserRepository,
+	profileRepo ports.ProfileRepository,
 	reviewRepo ports.ReviewRepository) ports.ReviewService {
 	return &ReviewService{
-		userRepo:   userRepo,
-		reviewRepo: reviewRepo,
+		userRepo:    userRepo,
+		profileRepo: profileRepo,
+		reviewRepo:  reviewRepo,
 	}
 }
 
@@ -104,6 +107,22 @@ func (s *ReviewService) getConvertedReview(
 func (s *ReviewService) PostReview(authorID uuid.UUID,
 	req *requests.PostReviewRequest) error {
 
+	if authorID == req.UserID {
+		logger.Log.Warn("Попытка создать отзыв на самого себя")
+		return errors.ErrorInvalidInput
+	}
+
+	review, err := s.reviewRepo.FindReviewToUser(authorID, req.UserID)
+	if err != nil {
+		logger.Log.Error("Ошибка при поиске отзыва: ", err)
+		return err
+	}
+
+	if review != nil {
+		logger.Log.Warn("Попытка создать второй отзыв на пользователя")
+		return errors.ErrorReviewExists
+	}
+
 	newReview := entities.Review{
 		AuthorID:    authorID,
 		RelatedToID: req.UserID,
@@ -115,5 +134,47 @@ func (s *ReviewService) PostReview(authorID uuid.UUID,
 		newReview.Comment = *req.Comment
 	}
 
-	return s.reviewRepo.CreateReview(&newReview)
+	err = s.reviewRepo.CreateReview(&newReview)
+	if err != nil {
+		logger.Log.Error("Ошибка при создании отзыва: ", err)
+		return err
+	}
+
+	return s.changeUSerRating(newReview.RelatedToID)
+}
+
+// changeUSerRating изменяет средний рейтинг
+// пользователя после получения нового отзыва
+func (s *ReviewService) changeUSerRating(userID uuid.UUID) error {
+
+	user, err := s.userRepo.FindByID(userID)
+	if err != nil {
+		logger.Log.Error("Ошибка при поиске пользователя: ", err)
+		return err
+	}
+
+	if user == nil {
+		logger.Log.Warn("Пользователь, к которому отностится отзыв, не найден")
+		return errors.ErrorUserNotFound
+	}
+
+	profile := user.Profile
+
+	if profile == nil {
+		logger.Log.Warn("Профиль пользователя не найден")
+		return errors.ErrorUserNotFound
+	}
+
+	reviews := user.RelatedReviews
+	var ratingSum float64
+
+	for i := range reviews {
+		ratingSum = ratingSum + reviews[i].Rating
+	}
+
+	totalRating := ratingSum / float64(len(reviews))
+
+	profile.Rating = totalRating
+
+	return s.profileRepo.UpdateProfile(profile)
 }

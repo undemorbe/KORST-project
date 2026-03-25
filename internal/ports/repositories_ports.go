@@ -81,6 +81,11 @@ type ProfileRepository interface {
 // ReviewRepository содержит порты для взаимодействия с
 // отзывами на пользователя в БД
 type ReviewRepository interface {
+	// FindReviewToUser находит отзыв, созданный пользователем с authorID
+	// и относящийся к пользователю с relatedToID
+	FindReviewToUser(authorID uuid.UUID,
+		relatedToID uuid.UUID) (*entities.Review, error)
+
 	// CreateReview создает новый объект отзыва на пользователя в БД
 	CreateReview(review *entities.Review) error
 

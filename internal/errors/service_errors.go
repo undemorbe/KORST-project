@@ -44,6 +44,11 @@ var (
 		Message: "Карточка не найдена",
 	}
 
+	ErrorReviewExists = AppError{
+		Code:    CodeReviewExists,
+		Message: "Отзыв для указанного пользователя уже существует",
+	}
+
 	ErrorInternal = AppError{
 		Code:    CodeInternalError,
 		Message: "Непредвиденная ошибка сервера. Попробуйте позже",
