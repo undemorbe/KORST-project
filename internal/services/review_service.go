@@ -103,6 +103,17 @@ func (s *ReviewService) getConvertedReview(
 // PostReview сохраняет отзыв на указанного пользователя
 func (s *ReviewService) PostReview(authorID uuid.UUID,
 	req *requests.PostReviewRequest) error {
-	// TODO: сделать размещение отзыва
-	return nil
+
+	newReview := entities.Review{
+		AuthorID:    authorID,
+		RelatedToID: req.UserID,
+
+		Rating: req.Rating,
+	}
+
+	if req.Comment != nil {
+		newReview.Comment = *req.Comment
+	}
+
+	return s.reviewRepo.CreateReview(&newReview)
 }

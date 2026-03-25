@@ -52,6 +52,7 @@ func main() {
 	refreshTokenRepo := repositories.NewRefreshTokenRepository(db)
 	cardRepo := repositories.NewCardRepository(db)
 	profileRepo := repositories.NewProfileRepository(db)
+	reviewRepo := repositories.NewReviewRepository(db)
 
 	// Подключение сервисов
 	tokenService := services.NewTokenService(userRepo, refreshTokenRepo)
@@ -59,12 +60,14 @@ func main() {
 	otpService := services.NewOTPService(otpRepo, userRepo, tokenService)
 	cardService := services.NewCardService(cardRepo, userRepo)
 	userService := services.NewUserService(userRepo, profileRepo)
+	reviewService := services.NewReviewService(userRepo, reviewRepo)
 
 	// Подключение хэндлеров
 	authHandler := handlers.NewAuthHandler(authService)
 	otpHandler := handlers.NewOTPHandler(otpService)
 	cardHandler := handlers.NewCardHandler(cardService, tokenService)
 	userHandler := handlers.NewUserHandler(userService, tokenService)
+	reviewHandler := handlers.NewReviewHandler(reviewService, tokenService)
 
 	// Регистрация маршрутов
 	api := r.Group("/api")
@@ -88,6 +91,10 @@ func main() {
 	user := api.Group("/user")
 	{
 		user.POST("/update", userHandler.UpdateUserInfo)
+		user.GET("/get-info", userHandler.GetUserInfo)
+
+		user.GET("/reviews", reviewHandler.GetReviews)
+		user.POST("/post-review", reviewHandler.PostReview)
 	}
 
 	// Запуск сервера

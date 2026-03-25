@@ -75,4 +75,12 @@ type UserService interface {
 // ReviewService содержит порты для методов для
 // создания и просмотра отзывов на пользователе1
 type ReviewService interface {
+	// GetReviews получает все отзывы,
+	// относящиеся к определенному пользователю
+	GetReviews(userID uuid.UUID) (
+		responses.GetReviewsResponse, error)
+
+	// PostReview сохраняет отзыв на указанного пользователя
+	PostReview(authorID uuid.UUID,
+		req *requests.PostReviewRequest) error
 }
