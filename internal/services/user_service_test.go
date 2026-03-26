@@ -4,6 +4,7 @@ package services
 import (
 	"korst-backend/internal/dto/requests"
 	"korst-backend/internal/entities"
+	"korst-backend/internal/infrastructure/logger"
 	"korst-backend/internal/mocks"
 	"testing"
 
@@ -15,6 +16,8 @@ import (
 // TestUpdateUserInfo проверяет обновление данных
 // определенного пользователя
 func TestUpdateUserInfo(t *testing.T) {
+	logger.InitLoggerTest()
+
 	mockUserRepo := &mocks.MockUserRepo{}
 	mockProfileRepo := &mocks.MockProfileRepo{}
 
@@ -77,4 +80,44 @@ func TestUpdateUserInfo(t *testing.T) {
 	require.Equal(t, profile.Description, description)
 	require.Equal(t, profile.Telegram, telegram)
 	require.Equal(t, profile.Email, "")
+}
+
+// TestGetUserInfo проверяет получение информации о пользователе
+func TestGetUserInfo(t *testing.T) {
+	mockUserRepo := &mocks.MockUserRepo{}
+	mockProfileRepo := &mocks.MockProfileRepo{}
+
+	userService := NewUserService(mockUserRepo, mockProfileRepo)
+
+	userID := uuid.New()
+	name := "Олег"
+	cardName := "Название карточки"
+	telegram := "@oleg"
+
+	profile := &entities.Profile{
+		UserID:   userID,
+		Telegram: telegram,
+	}
+
+	card := entities.Card{
+		Name: cardName,
+	}
+
+	user := &entities.User{
+		ID:      userID,
+		Name:    name,
+		Profile: profile,
+		Cards:   []entities.Card{card},
+	}
+
+	mockUserRepo.
+		On("FindByID", userID).
+		Return(user, nil)
+
+	response, err := userService.GetUserInfo(userID)
+
+	require.NoError(t, err)
+	require.Equal(t, name, response.Name)
+	require.Equal(t, telegram, response.Contacts.Telegram)
+	require.Equal(t, cardName, response.Cards[0].Name)
 }
