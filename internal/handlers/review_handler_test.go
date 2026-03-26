@@ -24,7 +24,7 @@ import (
 // получение отзывов на определенного пользователя
 func TestGetReviews(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	logger.InitLogger()
+	logger.InitLoggerTest()
 
 	mockReviewService := &mocks.MockReviewService{}
 	mockTokenService := &mocks.MockTokenService{}
