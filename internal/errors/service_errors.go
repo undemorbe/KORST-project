@@ -26,7 +26,7 @@ var (
 
 	ErrorAccessExpired = AppError{
 		Code:    CodeAccessExpired,
-		Message: "Сессия истекла.Выполняется обновление токена",
+		Message: "Сессия истекла. Выполняется обновление токена",
 	}
 
 	ErrorRefreshExpired = AppError{

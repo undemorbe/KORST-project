@@ -8,6 +8,7 @@ import (
 	"korst-backend/internal/errors"
 	"korst-backend/internal/infrastructure/logger"
 	"korst-backend/internal/ports"
+	"math"
 
 	"github.com/google/uuid"
 )
@@ -140,12 +141,12 @@ func (s *ReviewService) PostReview(authorID uuid.UUID,
 		return err
 	}
 
-	return s.changeUSerRating(newReview.RelatedToID)
+	return s.changeUserRating(newReview.RelatedToID)
 }
 
 // changeUSerRating изменяет средний рейтинг
 // пользователя после получения нового отзыва
-func (s *ReviewService) changeUSerRating(userID uuid.UUID) error {
+func (s *ReviewService) changeUserRating(userID uuid.UUID) error {
 
 	user, err := s.userRepo.FindByID(userID)
 	if err != nil {
@@ -172,9 +173,10 @@ func (s *ReviewService) changeUSerRating(userID uuid.UUID) error {
 		ratingSum = ratingSum + reviews[i].Rating
 	}
 
-	totalRating := ratingSum / float64(len(reviews))
+	averangeRating := ratingSum / float64(len(reviews))
+	roundedRating := math.Round(averangeRating*10) / 10
 
-	profile.Rating = totalRating
+	profile.Rating = roundedRating
 
 	return s.profileRepo.UpdateProfile(profile)
 }

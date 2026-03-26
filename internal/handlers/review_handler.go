@@ -28,6 +28,8 @@ func NewReviewHandler(reviewService ports.ReviewService,
 	}
 }
 
+// GetReviews обрабатывает запрос для получения
+// отзывов на конкретного пользователя
 func (h *ReviewHandler) GetReviews(c *gin.Context) {
 	var req requests.UserIDRequest
 
@@ -48,6 +50,7 @@ func (h *ReviewHandler) GetReviews(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
+// PostReview обрабатывает запрос для размещения отзыва на пользоваателя
 func (h *ReviewHandler) PostReview(c *gin.Context) {
 	var req requests.PostReviewRequest
 

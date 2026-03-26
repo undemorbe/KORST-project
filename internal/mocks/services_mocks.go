@@ -104,3 +104,19 @@ func (m *MockUserService) GetUserInfo(userID uuid.UUID) (responses.GetUserInfoRe
 	args := m.Called(userID)
 	return args.Get(0).(responses.GetUserInfoResponse), args.Error(1)
 }
+
+// MockReviewService - структура для передачи в тестах
+// фиктивной структуры сервиса ReviewService
+type MockReviewService struct{ mock.Mock }
+
+// GetReviews задает фиктивную реализацию получения отзывов
+func (m *MockReviewService) GetReviews(userID uuid.UUID) (responses.GetReviewsResponse, error) {
+	args := m.Called(userID)
+	return args.Get(0).(responses.GetReviewsResponse), args.Error(1)
+}
+
+// PostReview задает фиктивную реализацию размещения отзыва
+func (m *MockReviewService) PostReview(authorID uuid.UUID, req *requests.PostReviewRequest) error {
+	args := m.Called(authorID, req)
+	return args.Error(0)
+}

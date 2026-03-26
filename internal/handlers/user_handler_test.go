@@ -4,6 +4,7 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"korst-backend/internal/dto/responses"
 	"korst-backend/internal/infrastructure/logger"
 	"korst-backend/internal/middleware"
@@ -76,15 +77,15 @@ func TestGetUserInfo(t *testing.T) {
 
 	router := gin.New()
 	router.Use(middleware.ErrorHandler())
-	router.POST("/get-info", userHandler.UpdateUserInfo)
+	router.POST("/get-info", userHandler.GetUserInfo)
 
 	userID := uuid.New()
 	name := "Олег"
 	telegram := "@oleg"
 
-	body := `{
-		"user-id: ""
-	}`
+	body := fmt.Sprintf(`{
+		"user-id": "%s"
+	}`, userID.String())
 
 	responseFromFunc := responses.GetUserInfoResponse{
 		Name: name,
@@ -99,7 +100,7 @@ func TestGetUserInfo(t *testing.T) {
 
 	req := httptest.NewRequest(
 		http.MethodPost,
-		"/update",
+		"/get-info",
 		bytes.NewBufferString(body),
 	)
 	req.Header.Set("Content-Type", "application/json")

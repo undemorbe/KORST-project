@@ -141,7 +141,7 @@ func (m *MockCardRepo) UpdateCard(card *entities.Card) error {
 	return args.Error(0)
 }
 
-// MockCardRepository - структура для передачи в тестах
+// MockProfileRepository - структура для передачи в тестах
 // фиктивной структуры репозитория ProfileRepository
 type MockProfileRepo struct{ mock.Mock }
 
@@ -154,5 +154,33 @@ func (m *MockProfileRepo) CreateProfile(profile *entities.Profile) error {
 // UpdateProfile задает фиктивную реализацию обновления профиля пользователя в БД
 func (m *MockProfileRepo) UpdateProfile(profile *entities.Profile) error {
 	args := m.Called(profile)
+	return args.Error(0)
+}
+
+// MockReviewRepository - структура для передачи в тестах
+// фиктивной структуры репозитория ReviewRepository
+type MockReviewRepo struct{ mock.Mock }
+
+// FindReviewToUser задает фиктивную реализацию поиска определенного отзыва
+func (m *MockReviewRepo) FindReviewToUser(authorID uuid.UUID,
+	relatedToID uuid.UUID) (*entities.Review, error) {
+	args := m.Called(authorID, relatedToID)
+
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+
+	return args.Get(0).(*entities.Review), args.Error(1)
+}
+
+// CreateReview задает фиктивную реализацию создания сущности отзыва
+func (m *MockReviewRepo) CreateReview(review *entities.Review) error {
+	args := m.Called(review)
+	return args.Error(0)
+}
+
+// UpdateReview задает фиктивную реализацию обновления сущности отзыва
+func (m *MockReviewRepo) UpdateReview(review *entities.Review) error {
+	args := m.Called(review)
 	return args.Error(0)
 }
