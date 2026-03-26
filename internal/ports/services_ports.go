@@ -30,6 +30,9 @@ type AuthService interface {
 
 	// GetNewTokens получает новые access и refresh токены для пользователя
 	GetNewTokens(refreshTokenStr string) (responses.RefreshResponse, error)
+
+	// RemoveRefreshToken удаляет refresh-токен по ID пользователя
+	RemoveRefreshToken(userID uuid.UUID) error
 }
 
 // TokenService содержит порты для методов создания/обновления токенов

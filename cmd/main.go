@@ -63,7 +63,7 @@ func main() {
 	reviewService := services.NewReviewService(userRepo, profileRepo, reviewRepo)
 
 	// Подключение хэндлеров
-	authHandler := handlers.NewAuthHandler(authService)
+	authHandler := handlers.NewAuthHandler(authService, tokenService)
 	otpHandler := handlers.NewOTPHandler(otpService)
 	cardHandler := handlers.NewCardHandler(cardService, tokenService)
 	userHandler := handlers.NewUserHandler(userService, tokenService)

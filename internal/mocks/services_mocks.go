@@ -45,6 +45,12 @@ func (m *MockAuthService) GetNewTokens(refreshTokenStr string) (responses.Refres
 	return args.Get(0).(responses.RefreshResponse), args.Error(1)
 }
 
+// RemoveRefreshToken задает фиктивную реализацию удаления access-токена
+func (m *MockAuthService) RemoveRefreshToken(userID uuid.UUID) error {
+	args := m.Called(userID)
+	return args.Error(0)
+}
+
 // MockTokenService - структура для передачи в тестах
 // фиктивной структуры сервиса TokenService
 type MockTokenService struct{ mock.Mock }

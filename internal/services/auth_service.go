@@ -7,6 +7,7 @@ import (
 	"korst-backend/internal/infrastructure/logger"
 	"korst-backend/internal/ports"
 
+	"github.com/google/uuid"
 	"github.com/nyaruka/phonenumbers"
 )
 
@@ -89,4 +90,16 @@ func (s *AuthService) GetNewTokens(
 		RefreshToken: refreshTokenStr,
 	}
 	return response, err
+}
+
+// RemoveRefreshToken удаляет refresh-токен по ID пользователя
+func (s *AuthService) RemoveRefreshToken(userID uuid.UUID) error {
+
+	err := s.refreshTokenRepo.DeleteByUserID(userID)
+	if err != nil {
+		logger.Log.Error("Ошибка при удалении Refresh-токена: ", err)
+		return err
+	}
+
+	return nil
 }

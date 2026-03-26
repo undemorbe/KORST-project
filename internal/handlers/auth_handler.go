@@ -3,6 +3,7 @@ package handlers
 
 import (
 	"korst-backend/internal/dto/requests"
+	"korst-backend/internal/dto/responses"
 	"korst-backend/internal/errors"
 	"korst-backend/internal/infrastructure/logger"
 	"korst-backend/internal/ports"
@@ -14,13 +15,16 @@ import (
 // AuthHandler - объект, содержащий методы для обработки
 // Api запросов, связанных с авторизацией
 type AuthHandler struct {
-	authService ports.AuthService
+	authService  ports.AuthService
+	tokenService ports.TokenService
 }
 
 // NewAuthHandler создает и возвращает новый объект AuthHandler
-func NewAuthHandler(authService ports.AuthService) *AuthHandler {
+func NewAuthHandler(authService ports.AuthService,
+	tokenService ports.TokenService) *AuthHandler {
 	return &AuthHandler{
-		authService: authService,
+		authService:  authService,
+		tokenService: tokenService,
 	}
 }
 
@@ -64,4 +68,26 @@ func (h *AuthHandler) RefreshTokens(c *gin.Context) {
 
 	logger.Log.Info("Обновление токенов успешно выполнено")
 	c.JSON(http.StatusOK, response)
+}
+
+// Logout обрабатывает запрос выхода пользователя из аккаунта
+func (h *AuthHandler) Logout(c *gin.Context) {
+
+	accessToken := c.GetHeader("Authorization")
+
+	userID, err := h.tokenService.DecodeAccessToken(accessToken)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	err = h.authService.RemoveRefreshToken(userID)
+
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	logger.Log.Info("Логаут успешно выполнен")
+	c.JSON(http.StatusOK, responses.GenericResponse{})
 }

@@ -22,8 +22,9 @@ func TestCheckUser(t *testing.T) {
 	logger.InitLoggerTest()
 
 	mockAuthService := &mocks.MockAuthService{}
+	mockTokenService := &mocks.MockTokenService{}
 
-	authHandler := NewAuthHandler(mockAuthService)
+	authHandler := NewAuthHandler(mockAuthService, mockTokenService)
 
 	router := gin.New()
 	router.Use(middleware.ErrorHandler())
@@ -61,9 +62,11 @@ func TestCheckUser(t *testing.T) {
 
 // TestRefreshTokens проверяет работу хэндлера RefreshTokens
 func TestRefreshTokens(t *testing.T) {
-	mockAuthService := new(mocks.MockAuthService)
 
-	authHandler := NewAuthHandler(mockAuthService)
+	mockAuthService := &mocks.MockAuthService{}
+	mockTokenService := &mocks.MockTokenService{}
+
+	authHandler := NewAuthHandler(mockAuthService, mockTokenService)
 
 	router := gin.New()
 	router.Use(middleware.ErrorHandler())
