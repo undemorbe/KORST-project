@@ -19,7 +19,10 @@ class ProfileBanner extends StatelessWidget {
         final profile = authStore.userProfile;
         if (profile == null) return const SizedBox.shrink();
 
-        final name = profile.name;
+        final displayName = [
+          profile.name.trim(),
+          (profile.surname ?? '').trim(),
+        ].where((e) => e.isNotEmpty).join(' ');
         final phone = profile.phone;
         final photoUrl = profile.photoUrl;
 
@@ -52,7 +55,7 @@ class ProfileBanner extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      name,
+                      displayName.isNotEmpty ? displayName : 'Пользователь',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),

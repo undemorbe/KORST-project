@@ -52,8 +52,8 @@ class _CreateServicePageState extends State<CreateServicePage> {
         title: _titleController.text,
         description: _descriptionController.text,
         price: double.tryParse(_priceController.text) ?? 0.0,
-        currency: 'RUB',
-        type: 'service',
+        currency: 'USD',
+        type: 'услуга',
         author: user,
         timesBooked: 0,
         rating: 0,
@@ -104,7 +104,6 @@ class _CreateServicePageState extends State<CreateServicePage> {
                 controller: _descriptionController,
                 decoration: const InputDecoration(labelText: 'Описание'),
                 maxLines: 3,
-                validator: (v) => v?.isEmpty == true ? 'Введите описание' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(

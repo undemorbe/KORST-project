@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:talker_flutter/talker_flutter.dart';
 import '../../features/services/presentation/pages/create_service_page.dart';
 import '../../features/settings/presentation/pages/edit_profile_page.dart';
+import '../../features/auth/presentation/pages/auth_gate_page.dart';
 import '../../features/auth/presentation/pages/onboarding_page.dart';
 import '../../features/auth/presentation/pages/phone_number_page.dart';
 import '../../features/auth/presentation/pages/otp_page.dart';
 import '../../features/auth/presentation/pages/create_profile_page.dart';
 import '../../features/auth/presentation/store/auth_store.dart';
+import '../../features/auth/domain/entities/auth_user_status.dart';
 import '../di/injection_container.dart';
 import '../../features/services/domain/entities/service_entity.dart';
 import '../../features/services/presentation/pages/service_details_page.dart';
@@ -21,22 +24,39 @@ class AppRouter {
 
   static final GoRouter router = GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: '/',
+    initialLocation: '/auth-gate',
     redirect: (context, state) {
-      final isLoggedIn = sl<AuthStore>().isLoggedIn;
-      final isAuthRoute = state.uri.path.startsWith('/auth') || state.uri.path == '/onboarding';
+      final authStore = sl<AuthStore>();
+      final path = state.uri.path;
+      if (path == '/auth-gate') return null;
+
+      final isLoggedIn = authStore.isLoggedIn;
+      final isCreateProfile = path == '/auth/create-profile';
+      final isAuthRoute = path.startsWith('/auth') || path == '/onboarding';
+
+      if (!isLoggedIn && isCreateProfile) {
+        return '/onboarding';
+      }
 
       if (!isLoggedIn && !isAuthRoute) {
         return '/onboarding';
       }
 
-      if (isLoggedIn && isAuthRoute) {
+      if (isLoggedIn && authStore.userStatus == AuthUserStatus.notRegistered && !isCreateProfile) {
+        return '/auth/create-profile';
+      }
+
+      if (isLoggedIn && isAuthRoute && !(isCreateProfile && authStore.userStatus == AuthUserStatus.notRegistered)) {
         return '/';
       }
 
       return null;
     },
     routes: [
+      GoRoute(
+        path: '/auth-gate',
+        builder: (context, state) => const AuthGatePage(),
+      ),
       GoRoute(
         path: '/onboarding',
         builder: (context, state) => const OnboardingPage(),
@@ -109,6 +129,11 @@ class AppRouter {
         path: '/edit-profile',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const EditProfilePage(),
+      ),
+      GoRoute(
+        path: '/logs',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => TalkerScreen(talker: sl<Talker>()),
       ),
     ],
   );

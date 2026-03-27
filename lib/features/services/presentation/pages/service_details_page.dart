@@ -10,10 +10,23 @@ import '../../../favorites/presentation/store/favorites_store.dart';
 import '../../../bookings/presentation/store/bookings_store.dart';
 import '../../../bookings/domain/entities/booking_entity.dart';
 
-class ServiceDetailsPage extends StatelessWidget {
+class ServiceDetailsPage extends StatefulWidget {
   final ServiceEntity service;
 
   const ServiceDetailsPage({super.key, required this.service});
+
+  @override
+  State<ServiceDetailsPage> createState() => _ServiceDetailsPageState();
+}
+
+class _ServiceDetailsPageState extends State<ServiceDetailsPage> {
+  final ServiceStore _serviceStore = sl<ServiceStore>();
+
+  @override
+  void initState() {
+    super.initState();
+    _serviceStore.loadServiceDetails(widget.service.id);
+  }
 
   void _showAddReviewDialog(BuildContext context, ServiceStore serviceStore) {
     final commentController = TextEditingController();
@@ -66,7 +79,7 @@ class ServiceDetailsPage extends StatelessWidget {
                       created: DateTime.now(),
                       updated: DateTime.now(),
                     );
-                    serviceStore.addReview(service.id, review);
+                    serviceStore.addReview(widget.service.id, review);
                     Navigator.pop(context);
                   },
                   child: const Text('Отправить'),
@@ -84,15 +97,14 @@ class ServiceDetailsPage extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final favoritesStore = sl<FavoritesStore>();
     final bookingsStore = sl<BookingsStore>();
-    final serviceStore = sl<ServiceStore>();
+    final serviceStore = _serviceStore;
 
     return Scaffold(
       body: Observer(
         builder: (_) {
-          // Try to find updated service in store, fallback to passed service
           final currentService = serviceStore.services.firstWhere(
-            (s) => s.uid == service.uid,
-            orElse: () => service,
+            (s) => s.uid == widget.service.uid,
+            orElse: () => widget.service,
           );
 
           return CustomScrollView(
@@ -183,7 +195,6 @@ class ServiceDetailsPage extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 8),
-                      // Author
                       if (currentService.author != null)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 8.0),
@@ -199,7 +210,6 @@ class ServiceDetailsPage extends StatelessWidget {
                           ),
                         ),
                       
-                      // Rating & Tags
                       Row(
                         children: [
                           const Icon(Icons.star, color: Colors.amber, size: 20),
@@ -228,7 +238,6 @@ class ServiceDetailsPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 24),
                       
-                      // Reviews Section
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -253,7 +262,7 @@ class ServiceDetailsPage extends StatelessWidget {
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           itemCount: currentService.reviews.length,
-                          separatorBuilder: (_, __) => const Divider(),
+                          separatorBuilder: (context, index) => const Divider(),
                           itemBuilder: (context, index) {
                             final review = currentService.reviews[index];
                             return ListTile(
@@ -261,7 +270,7 @@ class ServiceDetailsPage extends StatelessWidget {
                               leading: const CircleAvatar(child: Icon(Icons.person)),
                               title: Row(
                                 children: [
-                                  Text('Пользователь', style: const TextStyle(fontWeight: FontWeight.bold)), // Placeholder for review author
+                                  Text('Пользователь', style: const TextStyle(fontWeight: FontWeight.bold)),
                                   const Spacer(),
                                   Icon(Icons.star, size: 16, color: Colors.amber),
                                   Text(review.rating.toString()),

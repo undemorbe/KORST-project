@@ -1,0 +1,188 @@
+import 'dart:convert';
+import 'package:dio/dio.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:korst/core/api/api_client.dart';
+import 'package:korst/core/api/api_constants.dart';
+import 'package:korst/core/api/token_storage.dart';
+import 'package:korst/core/storage/local_storage.dart';
+import 'package:korst/features/services/data/repositories/service_repository_impl.dart';
+import 'package:korst/features/services/domain/entities/service_category.dart';
+import 'package:korst/features/services/domain/entities/service_entity.dart';
+
+class _FakeLocalStorage implements LocalStorageService {
+  final Map<String, dynamic> _m = {};
+
+  @override
+  Future<void> init() async {}
+
+  @override
+  dynamic get(String key, {dynamic defaultValue}) => _m[key] ?? defaultValue;
+
+  @override
+  Future<void> put(String key, dynamic value) async => _m[key] = value;
+
+  @override
+  Future<void> delete(String key) async => _m.remove(key);
+
+  @override
+  Future<void> clear() async => _m.clear();
+}
+
+class _Adapter implements HttpClientAdapter {
+  final Future<ResponseBody> Function(RequestOptions options) handler;
+  _Adapter(this.handler);
+
+  @override
+  void close({bool force = false}) {}
+
+  @override
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<List<int>>? requestStream,
+    Future<void>? cancelFuture,
+  ) {
+    return handler(options);
+  }
+}
+
+ResponseBody _jsonBody(int statusCode, Map<String, dynamic> json) {
+  return ResponseBody.fromString(
+    jsonEncode(json),
+    statusCode,
+    headers: {
+      Headers.contentTypeHeader: [Headers.jsonContentType],
+    },
+  );
+}
+
+void main() {
+  group('ServiceRepositoryImpl (Cards API)', () {
+    late Dio dio;
+    late Dio refreshDio;
+    late TokenStorage tokenStorage;
+    late ApiClient apiClient;
+    late ServiceRepositoryImpl repo;
+
+    setUp(() async {
+      dio = Dio();
+      refreshDio = Dio();
+      tokenStorage = TokenStorage(_FakeLocalStorage());
+      await tokenStorage.saveTokens(accessToken: 'access-1', refreshToken: 'refresh-1');
+      apiClient = ApiClient(dio: dio, refreshDio: refreshDio, tokenStorage: tokenStorage);
+      repo = ServiceRepositoryImpl(apiClient);
+    });
+
+    test('getServices parses cards list', () async {
+      dio.httpClientAdapter = _Adapter((options) async {
+        expect(options.path, ApiConstants.cardsGetCards);
+        expect(options.headers[ApiConstants.headerAuthorization], 'access-1');
+        expect(options.headers[ApiConstants.headerAccessToken], 'access-1');
+
+        return _jsonBody(200, {
+          'cards': [
+            {
+              'id': 'c1',
+              'name': 'Service 1',
+              'price': 100,
+              'currency': 'USD',
+              'type': 'услуга',
+              'author': {'name': 'Oleg', 'surname': 'Olegovich', 'rating': 4.5},
+              'tags': ['tag1', 'tag2'],
+              'created': '2026-03-16T14:32:10Z',
+            }
+          ]
+        });
+      });
+      refreshDio.httpClientAdapter = _Adapter((options) async => _jsonBody(500, {}));
+
+      final page = await repo.getServices(key: null);
+      expect(page.cards, hasLength(1));
+      expect(page.nextKey, isNotNull);
+      expect(page.cards.first.id, 'c1');
+      expect(page.cards.first.title, 'Service 1');
+      expect(page.cards.first.price, 100);
+      expect(page.cards.first.currency, 'USD');
+      expect(page.cards.first.type, 'услуга');
+    });
+
+    test('getService parses card-info', () async {
+      dio.httpClientAdapter = _Adapter((options) async {
+        expect(options.path, ApiConstants.cardsCardInfo);
+        expect(options.headers[ApiConstants.headerAuthorization], 'access-1');
+        expect(options.headers[ApiConstants.headerAccessToken], 'access-1');
+
+        return _jsonBody(200, {
+          'name': 'Наименование услуги',
+          'description': 'Описание',
+          'price': 100,
+          'currency': 'USD',
+          'type': 'услуга',
+          'author': {
+            'id': 'u1',
+            'name': 'Олег',
+            'surname': 'Олегович',
+            'phone': '+79123456789',
+            'contacts': {
+              'email': 'merchant@example.com',
+              'telegram': '@merchant',
+              'others': {'facebook': 'merchant'},
+              'rating': 4.5,
+            }
+          },
+          'tags': ['tag1', 'tag2'],
+          'created': '2023-01-01',
+          'updated': '2023-01-01',
+        });
+      });
+      refreshDio.httpClientAdapter = _Adapter((options) async => _jsonBody(500, {}));
+
+      final ServiceEntity s = await repo.getService('c1');
+      expect(s.id, 'c1');
+      expect(s.title, 'Наименование услуги');
+      expect(s.description, 'Описание');
+      expect(s.author?.uid, 'u1');
+      expect(s.author?.phone, '+79123456789');
+    });
+
+    test('createService sends save-card payload', () async {
+      ServiceEntity? received;
+
+      dio.httpClientAdapter = _Adapter((options) async {
+        expect(options.path, ApiConstants.cardsSaveCard);
+        expect(options.headers[ApiConstants.headerAuthorization], 'access-1');
+        expect(options.headers[ApiConstants.headerAccessToken], 'access-1');
+
+        final data = options.data;
+        expect(data, isA<Map>());
+        final m = Map<String, dynamic>.from(data as Map);
+        expect(m['name'], 'Service 1');
+        expect(m['description'], 'Desc');
+        expect(m['price'], 100.0);
+        expect(m['currency'], 'USD');
+        expect(m['type'], 'услуга');
+        expect(m['tags'], ['t1', 't2']);
+        return _jsonBody(200, {});
+      });
+      refreshDio.httpClientAdapter = _Adapter((options) async => _jsonBody(500, {}));
+
+      received = ServiceEntity(
+        uid: 'tmp',
+        title: 'Service 1',
+        description: 'Desc',
+        price: 100,
+        currency: 'USD',
+        type: 'услуга',
+        timesBooked: 0,
+        rating: 0,
+        reviews: const [],
+        tags: const ['t1', 't2'],
+        created: DateTime.now(),
+        updated: DateTime.now(),
+        category: ServiceCategory.other,
+        imageUrl: '',
+      );
+
+      await repo.createService(received);
+    });
+  });
+}
