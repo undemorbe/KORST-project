@@ -29,15 +29,28 @@ jobs:
       shell: bash
       run: |
         if [ -n "${{ secrets.DOTENV_BASE64 }}" ]; then
-          echo "${{ secrets.DOTENV_BASE64 }}" | base64 --decode > .env
-          exit 0
-        fi
-        if [ -n "${{ secrets.DOTENV }}" ]; then
+          if echo "${{ secrets.DOTENV_BASE64 }}" | base64 -d > .env 2>/dev/null; then
+            echo "Decoded .env from DOTENV_BASE64"
+            exit 0
+          else
+            echo "DOTENV_BASE64 provided but base64 decode failed; trying DOTENV plain secret..."
+            if [ -n "${{ secrets.DOTENV }}" ]; then
+              printf "%s" "${{ secrets.DOTENV }}" > .env
+              echo "Wrote .env from DOTENV"
+              exit 0
+            else
+              echo "Invalid DOTENV_BASE64 and DOTENV not provided" >&2
+              exit 1
+            fi
+          fi
+        elif [ -n "${{ secrets.DOTENV }}" ]; then
           printf "%s" "${{ secrets.DOTENV }}" > .env
+          echo "Wrote .env from DOTENV"
           exit 0
+        else
+          echo "Missing DOTENV_BASE64 or DOTENV secret" >&2
+          exit 1
         fi
-        echo "Missing DOTENV_BASE64 or DOTENV secret" >&2
-        exit 1
 
     - name: Get dependencies
       run: flutter pub get
