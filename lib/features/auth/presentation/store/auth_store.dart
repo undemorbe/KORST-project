@@ -1,4 +1,5 @@
 import 'package:mobx/mobx.dart';
+import '../../domain/entities/auth_user_status.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/entities/user_entity.dart';
 
@@ -27,6 +28,9 @@ abstract class _AuthStore with Store {
   @observable
   String? phoneNumber;
 
+  @observable
+  AuthUserStatus? userStatus;
+
   @action
   Future<void> checkLoginStatus() async {
     isLoading = true;
@@ -37,6 +41,36 @@ abstract class _AuthStore with Store {
       }
     } catch (e) {
       errorMessage = e.toString();
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  @action
+  Future<void> bootstrap() async {
+    isLoading = true;
+    errorMessage = null;
+    try {
+      isLoggedIn = await _authRepository.isLoggedIn();
+      userProfile = isLoggedIn ? await _authRepository.getUserProfile() : null;
+      final phone = userProfile?.phone;
+      if (isLoggedIn && phone != null && phone.isNotEmpty) {
+        try {
+          userStatus = await _authRepository.checkUser(phone);
+          if (userStatus == AuthUserStatus.notFound) {
+            await _authRepository.logout();
+            isLoggedIn = false;
+            userProfile = null;
+          }
+        } catch (e) {
+          errorMessage = e.toString();
+          userStatus ??= AuthUserStatus.user;
+        }
+      }
+    } catch (e) {
+      errorMessage = e.toString();
+      isLoggedIn = false;
+      userProfile = null;
     } finally {
       isLoading = false;
     }
@@ -58,19 +92,21 @@ abstract class _AuthStore with Store {
   }
 
   @action
-  Future<bool> verifyOtp(String code) async {
+  Future<AuthUserStatus?> verifyOtp(String otp) async {
     isLoading = true;
     errorMessage = null;
     try {
-      final exists = await _authRepository.verifyOtp(code);
-      if (exists) {
-        isLoggedIn = true;
-        userProfile = await _authRepository.getUserProfile();
-      }
-      return exists;
+      final phone = phoneNumber;
+      if (phone == null) return null;
+
+      final status = await _authRepository.verifyOtp(phone: phone, otp: otp);
+      userStatus = status;
+      isLoggedIn = status != AuthUserStatus.notFound;
+      userProfile = await _authRepository.getUserProfile();
+      return status;
     } catch (e) {
       errorMessage = e.toString();
-      return false;
+      return null;
     } finally {
       isLoading = false;
     }
@@ -81,9 +117,21 @@ abstract class _AuthStore with Store {
     isLoading = true;
     errorMessage = null;
     try {
-      await _authRepository.register(name, photoUrl, contacts);
+      final phone = phoneNumber ?? userProfile?.phone ?? '';
+      final base = userProfile ?? UserEntity.empty(phone: phone);
+      final updated = base.copyWith(
+        name: name,
+        photoUrl: photoUrl,
+        contacts: {
+          ...base.contacts,
+          'other': contacts,
+        },
+        updated: DateTime.now(),
+      );
+      await _authRepository.updateProfile(updated);
       isLoggedIn = true;
-      userProfile = await _authRepository.getUserProfile();
+      userProfile = updated;
+      userStatus = AuthUserStatus.user;
     } catch (e) {
       errorMessage = e.toString();
     } finally {
@@ -97,7 +145,15 @@ abstract class _AuthStore with Store {
     errorMessage = null;
     try {
       await _authRepository.updateProfile(user);
+      isLoggedIn = true;
       userProfile = user;
+      userStatus = AuthUserStatus.user;
+      try {
+        final phone = user.phone;
+        if (phone.isNotEmpty) {
+          userStatus = await _authRepository.checkUser(phone);
+        }
+      } catch (_) {}
     } catch (e) {
       errorMessage = e.toString();
     } finally {

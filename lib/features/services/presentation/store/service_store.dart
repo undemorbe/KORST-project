@@ -1,4 +1,5 @@
 import 'package:mobx/mobx.dart';
+import '../../domain/entities/cards_page.dart';
 import '../../domain/entities/service_entity.dart';
 import '../../domain/entities/service_category.dart';
 import '../../domain/entities/review_entity.dart';
@@ -21,6 +22,9 @@ abstract class _ServiceStore with Store {
   bool isLoading = false;
 
   @observable
+  bool isLoadingMore = false;
+
+  @observable
   String? errorMessage;
 
   @observable
@@ -28,6 +32,12 @@ abstract class _ServiceStore with Store {
 
   @observable
   ServiceCategory? selectedCategory;
+
+  @observable
+  String? nextKey;
+
+  @observable
+  bool hasMore = true;
 
   @computed
   List<ServiceEntity> get filteredServices {
@@ -43,12 +53,33 @@ abstract class _ServiceStore with Store {
     isLoading = true;
     errorMessage = null;
     try {
-      final result = await _serviceRepository.getServices();
-      services = ObservableList.of(result);
+      final CardsPage page = await _serviceRepository.getServices(key: null);
+      services = ObservableList.of(page.cards);
+      nextKey = page.nextKey;
+      hasMore = page.nextKey != null && page.cards.isNotEmpty;
     } catch (e) {
       errorMessage = e.toString();
     } finally {
       isLoading = false;
+    }
+  }
+
+  @action
+  Future<void> loadMoreServices() async {
+    if (isLoading || isLoadingMore || !hasMore) return;
+    isLoadingMore = true;
+    errorMessage = null;
+    try {
+      final CardsPage page = await _serviceRepository.getServices(key: nextKey);
+      final existingIds = services.map((e) => e.id).toSet();
+      final newItems = page.cards.where((c) => !existingIds.contains(c.id)).toList();
+      services.addAll(newItems);
+      nextKey = page.nextKey;
+      hasMore = page.nextKey != null && page.cards.isNotEmpty;
+    } catch (e) {
+      errorMessage = e.toString();
+    } finally {
+      isLoadingMore = false;
     }
   }
 
@@ -73,6 +104,25 @@ abstract class _ServiceStore with Store {
     try {
       await _serviceRepository.addReview(serviceId, review);
       await loadServices();
+    } catch (e) {
+      errorMessage = e.toString();
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  @action
+  Future<void> loadServiceDetails(String id) async {
+    isLoading = true;
+    errorMessage = null;
+    try {
+      final service = await _serviceRepository.getService(id);
+      final index = services.indexWhere((s) => s.id == id);
+      if (index >= 0) {
+        services[index] = service;
+      } else {
+        services.add(service);
+      }
     } catch (e) {
       errorMessage = e.toString();
     } finally {

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
-import '../../../auth/domain/entities/user_entity.dart';
 import '../../../auth/presentation/store/auth_store.dart';
 
 class EditProfilePage extends StatefulWidget {
@@ -17,6 +16,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final _formKey = GlobalKey<FormState>();
   
   late TextEditingController _nameController;
+  late TextEditingController _surnameController;
+  late TextEditingController _descriptionController;
   late TextEditingController _emailController;
   late TextEditingController _telegramController;
   
@@ -28,13 +29,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
     super.initState();
     final profile = _authStore.userProfile;
     _nameController = TextEditingController(text: profile?.name ?? '');
+    _surnameController = TextEditingController(text: profile?.surname ?? '');
+    _descriptionController = TextEditingController(text: profile?.description ?? '');
     
     final contacts = profile?.contacts ?? {};
     _emailController = TextEditingController(text: contacts['email'] ?? '');
     _telegramController = TextEditingController(text: contacts['telegram'] ?? '');
     
-    if (contacts['other'] is Map) {
-      (contacts['other'] as Map).forEach((key, value) {
+    final others = contacts['others'] ?? contacts['other'];
+    if (others is Map) {
+      others.forEach((key, value) {
         _otherContactsControllers[key.toString()] = TextEditingController(text: value.toString());
       });
     }
@@ -43,6 +47,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
   @override
   void dispose() {
     _nameController.dispose();
+    _surnameController.dispose();
+    _descriptionController.dispose();
     _emailController.dispose();
     _telegramController.dispose();
     for (var controller in _otherContactsControllers.values) {
@@ -96,19 +102,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
         }
       });
 
-      final updatedUser = UserEntity(
-        uid: currentProfile.uid,
+      final updatedUser = currentProfile.copyWith(
         name: _nameController.text,
-        phone: currentProfile.phone,
-        photoUrl: currentProfile.photoUrl,
+        surname: _surnameController.text,
+        description: _descriptionController.text,
         contacts: {
           'email': _emailController.text,
           'telegram': _telegramController.text,
-          'other': otherContacts,
+          'others': otherContacts,
         },
-        createdCards: currentProfile.createdCards,
-        bookings: currentProfile.bookings,
-        created: currentProfile.created,
         updated: DateTime.now(),
       );
 
@@ -149,6 +151,17 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 controller: _nameController,
                 decoration: const InputDecoration(labelText: 'Имя'),
                 validator: (v) => v?.isEmpty == true ? 'Введите имя' : null,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _surnameController,
+                decoration: const InputDecoration(labelText: 'Фамилия'),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _descriptionController,
+                maxLines: 3,
+                decoration: const InputDecoration(labelText: 'Описание'),
               ),
               const SizedBox(height: 16),
               TextFormField(

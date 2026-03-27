@@ -42,8 +42,8 @@ class ServiceEntity {
 
   factory ServiceEntity.fromJson(Map<String, dynamic> json) {
     return ServiceEntity(
-      uid: json['uid'] as String,
-      title: json['name'] as String, // Mapping 'name' from JSON to 'title'
+      uid: (json['uid'] as String?) ?? (json['id'] as String?) ?? '',
+      title: (json['name'] as String?) ?? (json['title'] as String?) ?? '',
       description: json['description'] as String? ?? '',
       price: (json['price'] as num).toDouble(),
       currency: json['currency'] as String? ?? 'RUB',

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../l10n/generated/app_localizations.dart';
@@ -34,6 +35,16 @@ class SettingsPage extends StatelessWidget {
               },
               child: const Text('Редактировать профиль'),
             ),
+
+            if (kDebugMode) ...[
+              const SizedBox(height: 12),
+              OutlinedButton(
+                onPressed: () {
+                  context.push('/logs');
+                },
+                child: const Text('Логи (Talker)'),
+              ),
+            ],
             
             const SizedBox(height: 24),
             
@@ -124,4 +135,3 @@ class SettingsPage extends StatelessWidget {
     );
   }
 }
-

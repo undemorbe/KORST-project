@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import '../../domain/entities/user_entity.dart';
 import '../store/auth_store.dart';
 
 class CreateProfilePage extends StatefulWidget {
@@ -15,22 +16,42 @@ class _CreateProfilePageState extends State<CreateProfilePage> {
   final AuthStore _authStore = GetIt.I<AuthStore>();
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final _surnameController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _telegramController = TextEditingController();
   final _contactsController = TextEditingController();
 
   @override
   void dispose() {
     _nameController.dispose();
+    _surnameController.dispose();
+    _descriptionController.dispose();
+    _emailController.dispose();
+    _telegramController.dispose();
     _contactsController.dispose();
     super.dispose();
   }
 
   Future<void> _onSave() async {
     if (_formKey.currentState!.validate()) {
-      await _authStore.register(
-        _nameController.text,
-        null, // Photo URL placeholder
-        _contactsController.text,
+      final phone = _authStore.phoneNumber ?? _authStore.userProfile?.phone ?? '';
+      final base = _authStore.userProfile ?? UserEntity.empty(phone: phone);
+      final updated = base.copyWith(
+        name: _nameController.text,
+        surname: _surnameController.text,
+        description: _descriptionController.text,
+        contacts: {
+          'email': _emailController.text,
+          'telegram': _telegramController.text,
+          'others': {
+            if (_contactsController.text.trim().isNotEmpty) 'other': _contactsController.text.trim(),
+          },
+        },
+        updated: DateTime.now(),
       );
+
+      await _authStore.updateProfile(updated);
       
       if (!mounted) return;
 
@@ -77,7 +98,6 @@ class _CreateProfilePageState extends State<CreateProfilePage> {
                             padding: EdgeInsets.zero,
                             icon: const Icon(Icons.camera_alt, size: 18, color: Colors.white),
                             onPressed: () {
-                              // Pick image logic
                             },
                           ),
                         ),
@@ -87,7 +107,6 @@ class _CreateProfilePageState extends State<CreateProfilePage> {
                 ),
                 const SizedBox(height: 32),
                 TextFormField(
-                  controller: _nameController,
                   decoration: const InputDecoration(
                     labelText: 'Имя',
                     border: OutlineInputBorder(),
@@ -101,9 +120,42 @@ class _CreateProfilePageState extends State<CreateProfilePage> {
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
+                  controller: _surnameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Фамилия',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _descriptionController,
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                    labelText: 'Описание',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(
+                    labelText: 'Email',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _telegramController,
+                  decoration: const InputDecoration(
+                    labelText: 'Telegram',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
                   controller: _contactsController,
                   decoration: const InputDecoration(
-                    labelText: 'Контакты для связи (Telegram, WhatsApp)',
+                    labelText: 'Доп. контакты (любой текст)',
                     border: OutlineInputBorder(),
                   ),
                 ),

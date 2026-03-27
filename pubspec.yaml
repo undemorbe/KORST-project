@@ -7,8 +7,10 @@ environment:
   sdk: ^3.10.7
 
 dependencies:
+  dio: ^5.9.2
   flutter:
     sdk: flutter
+  flutter_dotenv: ^6.0.0
   flutter_localizations:
     sdk: flutter
   flutter_mobx: ^2.3.0
@@ -20,6 +22,9 @@ dependencies:
   mask_text_input_formatter: ^2.9.0
   mobx: ^2.6.0
   pinput: ^6.0.2
+  talker: ^5.1.15
+  talker_dio_logger: ^5.1.15
+  talker_flutter: ^5.1.15
 
 dev_dependencies:
   flutter_test:
@@ -34,3 +39,5 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   generate: true
+  assets:
+    - .env

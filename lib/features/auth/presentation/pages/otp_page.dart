@@ -3,6 +3,7 @@ import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pinput/pinput.dart';
+import '../../domain/entities/auth_user_status.dart';
 import '../store/auth_store.dart';
 
 class OtpPage extends StatefulWidget {
@@ -28,15 +29,15 @@ class _OtpPageState extends State<OtpPage> {
     _scaffoldMessengerKey.currentState?.hideCurrentMaterialBanner();
     _scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
 
-    final exists = await _authStore.verifyOtp(pin);
+    final status = await _authStore.verifyOtp(pin);
     
     if (!mounted) return;
 
     if (_authStore.errorMessage == null) {
-      if (exists) {
-        context.go('/'); // Home page
-      } else {
+      if (status == AuthUserStatus.notRegistered) {
         context.push('/auth/create-profile');
+      } else {
+        context.go('/'); // Home page
       }
     } else {
       // Clear pin on error
@@ -102,7 +103,7 @@ class _OtpPageState extends State<OtpPage> {
                 const SizedBox(height: 32),
                 Center(
                   child: Pinput(
-                    length: 4,
+                    length: 6,
                     controller: _otpController,
                     onCompleted: _onCompleted,
                     defaultPinTheme: PinTheme(

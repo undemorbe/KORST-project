@@ -19,6 +19,7 @@ class _ServicesHomePageState extends State<ServicesHomePage> {
   final ServiceStore _store = sl<ServiceStore>();
   final FavoritesStore _favoritesStore = sl<FavoritesStore>();
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -26,18 +27,31 @@ class _ServicesHomePageState extends State<ServicesHomePage> {
     _searchController.addListener(() {
       _store.setSearchQuery(_searchController.text);
     });
+    _store.loadServices();
+    _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final pos = _scrollController.position;
+    if (pos.maxScrollExtent <= 0) return;
+    final threshold = pos.maxScrollExtent * 0.85;
+    if (pos.pixels >= threshold) {
+      _store.loadMoreServices();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final services = _store.filteredServices; // Observe this in Observer or build
     
     return Scaffold(
       appBar: AppBar(
@@ -71,20 +85,18 @@ class _ServicesHomePageState extends State<ServicesHomePage> {
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Observer(
-              builder: (_) => Row(
-                children: [
-                  _buildCategoryChip(context, l10n.categoryAll, null),
-                  const SizedBox(width: 8),
-                  _buildCategoryChip(context, l10n.categoryCleaning, ServiceCategory.cleaning),
-                  const SizedBox(width: 8),
-                  _buildCategoryChip(context, l10n.categoryRepair, ServiceCategory.repair),
-                  const SizedBox(width: 8),
-                  _buildCategoryChip(context, l10n.categoryConsulting, ServiceCategory.consulting),
-                  const SizedBox(width: 8),
-                  _buildCategoryChip(context, 'Other', ServiceCategory.other),
-                ],
-              ),
+            child: Row(
+              children: [
+                _buildCategoryChip(context, l10n.categoryAll, null),
+                const SizedBox(width: 8),
+                _buildCategoryChip(context, l10n.categoryCleaning, ServiceCategory.cleaning),
+                const SizedBox(width: 8),
+                _buildCategoryChip(context, l10n.categoryRepair, ServiceCategory.repair),
+                const SizedBox(width: 8),
+                _buildCategoryChip(context, l10n.categoryConsulting, ServiceCategory.consulting),
+                const SizedBox(width: 8),
+                _buildCategoryChip(context, 'Other', ServiceCategory.other),
+              ],
             ),
           ),
           const SizedBox(height: 16),
@@ -98,28 +110,63 @@ class _ServicesHomePageState extends State<ServicesHomePage> {
                 }
 
                 if (_store.errorMessage != null) {
-                  return Center(child: Text('${l10n.errorLoading}: ${_store.errorMessage}'));
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('${l10n.errorLoading}: ${_store.errorMessage}'),
+                          const SizedBox(height: 12),
+                          OutlinedButton(
+                            onPressed: _store.loadServices,
+                            child: const Text('Повторить'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
                 }
 
                 if (_store.filteredServices.isEmpty) {
                   return Center(child: Text(l10n.emptyList));
                 }
 
-                return ListView.builder(
-                  itemCount: _store.filteredServices.length,
-                  itemBuilder: (context, index) {
-                    final service = _store.filteredServices[index];
-                    return Observer( // Add observer for favorites
-                      builder: (_) => ServiceCard(
-                        service: service,
-                        isFavorite: _favoritesStore.isFavorite(service.id),
-                        onFavoriteToggle: () => _favoritesStore.toggleFavorite(service.id),
-                        onTap: () {
-                          context.push('/service-details', extra: service);
-                        },
-                      ),
-                    );
-                  },
+                return RefreshIndicator(
+                  onRefresh: _store.loadServices,
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    itemCount: _store.filteredServices.length + 1,
+                    itemBuilder: (context, index) {
+                      if (index == _store.filteredServices.length) {
+                        if (_store.isLoadingMore) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            child: Center(child: CircularProgressIndicator()),
+                          );
+                        }
+                        if (!_store.hasMore) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 24),
+                            child: Center(child: Text('Больше карточек нет')),
+                          );
+                        }
+                        return const SizedBox(height: 24);
+                      }
+
+                      final service = _store.filteredServices[index];
+                      return Observer(
+                        builder: (_) => ServiceCard(
+                          service: service,
+                          isFavorite: _favoritesStore.isFavorite(service.id),
+                          onFavoriteToggle: () => _favoritesStore.toggleFavorite(service.id),
+                          onTap: () {
+                            context.push('/service-details', extra: service);
+                          },
+                        ),
+                      );
+                    },
+                  ),
                 );
               },
             ),

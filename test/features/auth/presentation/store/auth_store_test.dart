@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:korst/features/auth/domain/entities/auth_user_status.dart';
 import 'package:korst/features/auth/domain/entities/user_entity.dart';
 import 'package:korst/features/auth/domain/repositories/auth_repository.dart';
 import 'package:korst/features/auth/presentation/store/auth_store.dart';
@@ -101,43 +102,64 @@ void main() {
 
     group('verifyOtp', () {
       const code = '1234';
+      const phone = '+79990000000';
 
-      test('returns true and updates state when otp exists', () async {
-        when(() => mockAuthRepository.verifyOtp(any())).thenAnswer((_) async => true);
+      test('returns status and updates state on success', () async {
+        store.phoneNumber = phone;
+        when(
+          () => mockAuthRepository.verifyOtp(
+            phone: any(named: 'phone'),
+            otp: any(named: 'otp'),
+          ),
+        ).thenAnswer((_) async => AuthUserStatus.user);
         when(() => mockAuthRepository.getUserProfile()).thenAnswer((_) async => testUser);
 
         final result = await store.verifyOtp(code);
 
-        expect(result, true);
+        expect(result, AuthUserStatus.user);
+        expect(store.isLoggedIn, true);
+        expect(store.userProfile, testUser);
+        expect(store.userStatus, AuthUserStatus.user);
+        expect(store.errorMessage, null);
+        expect(store.isLoading, false);
+        verify(() => mockAuthRepository.verifyOtp(phone: phone, otp: code)).called(1);
+        verify(() => mockAuthRepository.getUserProfile()).called(1);
+      });
+
+      test('routes to notRegistered status correctly', () async {
+        store.phoneNumber = phone;
+        when(
+          () => mockAuthRepository.verifyOtp(
+            phone: any(named: 'phone'),
+            otp: any(named: 'otp'),
+          ),
+        ).thenAnswer((_) async => AuthUserStatus.notRegistered);
+        when(() => mockAuthRepository.getUserProfile()).thenAnswer((_) async => testUser);
+
+        final result = await store.verifyOtp(code);
+
+        expect(result, AuthUserStatus.notRegistered);
         expect(store.isLoggedIn, true);
         expect(store.userProfile, testUser);
         expect(store.errorMessage, null);
         expect(store.isLoading, false);
-        verify(() => mockAuthRepository.verifyOtp(code)).called(1);
+        verify(() => mockAuthRepository.verifyOtp(phone: phone, otp: code)).called(1);
         verify(() => mockAuthRepository.getUserProfile()).called(1);
       });
 
-      test('returns false when otp does not exist', () async {
-        when(() => mockAuthRepository.verifyOtp(any())).thenAnswer((_) async => false);
-
-        final result = await store.verifyOtp(code);
-
-        expect(result, false);
-        expect(store.isLoggedIn, false);
-        expect(store.userProfile, null);
-        expect(store.errorMessage, null);
-        expect(store.isLoading, false);
-        verify(() => mockAuthRepository.verifyOtp(code)).called(1);
-        verifyNever(() => mockAuthRepository.getUserProfile());
-      });
-
-      test('returns false and sets errorMessage on exception', () async {
+      test('returns null and sets errorMessage on exception', () async {
         final exception = Exception('Error verifying OTP');
-        when(() => mockAuthRepository.verifyOtp(any())).thenThrow(exception);
+        store.phoneNumber = phone;
+        when(
+          () => mockAuthRepository.verifyOtp(
+            phone: any(named: 'phone'),
+            otp: any(named: 'otp'),
+          ),
+        ).thenThrow(exception);
 
         final result = await store.verifyOtp(code);
 
-        expect(result, false);
+        expect(result, null);
         expect(store.errorMessage, exception.toString());
         expect(store.isLoading, false);
       });
@@ -146,26 +168,27 @@ void main() {
     group('register', () {
       const name = 'Test User';
       const contacts = 'test@example.com';
+      const phone = '+79990000000';
 
       test('calls repository and updates state on success', () async {
-        when(() => mockAuthRepository.register(any(), any(), any()))
-            .thenAnswer((_) async {});
-        when(() => mockAuthRepository.getUserProfile()).thenAnswer((_) async => testUser);
+        when(() => mockAuthRepository.updateProfile(any())).thenAnswer((_) async {});
+        store.phoneNumber = phone;
+        store.userProfile = testUser;
 
         await store.register(name, null, contacts);
 
         expect(store.isLoggedIn, true);
-        expect(store.userProfile, testUser);
+        expect(store.userProfile?.name, name);
         expect(store.errorMessage, null);
         expect(store.isLoading, false);
-        verify(() => mockAuthRepository.register(name, null, contacts)).called(1);
-        verify(() => mockAuthRepository.getUserProfile()).called(1);
+        verify(() => mockAuthRepository.updateProfile(any())).called(1);
       });
 
       test('handles errors gracefully', () async {
         final exception = Exception('Error registering');
-        when(() => mockAuthRepository.register(any(), any(), any()))
-            .thenThrow(exception);
+        when(() => mockAuthRepository.updateProfile(any())).thenThrow(exception);
+        store.phoneNumber = phone;
+        store.userProfile = testUser;
 
         await store.register(name, null, contacts);
 

@@ -49,6 +49,22 @@ mixin _$ServiceStore on _ServiceStore, Store {
     });
   }
 
+  late final _$isLoadingMoreAtom =
+      Atom(name: '_ServiceStore.isLoadingMore', context: context);
+
+  @override
+  bool get isLoadingMore {
+    _$isLoadingMoreAtom.reportRead();
+    return super.isLoadingMore;
+  }
+
+  @override
+  set isLoadingMore(bool value) {
+    _$isLoadingMoreAtom.reportWrite(value, super.isLoadingMore, () {
+      super.isLoadingMore = value;
+    });
+  }
+
   late final _$errorMessageAtom =
       Atom(name: '_ServiceStore.errorMessage', context: context);
 
@@ -97,12 +113,52 @@ mixin _$ServiceStore on _ServiceStore, Store {
     });
   }
 
+  late final _$nextKeyAtom =
+      Atom(name: '_ServiceStore.nextKey', context: context);
+
+  @override
+  String? get nextKey {
+    _$nextKeyAtom.reportRead();
+    return super.nextKey;
+  }
+
+  @override
+  set nextKey(String? value) {
+    _$nextKeyAtom.reportWrite(value, super.nextKey, () {
+      super.nextKey = value;
+    });
+  }
+
+  late final _$hasMoreAtom =
+      Atom(name: '_ServiceStore.hasMore', context: context);
+
+  @override
+  bool get hasMore {
+    _$hasMoreAtom.reportRead();
+    return super.hasMore;
+  }
+
+  @override
+  set hasMore(bool value) {
+    _$hasMoreAtom.reportWrite(value, super.hasMore, () {
+      super.hasMore = value;
+    });
+  }
+
   late final _$loadServicesAsyncAction =
       AsyncAction('_ServiceStore.loadServices', context: context);
 
   @override
   Future<void> loadServices() {
     return _$loadServicesAsyncAction.run(() => super.loadServices());
+  }
+
+  late final _$loadMoreServicesAsyncAction =
+      AsyncAction('_ServiceStore.loadMoreServices', context: context);
+
+  @override
+  Future<void> loadMoreServices() {
+    return _$loadMoreServicesAsyncAction.run(() => super.loadMoreServices());
   }
 
   late final _$createServiceAsyncAction =
@@ -119,6 +175,15 @@ mixin _$ServiceStore on _ServiceStore, Store {
   @override
   Future<void> addReview(String serviceId, ReviewEntity review) {
     return _$addReviewAsyncAction.run(() => super.addReview(serviceId, review));
+  }
+
+  late final _$loadServiceDetailsAsyncAction =
+      AsyncAction('_ServiceStore.loadServiceDetails', context: context);
+
+  @override
+  Future<void> loadServiceDetails(String id) {
+    return _$loadServiceDetailsAsyncAction
+        .run(() => super.loadServiceDetails(id));
   }
 
   late final _$_ServiceStoreActionController =
@@ -151,9 +216,12 @@ mixin _$ServiceStore on _ServiceStore, Store {
     return '''
 services: ${services},
 isLoading: ${isLoading},
+isLoadingMore: ${isLoadingMore},
 errorMessage: ${errorMessage},
 searchQuery: ${searchQuery},
 selectedCategory: ${selectedCategory},
+nextKey: ${nextKey},
+hasMore: ${hasMore},
 filteredServices: ${filteredServices}
     ''';
   }
