@@ -45,6 +45,12 @@ func (m *MockAuthService) GetNewTokens(refreshTokenStr string) (responses.Refres
 	return args.Get(0).(responses.RefreshResponse), args.Error(1)
 }
 
+// RemoveRefreshToken задает фиктивную реализацию удаления access-токена
+func (m *MockAuthService) RemoveRefreshToken(userID uuid.UUID) error {
+	args := m.Called(userID)
+	return args.Error(0)
+}
+
 // MockTokenService - структура для передачи в тестах
 // фиктивной структуры сервиса TokenService
 type MockTokenService struct{ mock.Mock }
@@ -90,5 +96,27 @@ type MockUserService struct{ mock.Mock }
 // UpdateUserInfo задает фиктивную реализацию обновления данных пользователя
 func (m *MockUserService) UpdateUserInfo(userID uuid.UUID, req *requests.UpdateUserRequest) error {
 	args := m.Called(userID, req)
+	return args.Error(0)
+}
+
+// GetUserInfo задает фиктивную реализацию получения информации о пользователе
+func (m *MockUserService) GetUserInfo(userID uuid.UUID) (responses.GetUserInfoResponse, error) {
+	args := m.Called(userID)
+	return args.Get(0).(responses.GetUserInfoResponse), args.Error(1)
+}
+
+// MockReviewService - структура для передачи в тестах
+// фиктивной структуры сервиса ReviewService
+type MockReviewService struct{ mock.Mock }
+
+// GetReviews задает фиктивную реализацию получения отзывов
+func (m *MockReviewService) GetReviews(userID uuid.UUID) (responses.GetReviewsResponse, error) {
+	args := m.Called(userID)
+	return args.Get(0).(responses.GetReviewsResponse), args.Error(1)
+}
+
+// PostReview задает фиктивную реализацию размещения отзыва
+func (m *MockReviewService) PostReview(authorID uuid.UUID, req *requests.PostReviewRequest) error {
+	args := m.Called(authorID, req)
 	return args.Error(0)
 }

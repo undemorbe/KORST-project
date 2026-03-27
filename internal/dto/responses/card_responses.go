@@ -22,7 +22,7 @@ type CompressedCard struct {
 	Currency string  `json:"currency"`
 	Type     string  `json:"type"`
 
-	Author *CompressedAuthor `json:"author"`
+	Author *CompressedAuthor `json:"author,omitempty"`
 
 	Tags []string `json:"tags"`
 

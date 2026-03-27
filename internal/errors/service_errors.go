@@ -26,7 +26,7 @@ var (
 
 	ErrorAccessExpired = AppError{
 		Code:    CodeAccessExpired,
-		Message: "Сессия истекла.Выполняется обновление токена",
+		Message: "Сессия истекла. Выполняется обновление токена",
 	}
 
 	ErrorRefreshExpired = AppError{
@@ -42,6 +42,11 @@ var (
 	ErrorCardNotFound = AppError{
 		Code:    CodeNotFound,
 		Message: "Карточка не найдена",
+	}
+
+	ErrorReviewExists = AppError{
+		Code:    CodeReviewExists,
+		Message: "Отзыв для указанного пользователя уже существует",
 	}
 
 	ErrorInternal = AppError{

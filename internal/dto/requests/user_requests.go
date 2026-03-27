@@ -1,7 +1,9 @@
 // requests - пакет, содержащий структуры запросов по Api
 package requests
 
-import "gorm.io/datatypes"
+import (
+	"gorm.io/datatypes"
+)
 
 // UpdateRequest - структура для запроса
 // на обновление профиля пользователя
@@ -13,6 +15,7 @@ type UpdateUserRequest struct {
 	Contacts *Contacts `json:"contacts"`
 }
 
+// Contacts - структура с контактами автора карточки
 type Contacts struct {
 	Email    *string `json:"email"`
 	Telegram *string `json:"telegram"`

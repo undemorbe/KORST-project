@@ -45,7 +45,7 @@ func TestSaveCard(t *testing.T) {
 		"tags": ["tag1", "tag2", "tag3"]
 	}`
 
-	required_req := &requests.SaveCardRequest{
+	requiredReq := &requests.SaveCardRequest{
 		Name:        "name",
 		Description: nil,
 		Price:       100,
@@ -57,7 +57,7 @@ func TestSaveCard(t *testing.T) {
 	mockTokenService.On("DecodeAccessToken", accessToken).Return(userID, nil)
 
 	mockCardService.
-		On("SaveCard", userID, required_req).
+		On("SaveCard", userID, requiredReq).
 		Return(nil)
 
 	req := httptest.NewRequest(

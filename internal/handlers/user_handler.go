@@ -57,3 +57,24 @@ func (h *UserHandler) UpdateUserInfo(c *gin.Context) {
 	logger.Log.Info("Обновление данных пользователя прошло успешно")
 	c.JSON(http.StatusOK, responses.GenericResponse{})
 }
+
+// GetUserInfo обрабатывает запрос на получение
+// информации о каком-то конкретном пользователе
+func (h *UserHandler) GetUserInfo(c *gin.Context) {
+	var req requests.UserIDRequest
+
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		c.Error(errors.ErrorInvalidInput)
+		return
+	}
+
+	response, err := h.userService.GetUserInfo(req.UserID)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	logger.Log.Info("Получение данных о пользователе успешно выполнено")
+	c.JSON(http.StatusOK, response)
+}

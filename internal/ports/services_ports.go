@@ -30,6 +30,9 @@ type AuthService interface {
 
 	// GetNewTokens получает новые access и refresh токены для пользователя
 	GetNewTokens(refreshTokenStr string) (responses.RefreshResponse, error)
+
+	// RemoveRefreshToken удаляет refresh-токен по ID пользователя
+	RemoveRefreshToken(userID uuid.UUID) error
 }
 
 // TokenService содержит порты для методов создания/обновления токенов
@@ -65,4 +68,22 @@ type UserService interface {
 	// о каком-то конкретном пользователе
 	UpdateUserInfo(userID uuid.UUID,
 		req *requests.UpdateUserRequest) error
+
+	// GetUserInfo получает подробную информацию
+	// о каком-то конкретном пользователе
+	GetUserInfo(userID uuid.UUID) (
+		responses.GetUserInfoResponse, error)
+}
+
+// ReviewService содержит порты для методов для
+// создания и просмотра отзывов на пользователе1
+type ReviewService interface {
+	// GetReviews получает все отзывы,
+	// относящиеся к определенному пользователю
+	GetReviews(userID uuid.UUID) (
+		responses.GetReviewsResponse, error)
+
+	// PostReview сохраняет отзыв на указанного пользователя
+	PostReview(authorID uuid.UUID,
+		req *requests.PostReviewRequest) error
 }
