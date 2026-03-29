@@ -56,6 +56,48 @@ func TestSaveCard(t *testing.T) {
 	require.NoError(t, err)
 }
 
+// TestUpdateCard тестирует обновление карточки объявления
+func TestUpdateCard(t *testing.T) {
+
+	mockCardRepo := &mocks.MockCardRepo{}
+	mockUserRepo := &mocks.MockUserRepo{}
+
+	cardService := NewCardService(mockCardRepo, mockUserRepo)
+
+	userID := uuid.New()
+	cardID := uuid.New()
+	oldName := "Старое название"
+	oldType := "Тип карточки"
+	newName := "Новое название"
+	newDescription := "Новое описание"
+
+	card := &entities.Card{
+		UserID: userID,
+		Name:   oldName,
+		Type:   oldType,
+	}
+
+	req := &requests.UpdateCardRequest{
+		CardID:      cardID,
+		Name:        &newName,
+		Description: &newDescription,
+	}
+
+	mockCardRepo.On("FindByID", cardID).Return(card, nil)
+
+	mockCardRepo.
+		On("UpdateCard", mock.AnythingOfType("*entities.Card")).
+		Return(nil)
+
+	err := cardService.UpdateCard(userID, req)
+
+	require.NoError(t, err)
+
+	require.Equal(t, newName, card.Name)
+	require.Equal(t, newDescription, card.Description)
+	require.Equal(t, oldType, card.Type)
+}
+
 // TestGetCards проверяет получение нескольких карточек
 func TestGetCards(t *testing.T) {
 	os.Setenv("CARD_LIMIT", "12")
