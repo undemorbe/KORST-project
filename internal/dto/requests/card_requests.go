@@ -28,3 +28,16 @@ type SaveCardRequest struct {
 	Type     string   `json:"type" binding:"required"`
 	Tags     []string `json:"tags" binding:"required"`
 }
+
+// UpdateCardRequest - структура для запроса на
+// обновление карточки объявления
+type UpdateCardRequest struct {
+	CardID      uuid.UUID `json:"card-id"`
+	Name        *string   `json:"name"`
+	Description *string   `json:"description"`
+
+	Price    *float64  `json:"price"`
+	Currency *string   `json:"currency"`
+	Type     *string   `json:"type"`
+	Tags     *[]string `json:"tags"`
+}

@@ -11,5 +11,6 @@ const (
 	CodeRefreshExpired = "REFRESH_TOKEN_EXPIRED"
 	CodeNotFound       = "NOT_FOUND"
 	CodeReviewExists   = "REVIEW_ALREADY_EXISTS"
+	CodeForbidden      = "FORBIDDEN"
 	CodeInternalError  = "INTERNAL_ERROR"
 )

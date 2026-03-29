@@ -33,7 +33,7 @@ func NewCardService(
 	}
 }
 
-// SaveCard сохраняет каторчку объявления, созданную пользователем
+// SaveCard сохраняет карточку объявления, созданную пользователем
 func (s *CardService) SaveCard(userID uuid.UUID,
 	req *requests.SaveCardRequest) error {
 
@@ -52,6 +52,52 @@ func (s *CardService) SaveCard(userID uuid.UUID,
 	}
 
 	return s.cardRepo.CreateCard(&newCard)
+}
+
+// UpdateCard обновляет данные определенной карточки объявления
+func (s *CardService) UpdateCard(userID uuid.UUID,
+	req *requests.UpdateCardRequest) error {
+
+	card, err := s.cardRepo.FindByID(req.CardID)
+	if err != nil {
+		logger.Log.Error("Ошибка при поиске карточки: ", err)
+		return err
+	}
+
+	if userID != card.UserID {
+		logger.Log.Warn("Попытка изменить чужую карточку")
+		return errors.ErrorForbidden
+	}
+
+	if req.Name != nil {
+		card.Name = *req.Name
+	}
+	if req.Description != nil {
+		card.Description = *req.Description
+	}
+
+	if req.Price != nil {
+		card.Price = *req.Price
+	}
+	if req.Currency != nil {
+		card.Currency = *req.Currency
+	}
+	if req.Type != nil {
+		card.Type = *req.Type
+	}
+	if req.Tags != nil {
+		card.Tags = *req.Tags
+	}
+
+	card.UpdatedAt = time.Now().UTC()
+
+	err = s.cardRepo.UpdateCard(card)
+	if err != nil {
+		logger.Log.Error("Ошибка при обновлении карточки в БД: ", err)
+		return err
+	}
+
+	return nil
 }
 
 // GetCards возвращает несколько сжатых карточек

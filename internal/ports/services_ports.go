@@ -52,6 +52,9 @@ type CardService interface {
 	// SaveCard сохраняет каторчку объявления, созданную пользователем
 	SaveCard(userID uuid.UUID, req *requests.SaveCardRequest) error
 
+	// UpdateCard обновляет данные определенной карточки объявления
+	UpdateCard(userID uuid.UUID, req *requests.UpdateCardRequest) error
+
 	// GetCards возвращает несколько сжатых карточек
 	// с объявлениями для просмотра пользователями
 	GetCards(key *time.Time) (responses.GetCardsResponse, error)

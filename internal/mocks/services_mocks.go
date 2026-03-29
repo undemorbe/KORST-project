@@ -77,6 +77,12 @@ func (m *MockCardService) SaveCard(userID uuid.UUID, req *requests.SaveCardReque
 	return args.Error(0)
 }
 
+// UpdateCard задает фиктивную реализацию обновления карточки
+func (m *MockCardService) UpdateCard(userID uuid.UUID, req *requests.UpdateCardRequest) error {
+	args := m.Called(userID, req)
+	return args.Error(0)
+}
+
 // GetCards задает фиктивную реализацию получения страницы карточек
 func (m *MockCardService) GetCards(key *time.Time) (responses.GetCardsResponse, error) {
 	args := m.Called(key)

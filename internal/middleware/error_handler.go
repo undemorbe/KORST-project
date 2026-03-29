@@ -62,6 +62,13 @@ func ErrorHandler() gin.HandlerFunc {
 				})
 				return
 
+			case errors.CodeForbidden:
+
+				c.JSON(http.StatusForbidden, gin.H{
+					"code":    appErr.Code,
+					"message": appErr.Message,
+				})
+
 			default:
 
 				c.JSON(http.StatusInternalServerError, gin.H{

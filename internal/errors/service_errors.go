@@ -49,6 +49,11 @@ var (
 		Message: "Отзыв для указанного пользователя уже существует",
 	}
 
+	ErrorForbidden = AppError{
+		Code:    CodeForbidden,
+		Message: "У пользователя нет разрешений на выполнение данного действия",
+	}
+
 	ErrorInternal = AppError{
 		Code:    CodeInternalError,
 		Message: "Непредвиденная ошибка сервера. Попробуйте позже",

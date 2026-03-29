@@ -8,6 +8,7 @@ import (
 	"korst-backend/internal/errors"
 	"korst-backend/internal/infrastructure/logger"
 	"korst-backend/internal/ports"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -82,6 +83,7 @@ func (s *UserService) UpdateUserInfo(
 		}
 	}
 
+	profile.UpdatedAt = time.Now().UTC()
 	user.Profile = profile
 
 	err = s.profileRepo.UpdateProfile(profile)
