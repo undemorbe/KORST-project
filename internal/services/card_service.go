@@ -216,6 +216,7 @@ func (s *CardService) getCompressedAuthor(userID uuid.UUID) (
 	}
 
 	compressedAuthor := &responses.CompressedAuthor{
+		ID:      author.ID,
 		Name:    author.Name,
 		Surname: author.Surname,
 

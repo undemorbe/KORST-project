@@ -78,3 +78,25 @@ func (h *UserHandler) GetUserInfo(c *gin.Context) {
 	logger.Log.Info("Получение данных о пользователе успешно выполнено")
 	c.JSON(http.StatusOK, response)
 }
+
+// GetMyInfo обрабатывает запрос на получение
+// информации о текущем пользователе приложения
+func (h *UserHandler) GetMyInfo(c *gin.Context) {
+
+	accessToken := c.GetHeader("Authorization")
+
+	userID, err := h.tokenService.DecodeAccessToken(accessToken)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response, err := h.userService.GetUserInfo(userID)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	logger.Log.Info("Получение данных о текущем пользователе успешно выполнено")
+	c.JSON(http.StatusOK, response)
+}
