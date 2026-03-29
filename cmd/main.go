@@ -84,6 +84,7 @@ func main() {
 	cards := api.Group("/cards")
 	{
 		cards.POST("/save-card", cardHandler.SaveCard)
+		cards.POST("/update-card", cardHandler.UpdateCard)
 		cards.GET("/get-cards", cardHandler.GetCards)
 		cards.GET("/card-info", cardHandler.GetCardInfo)
 	}
@@ -92,6 +93,7 @@ func main() {
 	{
 		user.POST("/update", userHandler.UpdateUserInfo)
 		user.GET("/get-info", userHandler.GetUserInfo)
+		user.GET("/me", userHandler.GetMyInfo)
 
 		user.GET("/reviews", reviewHandler.GetReviews)
 		user.POST("/post-review", reviewHandler.PostReview)

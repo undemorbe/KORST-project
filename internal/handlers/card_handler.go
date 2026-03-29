@@ -57,6 +57,36 @@ func (h *CardHandler) SaveCard(c *gin.Context) {
 	c.JSON(http.StatusOK, responses.GenericResponse{})
 }
 
+// UpdateCard обрабатывает запрос на изменение
+// данных карточки объявления
+func (h *CardHandler) UpdateCard(c *gin.Context) {
+	var req requests.UpdateCardRequest
+
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		c.Error(errors.ErrorInvalidInput)
+		return
+	}
+
+	accessToken := c.GetHeader("Authorization")
+
+	userID, err := h.tokenService.DecodeAccessToken(accessToken)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	err = h.cardService.UpdateCard(userID, &req)
+
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	logger.Log.Info("Обновление карточки прошло успешно")
+	c.JSON(http.StatusOK, responses.GenericResponse{})
+}
+
 // GetCards обрабатывает запрос на получение
 // карточек для отображения пользователям
 func (h *CardHandler) GetCards(c *gin.Context) {
