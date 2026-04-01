@@ -10,6 +10,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // UserHandler - объект, содержащий методы для обработки
@@ -63,13 +64,19 @@ func (h *UserHandler) UpdateUserInfo(c *gin.Context) {
 func (h *UserHandler) GetUserInfo(c *gin.Context) {
 	var req requests.UserIDRequest
 
-	err := c.ShouldBindJSON(&req)
+	err := c.ShouldBindQuery(&req)
 	if err != nil {
 		c.Error(errors.ErrorInvalidInput)
 		return
 	}
 
-	response, err := h.userService.GetUserInfo(req.UserID)
+	userID, err := uuid.Parse(req.UserID)
+	if err != nil {
+		c.Error(errors.ErrorInvalidInput)
+		return
+	}
+
+	response, err := h.userService.GetUserInfo(userID)
 	if err != nil {
 		c.Error(err)
 		return

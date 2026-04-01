@@ -9,5 +9,5 @@ type VerifyOTPRequest struct {
 
 // RefreshRequest - структура для запроса на обновление refresh токена
 type RefreshRequest struct {
-	RefreshToken string `json:"refresh-token" binding:"required"`
+	RefreshToken string `form:"refresh-token" binding:"required"`
 }

@@ -8,7 +8,8 @@ import (
 
 // User - структура сущности пользователя в БД
 // Содержит ID, телефон, имя и фамилию пользователя,
-// значение IsRegistered, ссылку на refresh токен
+// значение IsRegistered, ссылку на refresh токен,
+// профиль, созданные и полученные отзывы, карточки
 type User struct {
 	ID    uuid.UUID `gorm:"type:uuid;primaryKey"`
 	Phone string    `gorm:"unique;not null"`

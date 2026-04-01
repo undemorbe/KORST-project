@@ -8,8 +8,11 @@ import (
 	"korst-backend/internal/infrastructure/logger"
 	"korst-backend/internal/ports"
 	"net/http"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // CardHandler - объект, содержащий методы для обработки
@@ -91,14 +94,29 @@ func (h *CardHandler) UpdateCard(c *gin.Context) {
 // карточек для отображения пользователям
 func (h *CardHandler) GetCards(c *gin.Context) {
 	var req requests.GetCardsRequest
+	var key *time.Time = nil
 
-	err := c.ShouldBindJSON(&req)
+	err := c.ShouldBindQuery(&req)
 	if err != nil {
 		c.Error(errors.ErrorInvalidInput)
 		return
 	}
 
-	response, err := h.cardService.GetCards(req.Key)
+	if req.Key != nil {
+
+		rawTime := strings.Trim(*req.Key, `"`)
+
+		parsedTime, err := time.Parse(time.RFC3339Nano, rawTime)
+		if err != nil {
+			logger.Log.Warn("Ошибка при парсинге времени в key: ", err)
+			c.Error(errors.ErrorInvalidInput)
+			return
+		}
+
+		key = &parsedTime
+	}
+
+	response, err := h.cardService.GetCards(key)
 
 	if err != nil {
 		c.Error(err)
@@ -114,13 +132,19 @@ func (h *CardHandler) GetCards(c *gin.Context) {
 func (h *CardHandler) GetCardInfo(c *gin.Context) {
 	var req requests.CardInfoRequest
 
-	err := c.ShouldBindJSON(&req)
+	err := c.ShouldBindQuery(&req)
 	if err != nil {
 		c.Error(errors.ErrorInvalidInput)
 		return
 	}
 
-	response, err := h.cardService.GetCardInfo(req.CardID)
+	cardID, err := uuid.Parse(req.CardID)
+	if err != nil {
+		c.Error(errors.ErrorInvalidInput)
+		return
+	}
+
+	response, err := h.cardService.GetCardInfo(cardID)
 
 	if err != nil {
 		c.Error(err)

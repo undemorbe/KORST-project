@@ -68,6 +68,7 @@ func ErrorHandler() gin.HandlerFunc {
 					"code":    appErr.Code,
 					"message": appErr.Message,
 				})
+				return
 
 			default:
 
