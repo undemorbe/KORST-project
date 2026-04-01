@@ -23,7 +23,11 @@ type User struct {
 
 	CreatedReviews []Review `gorm:"foreignKey:AuthorID;constraint:OnDelete:CASCADE"`
 	RelatedReviews []Review `gorm:"foreignKey:RelatedToID;constraint:OnDelete:CASCADE"`
-	Cards          []Card   `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
+
+	CustomerChats []Chat `gorm:"foreignKey:MerchantID;constraint:OnDelete:CASCADE"`
+	MerchantChats []Chat `gorm:"foreignKey:CustomerID;constraint:OnDelete:CASCADE"`
+
+	Cards []Card `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
 }
 
 // BeforeCreate создает необходимые отсутствющие поля при создании сущности

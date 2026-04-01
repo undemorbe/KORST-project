@@ -2,7 +2,6 @@
 package handlers
 
 import (
-	"bytes"
 	"encoding/json"
 	"korst-backend/internal/dto/responses"
 	"korst-backend/internal/infrastructure/logger"
@@ -28,11 +27,7 @@ func TestCheckUser(t *testing.T) {
 
 	router := gin.New()
 	router.Use(middleware.ErrorHandler())
-	router.POST("/check-user", authHandler.CheckUser)
-
-	body := `{
-		"phone": "+79123456789"
-	}`
+	router.GET("/check-user", authHandler.CheckUser)
 
 	mockAuthService.
 		On("CheckUser", "+79123456789").
@@ -41,9 +36,9 @@ func TestCheckUser(t *testing.T) {
 		}, nil)
 
 	req := httptest.NewRequest(
-		http.MethodPost,
-		"/check-user",
-		bytes.NewBufferString(body),
+		http.MethodGet,
+		"/check-user?phone=%2B79123456789",
+		nil,
 	)
 	req.Header.Set("Content-Type", "application/json")
 
@@ -70,11 +65,7 @@ func TestRefreshTokens(t *testing.T) {
 
 	router := gin.New()
 	router.Use(middleware.ErrorHandler())
-	router.POST("/refresh", authHandler.RefreshTokens)
-
-	body := `{
-		"refresh-token": "old-refresh-token"
-	}`
+	router.GET("/refresh", authHandler.RefreshTokens)
 
 	accessToken := "new-access-token"
 	refreshToken := "new-access-token"
@@ -87,9 +78,9 @@ func TestRefreshTokens(t *testing.T) {
 		}, nil)
 
 	req := httptest.NewRequest(
-		http.MethodPost,
-		"/refresh",
-		bytes.NewBufferString(body),
+		http.MethodGet,
+		"/refresh?refresh-token=old-refresh-token",
+		nil,
 	)
 	req.Header.Set("Content-Type", "application/json")
 

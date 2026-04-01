@@ -84,20 +84,16 @@ func TestGetCards(t *testing.T) {
 
 	router := gin.New()
 	router.Use(middleware.ErrorHandler())
-	router.POST("/get-cards", cardHandler.GetCards)
-
-	body := `{
-		"key": "2026-03-19T20:15:34.123Z"
-	}`
+	router.GET("/get-cards", cardHandler.GetCards)
 
 	mockCardService.
 		On("GetCards", mock.AnythingOfType("*time.Time")).
 		Return(responses.GetCardsResponse{}, nil)
 
 	req := httptest.NewRequest(
-		http.MethodPost,
-		"/get-cards",
-		bytes.NewBufferString(body),
+		http.MethodGet,
+		"/get-cards?key=2026-03-19T20:15:34.123Z",
+		nil,
 	)
 	req.Header.Set("Content-Type", "application/json")
 
@@ -117,13 +113,9 @@ func TestGetCardInfo(t *testing.T) {
 
 	router := gin.New()
 	router.Use(middleware.ErrorHandler())
-	router.POST("/card-info", cardHandler.GetCardInfo)
+	router.GET("/card-info", cardHandler.GetCardInfo)
 
 	cardID, _ := uuid.Parse("a807daa3-c98a-4da2-bd03-a88ed68cdd48")
-
-	body := `{
-		"card-id": "a807daa3-c98a-4da2-bd03-a88ed68cdd48"
-	}`
 
 	name := "Олег"
 	phone := "+79123456789"
@@ -142,9 +134,9 @@ func TestGetCardInfo(t *testing.T) {
 	mockCardService.On("GetCardInfo", cardID).Return(responseFromFunc, nil)
 
 	req := httptest.NewRequest(
-		http.MethodPost,
-		"/card-info",
-		bytes.NewBufferString(body),
+		http.MethodGet,
+		"/card-info?card-id=a807daa3-c98a-4da2-bd03-a88ed68cdd48",
+		nil,
 	)
 	req.Header.Set("Content-Type", "application/json")
 

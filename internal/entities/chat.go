@@ -15,7 +15,7 @@ type Chat struct {
 	ID         uuid.UUID `gorm:"type:uuid;primaryKey"`
 	CardID     uuid.UUID `gorm:"type:uuid;uniqueIndex"`
 	CustomerID uuid.UUID `gorm:"type:uuid;uniqueIndex"`
-	ExecutorID uuid.UUID `gorm:"type:uuid;uniqueIndex"`
+	MerchantID uuid.UUID `gorm:"type:uuid;uniqueIndex"`
 
 	Messages []Message `gorm:"foreignKey:ChatID;constraint:OnDelete:CASCADE"`
 

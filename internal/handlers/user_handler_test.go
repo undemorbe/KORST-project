@@ -77,15 +77,13 @@ func TestGetUserInfo(t *testing.T) {
 
 	router := gin.New()
 	router.Use(middleware.ErrorHandler())
-	router.POST("/get-info", userHandler.GetUserInfo)
+	router.GET("/get-info", userHandler.GetUserInfo)
 
 	userID := uuid.New()
 	name := "Олег"
 	telegram := "@oleg"
 
-	body := fmt.Sprintf(`{
-		"user-id": "%s"
-	}`, userID.String())
+	target := fmt.Sprintf("/get-info?user-id=%s", userID.String())
 
 	responseFromFunc := responses.GetUserInfoResponse{
 		Name: name,
@@ -99,9 +97,9 @@ func TestGetUserInfo(t *testing.T) {
 		Return(responseFromFunc, nil)
 
 	req := httptest.NewRequest(
-		http.MethodPost,
-		"/get-info",
-		bytes.NewBufferString(body),
+		http.MethodGet,
+		target,
+		nil,
 	)
 	req.Header.Set("Content-Type", "application/json")
 
