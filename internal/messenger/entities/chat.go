@@ -1,4 +1,4 @@
-// // entities - пакет с сущностями для БД
+// entities - пакет с сущностями для мессенджера
 package entities
 
 import (

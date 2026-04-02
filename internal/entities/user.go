@@ -2,6 +2,8 @@
 package entities
 
 import (
+	messenger "korst-backend/internal/messenger/entities"
+
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -24,8 +26,8 @@ type User struct {
 	CreatedReviews []Review `gorm:"foreignKey:AuthorID;constraint:OnDelete:CASCADE"`
 	RelatedReviews []Review `gorm:"foreignKey:RelatedToID;constraint:OnDelete:CASCADE"`
 
-	CustomerChats []Chat `gorm:"foreignKey:MerchantID;constraint:OnDelete:CASCADE"`
-	MerchantChats []Chat `gorm:"foreignKey:CustomerID;constraint:OnDelete:CASCADE"`
+	CustomerChats []messenger.Chat `gorm:"foreignKey:MerchantID;constraint:OnDelete:CASCADE"`
+	MerchantChats []messenger.Chat `gorm:"foreignKey:CustomerID;constraint:OnDelete:CASCADE"`
 
 	Cards []Card `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
 }
