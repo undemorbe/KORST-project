@@ -23,9 +23,7 @@ func NewChatRepository(db *gorm.DB) ports.ChatRepository {
 }
 
 // FindByID находит чат по его ID
-func (r *chatRepo) FindByID(chatID uuid.UUID) (
-	*entities.Chat, error) {
-
+func (r *chatRepo) FindByID(chatID uuid.UUID) (*entities.Chat, error) {
 	var chat entities.Chat
 
 	err := r.db.

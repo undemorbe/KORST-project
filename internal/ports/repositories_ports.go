@@ -13,6 +13,15 @@ type UserRepository interface {
 	// FindByID находит пользователя по его ID
 	FindByID(userID uuid.UUID) (*entities.User, error)
 
+	// FindWithCards находит пользователя по его ID вместе с карточками
+	FindWithCards(userID uuid.UUID) (*entities.User, error)
+
+	// FindWithReviews находит пользователя по его ID вместе с отзывами на него
+	FindWithRelatedReviews(userID uuid.UUID) (*entities.User, error)
+
+	// FindWithChats находит пользователя по его ID вместе с его чатами
+	FindWithChats(userID uuid.UUID) (*entities.User, error)
+
 	// FindByPhone находит пользователя по номеру телефона
 	FindByPhone(phone string) (*entities.User, error)
 

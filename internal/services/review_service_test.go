@@ -58,7 +58,7 @@ func TestGetReviews(t *testing.T) {
 		RelatedReviews: reviews,
 	}
 
-	mockUserRepo.On("FindByID", userID).Return(user, nil)
+	mockUserRepo.On("FindWithRelatedReviews", userID).Return(user, nil)
 
 	mockUserRepo.On("FindByID", authorID1).Return(author1, nil)
 
@@ -127,7 +127,7 @@ func TestPostReview(t *testing.T) {
 		On("CreateReview", mock.AnythingOfType("*entities.Review")).
 		Return(nil)
 
-	mockUserRepo.On("FindByID", userID).Return(user, nil)
+	mockUserRepo.On("FindWithRelatedReviews", userID).Return(user, nil)
 
 	mockProfileRepo.On("UpdateProfile", profile).Return(nil)
 

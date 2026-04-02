@@ -108,7 +108,7 @@ func (s *UserService) GetUserInfo(userID uuid.UUID) (
 
 	var response responses.GetUserInfoResponse
 
-	user, err := s.userRepo.FindByID(userID)
+	user, err := s.userRepo.FindWithCards(userID)
 	if err != nil {
 		logger.Log.Error("Ошибка при поиске пользователя: ", err)
 		return responses.GetUserInfoResponse{}, err

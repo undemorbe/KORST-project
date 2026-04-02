@@ -26,8 +26,66 @@ func (r *userRepo) FindByID(userID uuid.UUID) (*entities.User, error) {
 
 	err := r.db.
 		Preload("Profile").
+		First(&user, userID).
+		Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+// FindWithCards находит пользователя по его ID вместе с карточками
+func (r *userRepo) FindWithCards(userID uuid.UUID) (*entities.User, error) {
+	var user entities.User
+
+	err := r.db.
+		Preload("Profile").
 		Preload("Cards").
+		First(&user, userID).
+		Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+// FindWithReviews находит пользователя по его ID вместе с отзывами на него
+func (r *userRepo) FindWithRelatedReviews(
+	userID uuid.UUID) (*entities.User, error) {
+
+	var user entities.User
+
+	err := r.db.
+		Preload("Profile").
 		Preload("RelatedReviews").
+		First(&user, userID).
+		Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+// FindWithChats находит пользователя по его ID вместе с его чатами
+func (r *userRepo) FindWithChats(userID uuid.UUID) (*entities.User, error) {
+	var user entities.User
+
+	err := r.db.
+		Preload("Profile").
+		Preload("CustomerChats").
+		Preload("MerchantChats").
 		First(&user, userID).
 		Error
 

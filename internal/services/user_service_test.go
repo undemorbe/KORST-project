@@ -105,7 +105,7 @@ func TestGetUserInfo(t *testing.T) {
 	}
 
 	mockUserRepo.
-		On("FindByID", userID).
+		On("FindWithCards", userID).
 		Return(user, nil)
 
 	response, err := userService.GetUserInfo(userID)
