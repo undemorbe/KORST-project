@@ -11,14 +11,18 @@ import (
 	"gorm.io/gorm"
 )
 
+// chatRepo - объект, содержащий методы для
+// работы с сущностью чата в БД
 type chatRepo struct {
 	db *gorm.DB
 }
 
+// NewChatRepository создает и возвращает новый объект chatRepo
 func NewChatRepository(db *gorm.DB) ports.ChatRepository {
 	return &chatRepo{db: db}
 }
 
+// FindByID находит чат по его ID
 func (r *chatRepo) FindByID(chatID uuid.UUID) (
 	*entities.Chat, error) {
 
@@ -38,11 +42,7 @@ func (r *chatRepo) FindByID(chatID uuid.UUID) (
 	return &chat, nil
 }
 
+// CreateChat создает новый объект чата в БД
 func (r *chatRepo) CreateChat(chat *entities.Chat) error {
 	return r.db.Create(chat).Error
-}
-
-func (r *chatRepo) DeleteChat(chatID uuid.UUID) error {
-	return r.db.Where("id = ?", chatID).
-		Delete(&entities.Chat{}).Error
 }

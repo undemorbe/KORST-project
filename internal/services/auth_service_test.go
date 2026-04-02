@@ -3,7 +3,8 @@ package services
 
 import (
 	"korst-backend/internal/entities"
-	"korst-backend/internal/mocks"
+	mockRepositories "korst-backend/internal/mocks/repositories"
+	mockServices "korst-backend/internal/mocks/services"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -12,9 +13,9 @@ import (
 // TestCheckRegisteredUser проверяет проверку статуса
 // зарегистрированного пользователя
 func TestCheckRegisteredUser(t *testing.T) {
-	mockUserRepo := &mocks.MockUserRepo{}
-	mockRefreshTokenRepo := &mocks.MockRefreshTokenRepo{}
-	mockTokenService := &mocks.MockTokenService{}
+	mockUserRepo := &mockRepositories.MockUserRepo{}
+	mockRefreshTokenRepo := &mockRepositories.MockRefreshTokenRepo{}
+	mockTokenService := &mockServices.MockTokenService{}
 
 	authService := NewAuthService(mockUserRepo, mockRefreshTokenRepo, mockTokenService)
 
@@ -33,14 +34,15 @@ func TestCheckRegisteredUser(t *testing.T) {
 
 	require.NoError(t, err)
 	require.Equal(t, response.Status, "user")
+	mockUserRepo.AssertExpectations(t)
 }
 
 // TestCheckRegisteredUser проверяет проверку статуса
 // незарегистрированного пользователя
 func TestCheckNotRegisteredUser(t *testing.T) {
-	mockUserRepo := &mocks.MockUserRepo{}
-	mockRefreshTokenRepo := &mocks.MockRefreshTokenRepo{}
-	mockTokenService := &mocks.MockTokenService{}
+	mockUserRepo := &mockRepositories.MockUserRepo{}
+	mockRefreshTokenRepo := &mockRepositories.MockRefreshTokenRepo{}
+	mockTokenService := &mockServices.MockTokenService{}
 
 	authService := NewAuthService(mockUserRepo, mockRefreshTokenRepo, mockTokenService)
 
@@ -56,14 +58,15 @@ func TestCheckNotRegisteredUser(t *testing.T) {
 
 	require.NoError(t, err)
 	require.Equal(t, response.Status, "notRegistered")
+	mockUserRepo.AssertExpectations(t)
 }
 
 // TestCheckRegisteredUser проверяет проверку статуса
 // несуществующего пользователя
 func TestCheckNotFoundUser(t *testing.T) {
-	mockUserRepo := &mocks.MockUserRepo{}
-	mockRefreshTokenRepo := &mocks.MockRefreshTokenRepo{}
-	mockTokenService := &mocks.MockTokenService{}
+	mockUserRepo := &mockRepositories.MockUserRepo{}
+	mockRefreshTokenRepo := &mockRepositories.MockRefreshTokenRepo{}
+	mockTokenService := &mockServices.MockTokenService{}
 
 	authService := NewAuthService(mockUserRepo, mockRefreshTokenRepo, mockTokenService)
 
@@ -75,4 +78,5 @@ func TestCheckNotFoundUser(t *testing.T) {
 
 	require.NoError(t, err)
 	require.Equal(t, response.Status, "notFound")
+	mockUserRepo.AssertExpectations(t)
 }

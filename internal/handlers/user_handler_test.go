@@ -8,7 +8,7 @@ import (
 	"korst-backend/internal/dto/responses"
 	"korst-backend/internal/infrastructure/logger"
 	"korst-backend/internal/middleware"
-	"korst-backend/internal/mocks"
+	mockServices "korst-backend/internal/mocks/services"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -24,8 +24,8 @@ func TestUpdateUser(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	logger.InitLoggerTest()
 
-	mockUserService := &mocks.MockUserService{}
-	mockTokenService := &mocks.MockTokenService{}
+	mockUserService := &mockServices.MockUserService{}
+	mockTokenService := &mockServices.MockTokenService{}
 
 	userHandler := NewUserHandler(mockUserService, mockTokenService)
 
@@ -65,13 +65,15 @@ func TestUpdateUser(t *testing.T) {
 	router.ServeHTTP(writer, req)
 
 	require.Equal(t, http.StatusOK, writer.Code)
+	mockTokenService.AssertExpectations(t)
+	mockUserService.AssertExpectations(t)
 }
 
 // TestGetUserInfo проверяет работу хэндлера GetUserInfo
 func TestGetUserInfo(t *testing.T) {
 
-	mockUserService := &mocks.MockUserService{}
-	mockTokenService := &mocks.MockTokenService{}
+	mockUserService := &mockServices.MockUserService{}
+	mockTokenService := &mockServices.MockTokenService{}
 
 	userHandler := NewUserHandler(mockUserService, mockTokenService)
 
@@ -115,4 +117,5 @@ func TestGetUserInfo(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, name, response.Name)
 	require.Equal(t, telegram, response.Contacts.Telegram)
+	mockUserService.AssertExpectations(t)
 }

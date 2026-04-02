@@ -6,7 +6,7 @@ import (
 	"korst-backend/internal/dto/responses"
 	"korst-backend/internal/infrastructure/logger"
 	"korst-backend/internal/middleware"
-	"korst-backend/internal/mocks"
+	mockServices "korst-backend/internal/mocks/services"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -20,8 +20,8 @@ func TestCheckUser(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	logger.InitLoggerTest()
 
-	mockAuthService := &mocks.MockAuthService{}
-	mockTokenService := &mocks.MockTokenService{}
+	mockAuthService := &mockServices.MockAuthService{}
+	mockTokenService := &mockServices.MockTokenService{}
 
 	authHandler := NewAuthHandler(mockAuthService, mockTokenService)
 
@@ -53,13 +53,14 @@ func TestCheckUser(t *testing.T) {
 
 	require.NoError(t, err)
 	require.Equal(t, "registered", response.Status)
+	mockAuthService.AssertExpectations(t)
 }
 
 // TestRefreshTokens проверяет работу хэндлера RefreshTokens
 func TestRefreshTokens(t *testing.T) {
 
-	mockAuthService := &mocks.MockAuthService{}
-	mockTokenService := &mocks.MockTokenService{}
+	mockAuthService := &mockServices.MockAuthService{}
+	mockTokenService := &mockServices.MockTokenService{}
 
 	authHandler := NewAuthHandler(mockAuthService, mockTokenService)
 
@@ -96,4 +97,5 @@ func TestRefreshTokens(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, accessToken, response.AccessToken)
 	require.Equal(t, refreshToken, response.RefreshToken)
+	mockAuthService.AssertExpectations(t)
 }

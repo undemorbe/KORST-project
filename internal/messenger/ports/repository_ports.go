@@ -3,3 +3,6 @@ package ports
 
 type ChatRepository interface {
 }
+
+type MessageRepository interface {
+}

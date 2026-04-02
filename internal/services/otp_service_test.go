@@ -5,7 +5,8 @@ import (
 	"korst-backend/internal/entities"
 	"korst-backend/internal/errors"
 	"korst-backend/internal/infrastructure/logger"
-	"korst-backend/internal/mocks"
+	mockRepositories "korst-backend/internal/mocks/repositories"
+	mockServices "korst-backend/internal/mocks/services"
 	"testing"
 	"time"
 
@@ -17,9 +18,9 @@ import (
 func TestVerifyOtp(t *testing.T) {
 	logger.InitLoggerTest()
 
-	mockOTPRepo := &mocks.MockOtpRepo{}
-	mockUserRepo := &mocks.MockUserRepo{}
-	mockTokenService := &mocks.MockTokenService{}
+	mockOTPRepo := &mockRepositories.MockOtpRepo{}
+	mockUserRepo := &mockRepositories.MockUserRepo{}
+	mockTokenService := &mockServices.MockTokenService{}
 
 	otpService := NewOTPService(mockOTPRepo, mockUserRepo, mockTokenService)
 
@@ -51,16 +52,21 @@ func TestVerifyOtp(t *testing.T) {
 	response, err := otpService.VerifyOTP(rawPhone, otpCode)
 
 	require.NoError(t, err)
+
 	require.Equal(t, response.AccessToken, "access")
 	require.Equal(t, response.RefreshToken, "refresh")
 	require.Equal(t, response.Status, "notRegistered")
+
+	mockOTPRepo.AssertExpectations(t)
+	mockUserRepo.AssertExpectations(t)
+	mockTokenService.AssertExpectations(t)
 }
 
 // TestVerifyExpiredOTP проверяет обработку истекшего Otp
 func TestVerifyExpiredOTP(t *testing.T) {
-	mockOTPRepo := &mocks.MockOtpRepo{}
-	mockUserRepo := &mocks.MockUserRepo{}
-	mockTokenService := &mocks.MockTokenService{}
+	mockOTPRepo := &mockRepositories.MockOtpRepo{}
+	mockUserRepo := &mockRepositories.MockUserRepo{}
+	mockTokenService := &mockServices.MockTokenService{}
 
 	otpService := NewOTPService(mockOTPRepo, mockUserRepo, mockTokenService)
 
@@ -75,16 +81,6 @@ func TestVerifyExpiredOTP(t *testing.T) {
 
 	mockOTPRepo.On("FindByPhone", rawPhone).Return(otpEntity, nil)
 
-	mockUserRepo.On("FindByPhone", rawPhone).Return(nil, nil)
-
-	mockOTPRepo.
-		On("UpdateOTP", mock.AnythingOfType("*entities.Otp")).
-		Return(nil)
-
-	mockUserRepo.
-		On("CreateUser", mock.AnythingOfType("*entities.User")).
-		Return(nil)
-
 	mockTokenService.
 		On("CreateTokens", mock.AnythingOfType("*entities.User")).
 		Return("access", "refresh", nil)
@@ -92,13 +88,14 @@ func TestVerifyExpiredOTP(t *testing.T) {
 	_, err := otpService.VerifyOTP(rawPhone, otpCode)
 
 	require.Equal(t, err, errors.ErrorOTPExpired)
+	mockOTPRepo.AssertExpectations(t)
 }
 
 // TestVerifyIncorrectOTP проверяет обработку неверного Otp
 func TestVerifyIncorrectOTP(t *testing.T) {
-	mockOTPRepo := &mocks.MockOtpRepo{}
-	mockUserRepo := &mocks.MockUserRepo{}
-	mockTokenService := &mocks.MockTokenService{}
+	mockOTPRepo := &mockRepositories.MockOtpRepo{}
+	mockUserRepo := &mockRepositories.MockUserRepo{}
+	mockTokenService := &mockServices.MockTokenService{}
 
 	otpService := NewOTPService(mockOTPRepo, mockUserRepo, mockTokenService)
 
@@ -113,21 +110,8 @@ func TestVerifyIncorrectOTP(t *testing.T) {
 
 	mockOTPRepo.On("FindByPhone", rawPhone).Return(otpEntity, nil)
 
-	mockUserRepo.On("FindByPhone", rawPhone).Return(nil, nil)
-
-	mockOTPRepo.
-		On("UpdateOTP", mock.AnythingOfType("*entities.Otp")).
-		Return(nil)
-
-	mockUserRepo.
-		On("CreateUser", mock.AnythingOfType("*entities.User")).
-		Return(nil)
-
-	mockTokenService.
-		On("CreateTokens", mock.AnythingOfType("*entities.User")).
-		Return("access", "refresh", nil)
-
 	_, err := otpService.VerifyOTP(rawPhone, otpCode)
 
 	require.Equal(t, err, errors.ErrorOTPIncorrect)
+	mockOTPRepo.AssertExpectations(t)
 }

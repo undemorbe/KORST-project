@@ -5,8 +5,7 @@ import (
 	"korst-backend/internal/entities"
 	"korst-backend/internal/errors"
 	"korst-backend/internal/infrastructure/logger"
-	"korst-backend/internal/mocks"
-	"os"
+	mockRepositories "korst-backend/internal/mocks/repositories"
 	"testing"
 
 	"github.com/google/uuid"
@@ -19,7 +18,7 @@ import (
 func TestGenerateAndDecodeAccessToken(t *testing.T) {
 	logger.InitLoggerTest()
 
-	os.Setenv("JWT_TOKEN_KEY", "test-secret-key")
+	t.Setenv("JWT_TOKEN_KEY", "test-secret-key")
 
 	tokenService := &TokenService{}
 	userID := uuid.New()
@@ -62,12 +61,12 @@ func TestDecodingInvalidAccessToken(t *testing.T) {
 	require.Equal(t, err, errors.ErrorInvalidInput)
 
 	// Если ключ для JWT не совпадает
-	os.Setenv("JWT_TOKEN_KEY", "incorrect-key")
+	t.Setenv("JWT_TOKEN_KEY", "incorrect-key")
 
 	userID := uuid.New()
 	token, err = tokenService.generateAccessToken(userID)
 
-	os.Setenv("JWT_TOKEN_KEY", "correct-key")
+	t.Setenv("JWT_TOKEN_KEY", "correct-key")
 
 	userID, err = tokenService.DecodeAccessToken(token)
 
@@ -76,8 +75,8 @@ func TestDecodingInvalidAccessToken(t *testing.T) {
 
 // TestCreateToken проверяет общую работу TokenService
 func TestCreateTokens(t *testing.T) {
-	mockUserRepo := &mocks.MockUserRepo{}
-	mockRefreshTokenRepo := &mocks.MockRefreshTokenRepo{}
+	mockUserRepo := &mockRepositories.MockUserRepo{}
+	mockRefreshTokenRepo := &mockRepositories.MockRefreshTokenRepo{}
 
 	tokenService := NewTokenService(mockUserRepo, mockRefreshTokenRepo)
 
@@ -108,4 +107,6 @@ func TestCreateTokens(t *testing.T) {
 
 	require.NoError(t, err)
 	require.Equal(t, userID, decodedUserID)
+	mockUserRepo.AssertExpectations(t)
+	mockRefreshTokenRepo.AssertExpectations(t)
 }

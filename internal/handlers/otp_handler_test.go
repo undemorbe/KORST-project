@@ -7,7 +7,7 @@ import (
 	"korst-backend/internal/dto/responses"
 	"korst-backend/internal/infrastructure/logger"
 	"korst-backend/internal/middleware"
-	"korst-backend/internal/mocks"
+	mockServices "korst-backend/internal/mocks/services"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -21,7 +21,7 @@ func TestSendOTP(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	logger.InitLoggerTest()
 
-	mockOTPService := &mocks.MockOTPService{}
+	mockOTPService := &mockServices.MockOTPService{}
 
 	otpHandler := NewOTPHandler(mockOTPService)
 
@@ -49,11 +49,12 @@ func TestSendOTP(t *testing.T) {
 	router.ServeHTTP(writer, req)
 
 	require.Equal(t, http.StatusOK, writer.Code)
+	mockOTPService.AssertExpectations(t)
 }
 
 // TestVerifyOTP проверяет работу хэндлера VerifyOTP
 func TestVerifyOTP(t *testing.T) {
-	mockOTPService := new(mocks.MockOTPService)
+	mockOTPService := new(mockServices.MockOTPService)
 
 	otpHandler := NewOTPHandler(mockOTPService)
 
@@ -94,4 +95,5 @@ func TestVerifyOTP(t *testing.T) {
 	require.Equal(t, "access-token", response.AccessToken)
 	require.Equal(t, "refresh-token", response.RefreshToken)
 	require.Equal(t, "registered", response.Status)
+	mockOTPService.AssertExpectations(t)
 }

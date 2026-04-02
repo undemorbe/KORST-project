@@ -9,7 +9,7 @@ import (
 
 	"korst-backend/internal/dto/requests"
 	"korst-backend/internal/dto/responses"
-	"korst-backend/internal/mocks"
+	mockServices "korst-backend/internal/mocks/services"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -24,8 +24,8 @@ func TestSaveCard(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	logger.InitLoggerTest()
 
-	mockCardService := &mocks.MockCardService{}
-	mockTokenService := &mocks.MockTokenService{}
+	mockCardService := &mockServices.MockCardService{}
+	mockTokenService := &mockServices.MockTokenService{}
 
 	cardHandler := NewCardHandler(mockCardService, mockTokenService)
 
@@ -73,12 +73,14 @@ func TestSaveCard(t *testing.T) {
 	router.ServeHTTP(writer, req)
 
 	require.Equal(t, http.StatusOK, writer.Code)
+	mockTokenService.AssertExpectations(t)
+	mockCardService.AssertExpectations(t)
 }
 
 func TestGetCards(t *testing.T) {
 
-	mockCardService := &mocks.MockCardService{}
-	mockTokenService := &mocks.MockTokenService{}
+	mockCardService := &mockServices.MockCardService{}
+	mockTokenService := &mockServices.MockTokenService{}
 
 	cardHandler := NewCardHandler(mockCardService, mockTokenService)
 
@@ -102,12 +104,13 @@ func TestGetCards(t *testing.T) {
 	router.ServeHTTP(writer, req)
 
 	require.Equal(t, http.StatusOK, writer.Code)
+	mockCardService.AssertExpectations(t)
 }
 
 func TestGetCardInfo(t *testing.T) {
 
-	mockCardService := &mocks.MockCardService{}
-	mockTokenService := &mocks.MockTokenService{}
+	mockCardService := &mockServices.MockCardService{}
+	mockTokenService := &mockServices.MockTokenService{}
 
 	cardHandler := NewCardHandler(mockCardService, mockTokenService)
 
@@ -153,4 +156,5 @@ func TestGetCardInfo(t *testing.T) {
 	require.Equal(t, name, response.Name)
 	require.Equal(t, phone, response.Author.Phone)
 	require.Equal(t, telegram, response.Author.Contacts.Telegram)
+	mockCardService.AssertExpectations(t)
 }
