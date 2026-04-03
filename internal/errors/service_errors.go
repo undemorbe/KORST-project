@@ -44,6 +44,11 @@ var (
 		Message: "Карточка не найдена",
 	}
 
+	ErrorChatNotFound = AppError{
+		Code:    CodeNotFound,
+		Message: "Чат не найден",
+	}
+
 	ErrorReviewExists = AppError{
 		Code:    CodeReviewExists,
 		Message: "Отзыв для указанного пользователя уже существует",

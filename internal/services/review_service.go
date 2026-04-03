@@ -57,7 +57,7 @@ func (s *ReviewService) GetReviews(userID uuid.UUID) (
 	for i := range reviews {
 		convertedReview, err := s.getConvertedReview(&reviews[i])
 		if err != nil {
-			logger.Log.Error("Ошибка при обработке отзыва: ", err)
+			logger.Log.Warn("Ошибка при обработке отзыва: ", err)
 			continue
 		}
 

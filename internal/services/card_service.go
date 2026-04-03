@@ -124,8 +124,8 @@ func (s *CardService) GetCards(key *time.Time) (
 	for i := range cards {
 		card, err := s.getCompressedCard(&cards[i])
 		if err != nil {
-			return responses.GetCardsResponse{},
-				err
+			logger.Log.Warn("Ошибка при обработке карточки: ", err)
+			continue
 		}
 
 		response.Cards = append(response.Cards, card)

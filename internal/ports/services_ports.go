@@ -17,8 +17,7 @@ type OTPService interface {
 
 	// VerifyOTP сравнивает полученный Otp-код c сохраненным в БД
 	VerifyOTP(rawPhone string, otp string) (
-		responses.VerifyOTPResponse,
-		error)
+		responses.VerifyOTPResponse, error)
 }
 
 // AuthService содержит порты для методов, необходимых для авторизации
