@@ -77,6 +77,7 @@ func (h *UserHandler) GetUserInfo(c *gin.Context) {
 	}
 
 	response, err := h.userService.GetUserInfo(userID)
+
 	if err != nil {
 		c.Error(err)
 		return
@@ -99,6 +100,7 @@ func (h *UserHandler) GetMyInfo(c *gin.Context) {
 	}
 
 	response, err := h.userService.GetUserInfo(userID)
+
 	if err != nil {
 		c.Error(err)
 		return
