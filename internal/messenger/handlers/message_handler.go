@@ -31,6 +31,8 @@ func NewMessageHandler(
 	}
 }
 
+// SendMessage обрабатывает запрос на отправку
+// сообщения в определенном чате
 func (h *MessageHandler) SendMessage(c *gin.Context) {
 	var req requests.SendMessageRequest
 
@@ -56,5 +58,64 @@ func (h *MessageHandler) SendMessage(c *gin.Context) {
 	}
 
 	logger.Log.Info("Отправка сообщения успешно выполнена")
+	c.JSON(http.StatusOK, responses.GenericResponse{})
+}
+
+// ChangeMessage обрабатывает запрос на
+// изменение определенного сообщения в чате
+func (h *MessageHandler) ChangeMessage(c *gin.Context) {
+	var req requests.ChangeMessageRequest
+
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	accessToken := c.GetHeader("Authorization")
+
+	authorID, err := h.tokenService.DecodeAccessToken(accessToken)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	err = h.messageService.ChangeMessage(authorID, req.MessageID, req.Text)
+
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	logger.Log.Info("Изменение сообщения успешно выполнено")
+	c.JSON(http.StatusOK, responses.GenericResponse{})
+}
+
+// DeleteMessage обрабатывает запрос на
+// удаление определенного сообщения в чате
+func (h *MessageHandler) DeleteMessage(c *gin.Context) {
+	var req requests.DeleteMessageRequest
+
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		c.Error(errors.ErrorInvalidInput)
+	}
+
+	accessToken := c.GetHeader("Authorization")
+
+	authorID, err := h.tokenService.DecodeAccessToken(accessToken)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	err = h.messageService.DeleteMessage(authorID, req.MessageID)
+
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	logger.Log.Info("Удаление сообщения успешно выполнено")
 	c.JSON(http.StatusOK, responses.GenericResponse{})
 }

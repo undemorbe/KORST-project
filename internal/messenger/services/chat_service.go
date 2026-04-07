@@ -5,6 +5,7 @@ package services
 import (
 	"korst-backend/internal/errors"
 	"korst-backend/internal/infrastructure/logger"
+	"korst-backend/internal/messenger/dto/requests"
 	"korst-backend/internal/messenger/dto/responses"
 	messengerEntities "korst-backend/internal/messenger/entities"
 	messengerPorts "korst-backend/internal/messenger/ports"
@@ -98,6 +99,31 @@ func (s *ChatService) GetChats(userID uuid.UUID) (
 	}
 
 	return response, nil
+}
+
+// CreateChat создает чат между двумя пользователями
+func (s *ChatService) CreateChat(authorID uuid.UUID,
+	req requests.CreateChatRequest) error {
+
+	var newChat messengerEntities.Chat
+
+	newChat.CardID = req.CardID
+
+	if req.IsMerchant {
+		newChat.MerchantID = req.UserID
+		newChat.CustomerID = authorID
+	} else {
+		newChat.MerchantID = authorID
+		newChat.CustomerID = req.UserID
+	}
+
+	err := s.chatRepo.CreateChat(&newChat)
+	if err != nil {
+		logger.Log.Error("Ошибка при создании чата: ", err)
+		return err
+	}
+
+	return nil
 }
 
 // GetMessages получает все сообщения в определенном чате

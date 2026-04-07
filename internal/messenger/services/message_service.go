@@ -75,3 +75,63 @@ func (s *MessageService) SendMessage(authorID uuid.UUID,
 
 	return nil
 }
+
+// ChangeMessage изменяет текст определенного сообщения в чате
+func (s *MessageService) ChangeMessage(authorID uuid.UUID,
+	messageID uuid.UUID, text string) error {
+
+	message, err := s.messageRepo.FindByID(messageID)
+	if err != nil {
+		logger.Log.Error("Ошибка при поиске сообщения: ", err)
+		return err
+	}
+
+	if message == nil {
+		logger.Log.Warn("Указанное сообщение не найдено")
+		return errors.ErrorMessageNotFound
+	}
+
+	if message.AuthorID != authorID {
+		logger.Log.Warn("Попытка изменить чужое сообщение")
+		return errors.ErrorForbidden
+	}
+
+	message.Text = text
+
+	err = s.messageRepo.UpdateMessage(message)
+	if err != nil {
+		logger.Log.Error("Ошибка при попытке изменить сообщение: ", err)
+		return err
+	}
+
+	return nil
+}
+
+// DeleteMessage удаляет определенное сообщение из чата
+func (s *MessageService) DeleteMessage(authorID uuid.UUID,
+	messageID uuid.UUID) error {
+
+	message, err := s.messageRepo.FindByID(messageID)
+	if err != nil {
+		logger.Log.Error("Ошибка при поиске сообщения: ", err)
+		return err
+	}
+
+	if message == nil {
+		logger.Log.Warn("Указанное сообщение не найдено")
+		return errors.ErrorMessageNotFound
+	}
+
+	if message.AuthorID != authorID {
+		logger.Log.Warn("Попытка удалить чужое сообщение")
+		return errors.ErrorForbidden
+	}
+
+	err = s.messageRepo.DeleteMessage(message)
+	if err != nil {
+		logger.Log.Error("Ошибка при удалении сообщения: ", err)
+		return err
+	}
+
+	return nil
+}

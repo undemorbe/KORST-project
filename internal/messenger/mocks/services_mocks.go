@@ -3,6 +3,7 @@
 package mocks
 
 import (
+	"korst-backend/internal/messenger/dto/requests"
 	"korst-backend/internal/messenger/dto/responses"
 
 	"github.com/google/uuid"
@@ -15,8 +16,14 @@ type MockChatService struct{ mock.Mock }
 
 // GetChats задает фиктивню реализацию получения чатов
 func (m *MockChatService) GetChats(userID uuid.UUID) (responses.GetChatsResponse, error) {
-	args := m.Called()
+	args := m.Called(userID)
 	return args.Get(0).(responses.GetChatsResponse), args.Error(1)
+}
+
+// CreateChat задает фиктивную реализацию создания чата
+func (m *MockChatService) CreateChat(authorID uuid.UUID, req requests.CreateChatRequest) error {
+	args := m.Called(authorID, req)
+	return args.Error(0)
 }
 
 // GetMessages задает фиктивную реализацию получения всех сообщения из чата
@@ -32,5 +39,17 @@ type MockMessageService struct{ mock.Mock }
 // SendMessage задает фиктивную реализацию отправки сообщения пользователю
 func (m *MockMessageService) SendMessage(authorID uuid.UUID, chatID uuid.UUID, text string) error {
 	args := m.Called(authorID, chatID, text)
+	return args.Error(0)
+}
+
+// ChangeMessage задает фиктивную реализацию изменения сообщения
+func (m *MockMessageService) ChangeMessage(authorID uuid.UUID, messageID uuid.UUID, text string) error {
+	args := m.Called(authorID, messageID, text)
+	return args.Error(0)
+}
+
+// DeleteMessage задает фиктивную реализацию удаления сообщения
+func (m *MockMessageService) DeleteMessage(authorID uuid.UUID, messageID uuid.UUID) error {
+	args := m.Called(authorID, messageID)
 	return args.Error(0)
 }

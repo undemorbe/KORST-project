@@ -6,6 +6,7 @@ import (
 	"korst-backend/internal/errors"
 	"korst-backend/internal/infrastructure/logger"
 	"korst-backend/internal/messenger/dto/requests"
+	"korst-backend/internal/messenger/dto/responses"
 	messengerPorts "korst-backend/internal/messenger/ports"
 	"korst-backend/internal/ports"
 	"net/http"
@@ -52,6 +53,36 @@ func (h *ChatHandler) GetChats(c *gin.Context) {
 
 	logger.Log.Info("Получение чатов пользователя успшно выполнено")
 	c.JSON(http.StatusOK, response)
+}
+
+// CreateChat обрабатывает запрос на создание нового
+// чата между двумя пользователями
+func (h *ChatHandler) CreateChat(c *gin.Context) {
+	var req requests.CreateChatRequest
+
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		c.Error(errors.ErrorInvalidInput)
+		return
+	}
+
+	accessToken := c.GetHeader("Authorization")
+
+	authorID, err := h.tokenService.DecodeAccessToken(accessToken)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	err = h.chatService.CreateChat(authorID, req)
+
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	logger.Log.Info("Создание чата успешно выполнено")
+	c.JSON(http.StatusOK, responses.GenericResponse{})
 }
 
 // GetMessages обрабатывает запрос на получение всех
