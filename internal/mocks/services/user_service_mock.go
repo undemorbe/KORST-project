@@ -3,6 +3,7 @@
 package mockServices
 
 import (
+	"io"
 	"korst-backend/internal/dto/requests"
 	"korst-backend/internal/dto/responses"
 
@@ -18,6 +19,13 @@ type MockUserService struct{ mock.Mock }
 func (m *MockUserService) UpdateUserInfo(userID uuid.UUID, req *requests.UpdateUserRequest) error {
 	args := m.Called(userID, req)
 	return args.Error(0)
+}
+
+// SaveImage вызывает FileService для сохранения изображения в
+// хранилище, сохраняет ссылку на него в профиле пользователя в БД
+func (m *MockUserService) SaveImage(userID uuid.UUID, file io.Reader, fileName string) (string, error) {
+	args := m.Called(userID, file, fileName)
+	return args.String(0), args.Error(1)
 }
 
 // GetUserInfo задает фиктивную реализацию получения информации о пользователе

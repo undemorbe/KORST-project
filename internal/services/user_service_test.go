@@ -6,6 +6,7 @@ import (
 	"korst-backend/internal/entities"
 	"korst-backend/internal/infrastructure/logger"
 	mockRepositories "korst-backend/internal/mocks/repositories"
+	mockService "korst-backend/internal/mocks/services"
 	"testing"
 
 	"github.com/google/uuid"
@@ -20,8 +21,9 @@ func TestUpdateUserInfo(t *testing.T) {
 
 	mockUserRepo := &mockRepositories.MockUserRepo{}
 	mockProfileRepo := &mockRepositories.MockProfileRepo{}
+	mockFileService := &mockService.MockFileService{}
 
-	userService := NewUserService(mockUserRepo, mockProfileRepo)
+	userService := NewUserService(mockUserRepo, mockProfileRepo, mockFileService)
 
 	userID := uuid.New()
 	phone := "+79123456789"
@@ -80,8 +82,9 @@ func TestUpdateUserInfo(t *testing.T) {
 func TestGetUserInfo(t *testing.T) {
 	mockUserRepo := &mockRepositories.MockUserRepo{}
 	mockProfileRepo := &mockRepositories.MockProfileRepo{}
+	mockFileService := &mockService.MockFileService{}
 
-	userService := NewUserService(mockUserRepo, mockProfileRepo)
+	userService := NewUserService(mockUserRepo, mockProfileRepo, mockFileService)
 
 	userID := uuid.New()
 	name := "Олег"

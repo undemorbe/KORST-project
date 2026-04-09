@@ -59,6 +59,42 @@ func (h *UserHandler) UpdateUserInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, responses.GenericResponse{})
 }
 
+// SaveImage обрабатывает запрос на сохранение
+// изображения для профиля пользователя
+func (h *UserHandler) SaveImage(c *gin.Context) {
+
+	fileHeader, err := c.FormFile("image")
+	if err != nil {
+		c.Error(errors.ErrorInvalidInput)
+		return
+	}
+
+	file, err := fileHeader.Open()
+	if err != nil {
+		c.Error(errors.ErrorInvalidInput)
+		return
+	}
+	defer file.Close()
+
+	accessToken := c.GetHeader("Authorization")
+
+	userID, err := h.tokenService.DecodeAccessToken(accessToken)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	url, err := h.userService.SaveImage(userID, file, fileHeader.Filename)
+
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	logger.Log.Info("Сохранение изображения для профиля успешно выполнено")
+	c.JSON(http.StatusOK, responses.SaveImageResponse{ImageURL: url})
+}
+
 // GetUserInfo обрабатывает запрос на получение
 // информации о каком-то конкретном пользователе
 func (h *UserHandler) GetUserInfo(c *gin.Context) {

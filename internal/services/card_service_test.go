@@ -6,6 +6,7 @@ import (
 	"korst-backend/internal/entities"
 	"korst-backend/internal/infrastructure/logger"
 	mockRepositories "korst-backend/internal/mocks/repositories"
+	mockServices "korst-backend/internal/mocks/services"
 	"testing"
 	"time"
 
@@ -21,8 +22,9 @@ func TestSaveCard(t *testing.T) {
 
 	mockCardRepo := &mockRepositories.MockCardRepo{}
 	mockUserRepo := &mockRepositories.MockUserRepo{}
+	mockFileService := &mockServices.MockFileService{}
 
-	cardService := NewCardService(mockCardRepo, mockUserRepo)
+	cardService := NewCardService(mockCardRepo, mockUserRepo, mockFileService)
 
 	userID := uuid.New()
 	name := "Название"
@@ -61,8 +63,9 @@ func TestUpdateCard(t *testing.T) {
 
 	mockCardRepo := &mockRepositories.MockCardRepo{}
 	mockUserRepo := &mockRepositories.MockUserRepo{}
+	mockFileService := &mockServices.MockFileService{}
 
-	cardService := NewCardService(mockCardRepo, mockUserRepo)
+	cardService := NewCardService(mockCardRepo, mockUserRepo, mockFileService)
 
 	userID := uuid.New()
 	cardID := uuid.New()
@@ -105,8 +108,9 @@ func TestGetCards(t *testing.T) {
 
 	mockCardRepo := &mockRepositories.MockCardRepo{}
 	mockUserRepo := &mockRepositories.MockUserRepo{}
+	mockFileService := &mockServices.MockFileService{}
 
-	cardService := NewCardService(mockCardRepo, mockUserRepo)
+	cardService := NewCardService(mockCardRepo, mockUserRepo, mockFileService)
 
 	userID := uuid.New()
 	userName := "Олег"
@@ -176,8 +180,9 @@ func TestGetCardInfo(t *testing.T) {
 
 	mockCardRepo := &mockRepositories.MockCardRepo{}
 	mockUserRepo := &mockRepositories.MockUserRepo{}
+	mockFileService := &mockServices.MockFileService{}
 
-	cardService := NewCardService(mockCardRepo, mockUserRepo)
+	cardService := NewCardService(mockCardRepo, mockUserRepo, mockFileService)
 
 	userID := uuid.New()
 	userName := "Олег"

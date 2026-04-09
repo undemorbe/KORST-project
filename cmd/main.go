@@ -5,9 +5,11 @@ import (
 	"korst-backend/internal/handlers"
 	"korst-backend/internal/infrastructure/database"
 	"korst-backend/internal/infrastructure/logger"
+	"korst-backend/internal/infrastructure/storage"
 	"korst-backend/internal/middleware"
 	repositories "korst-backend/internal/repository"
 	"korst-backend/internal/services"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -46,6 +48,9 @@ func main() {
 	}
 	logger.Log.Info("Миграции успешно применены")
 
+	// Подключение хранилища
+	storage := storage.NewLocalStorage(os.Getenv("BASE_PATH"))
+
 	// Подключение репозиториев
 	userRepo := repositories.NewUserRepository(db)
 	otpRepo := repositories.NewOTPRepository(db)
@@ -56,10 +61,11 @@ func main() {
 
 	// Подключение сервисов
 	tokenService := services.NewTokenService(userRepo, refreshTokenRepo)
+	fileService := services.NewFileService(storage)
 	authService := services.NewAuthService(userRepo, refreshTokenRepo, tokenService)
 	otpService := services.NewOTPService(otpRepo, userRepo, tokenService)
-	cardService := services.NewCardService(cardRepo, userRepo)
-	userService := services.NewUserService(userRepo, profileRepo)
+	cardService := services.NewCardService(cardRepo, userRepo, fileService)
+	userService := services.NewUserService(userRepo, profileRepo, fileService)
 	reviewService := services.NewReviewService(userRepo, profileRepo, reviewRepo)
 
 	// Подключение хэндлеров
@@ -85,6 +91,8 @@ func main() {
 	{
 		cards.POST("/save-card", cardHandler.SaveCard)
 		cards.POST("/update-card", cardHandler.UpdateCard)
+		cards.POST("/save-image", cardHandler.SaveImage)
+
 		cards.GET("/get-cards", cardHandler.GetCards)
 		cards.GET("/card-info", cardHandler.GetCardInfo)
 	}
@@ -92,11 +100,19 @@ func main() {
 	user := api.Group("/user")
 	{
 		user.POST("/update", userHandler.UpdateUserInfo)
+		user.POST("/save-image", userHandler.SaveImage)
 		user.GET("/get-info", userHandler.GetUserInfo)
 		user.GET("/me", userHandler.GetMyInfo)
 
 		user.GET("/reviews", reviewHandler.GetReviews)
 		user.POST("/post-review", reviewHandler.PostReview)
+	}
+
+	// Маршруты для получения изображений
+	uploads := r.Group("/uploads")
+	{
+		uploads.Static("/profiles", "./uploads/profiles")
+		uploads.Static("/cards", "./uploads/cards")
 	}
 
 	// Запуск сервера

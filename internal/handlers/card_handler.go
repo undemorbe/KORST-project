@@ -90,6 +90,42 @@ func (h *CardHandler) UpdateCard(c *gin.Context) {
 	c.JSON(http.StatusOK, responses.GenericResponse{})
 }
 
+// SaveImage обрабатывает запрос на сохранение
+// изображения для карточки объявления
+func (h *CardHandler) SaveImage(c *gin.Context) {
+
+	rawCardID := c.PostForm("card-id")
+
+	cardID, err := uuid.Parse(rawCardID)
+	if err != nil {
+		c.Error(errors.ErrorInvalidInput)
+		return
+	}
+
+	fileHeader, err := c.FormFile("image")
+	if err != nil {
+		c.Error(errors.ErrorInvalidInput)
+		return
+	}
+
+	file, err := fileHeader.Open()
+	if err != nil {
+		c.Error(errors.ErrorInvalidInput)
+		return
+	}
+	defer file.Close()
+
+	url, err := h.cardService.SaveImage(cardID, file, fileHeader.Filename)
+
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	logger.Log.Info("Сохранение изображения карточки успешно выполнено")
+	c.JSON(http.StatusOK, responses.SaveImageResponse{ImageURL: url})
+}
+
 // GetCards обрабатывает запрос на получение
 // карточек для отображения пользователям
 func (h *CardHandler) GetCards(c *gin.Context) {

@@ -3,6 +3,7 @@
 package mockServices
 
 import (
+	"io"
 	"korst-backend/internal/dto/requests"
 	"korst-backend/internal/dto/responses"
 	"time"
@@ -25,6 +26,12 @@ func (m *MockCardService) SaveCard(userID uuid.UUID, req *requests.SaveCardReque
 func (m *MockCardService) UpdateCard(userID uuid.UUID, req *requests.UpdateCardRequest) error {
 	args := m.Called(userID, req)
 	return args.Error(0)
+}
+
+// SaveImage задает фиктивную реализацию сохранения изображения в хранилище
+func (m *MockCardService) SaveImage(cardID uuid.UUID, file io.Reader, fileName string) (string, error) {
+	args := m.Called(cardID, file, fileName)
+	return args.String(0), args.Error(1)
 }
 
 // GetCards задает фиктивную реализацию получения страницы карточек

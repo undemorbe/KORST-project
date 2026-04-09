@@ -18,6 +18,7 @@ type Profile struct {
 	UserID uuid.UUID `gorm:"type:uuid;uniqueIndex"`
 
 	Description string
+	ImageURL    string
 	Rating      float64
 
 	Email         string

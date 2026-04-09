@@ -19,6 +19,7 @@ type Card struct {
 
 	Name        string `gorm:"not null"`
 	Description string `gorm:"default:''"`
+	ImageURL    string `gorm:"default:''"`
 
 	Price    float64 `gorm:"not null"`
 	Currency string  `gorm:"not null"`

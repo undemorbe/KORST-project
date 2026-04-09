@@ -2,6 +2,7 @@
 package services
 
 import (
+	"io"
 	"korst-backend/internal/dto/requests"
 	"korst-backend/internal/dto/responses"
 	"korst-backend/internal/entities"
@@ -17,14 +18,17 @@ import (
 type UserService struct {
 	userRepo    ports.UserRepository
 	profileRepo ports.ProfileRepository
+	fileService ports.FileService
 }
 
 // NewUserService создает и возвращает новый объект UserService
 func NewUserService(userRepo ports.UserRepository,
-	profileRepo ports.ProfileRepository) ports.UserService {
+	profileRepo ports.ProfileRepository,
+	fileService ports.FileService) ports.UserService {
 	return &UserService{
 		userRepo:    userRepo,
 		profileRepo: profileRepo,
+		fileService: fileService,
 	}
 }
 
@@ -101,6 +105,46 @@ func (s *UserService) UpdateUserInfo(
 	return nil
 }
 
+// SaveImage вызывает FileService для сохранения изображения в
+// хранилище, сохраняет ссылку на него в профиле пользователя в БД
+func (s *UserService) SaveImage(userID uuid.UUID,
+	file io.Reader, fileName string) (string, error) {
+
+	user, err := s.userRepo.FindByID(userID)
+	if err != nil {
+		logger.Log.Error("Ошибка при поиске пользователя: ", err)
+		return "", err
+	}
+
+	if user == nil {
+		logger.Log.Warn("Указанный пользователь не найден")
+		return "", errors.ErrorUserNotFound
+	}
+
+	profile := user.Profile
+
+	if profile == nil {
+		logger.Log.Warn("Профиль пользователя не найден")
+		return "", errors.ErrorUserNotFound
+	}
+
+	url, err := s.fileService.SaveProfileImage(file, fileName, userID)
+	if err != nil {
+		logger.Log.Error("Ошибка при сохранении изображения в профиле: ", err)
+		return "", err
+	}
+
+	profile.ImageURL = url
+
+	err = s.profileRepo.UpdateProfile(profile)
+	if err != nil {
+		logger.Log.Error("Ошибка при обновлении профиля пользователя: ", err)
+		return "", err
+	}
+
+	return url, nil
+}
+
 // GetUserInfo получает подробную информацию
 // о каком-то конкретном пользователе
 func (s *UserService) GetUserInfo(userID uuid.UUID) (
@@ -141,6 +185,10 @@ func (s *UserService) GetUserInfo(userID uuid.UUID) (
 		response.CreatedAt = profile.CreatedAt
 	}
 
+	if profile.ImageURL != "" {
+		response.ImageURL = baseURL + profile.ImageURL
+	}
+
 	cards := user.Cards
 
 	for i := range cards {
@@ -167,6 +215,10 @@ func (s *UserService) getCompressedCard(
 
 		CreatedAt: card.CreatedAt,
 		UpdatedAt: card.UpdatedAt,
+	}
+
+	if card.ImageURL != "" {
+		compressedCard.ImageURL = baseURL + card.ImageURL
 	}
 
 	return compressedCard
