@@ -1,0 +1,78 @@
+// services - пакет, содержащий внутреннюю логику приложения
+package services
+
+import (
+	"io"
+	"korst-backend/internal/errors"
+	"korst-backend/internal/ports"
+	"os"
+	"path/filepath"
+	"slices"
+	"strings"
+
+	"github.com/google/uuid"
+)
+
+// FileService - объект, содержащий методы для работы с хранилищем
+type FileService struct {
+	storage ports.Storage
+}
+
+// NewFileService создает и возвращает новый объект FileService
+func NewFileService(storage ports.Storage) ports.FileService {
+	return &FileService{storage: storage}
+}
+
+// SaveProfileImage сохраняет изображение профиля в
+// хранилище и возвращает ссылку на него
+func (s *FileService) SaveProfileImage(file io.Reader,
+	fileName string, userID uuid.UUID) (string, error) {
+
+	ext := filepath.Ext(fileName)
+	if !s.isValidExtension(ext) {
+		return "", errors.ErrorInvalidInput
+	}
+
+	name := userID.String() + ext
+	dirName := os.Getenv("PROFILE_IMAGE_DIR")
+
+	path := filepath.Join(dirName, name)
+
+	err := s.storage.Delete(path)
+	if err != nil {
+		return "", err
+	}
+
+	return s.storage.Save(file, path)
+}
+
+// SaveCardImage сохраняет изображение карточки в
+// хранилище и возвращает ссылку на него
+func (s *FileService) SaveCardImage(file io.Reader,
+	fileName string, cardID uuid.UUID) (string, error) {
+
+	ext := filepath.Ext(fileName)
+	if !s.isValidExtension(ext) {
+		return "", errors.ErrorInvalidInput
+	}
+
+	name := cardID.String() + ext
+	dirName := os.Getenv("CARD_IMAGE_DIR")
+
+	path := filepath.Join(dirName, name)
+
+	err := s.storage.Delete(path)
+	if err != nil {
+		return "", err
+	}
+
+	return s.storage.Save(file, path)
+}
+
+// isValidExtension проверяет, является ли расширение валидным
+func (s *FileService) isValidExtension(ext string) bool {
+	validExtensions := []string{".pdf", ".png", ".jpg", ".jpeg"}
+	ext = strings.ToLower(ext)
+
+	return slices.Contains(validExtensions, ext)
+}
