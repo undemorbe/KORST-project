@@ -42,6 +42,7 @@ func (h *ReviewHandler) GetReviews(c *gin.Context) {
 
 	userID, err := uuid.Parse(req.UserID)
 	if err != nil {
+		logger.Log.Warn("Ошибка при парсинге uuid: ", err)
 		c.Error(errors.ErrorInvalidInput)
 		return
 	}

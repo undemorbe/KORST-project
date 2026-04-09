@@ -26,7 +26,7 @@ type Card struct {
 	Type     string
 	Tags     pq.StringArray `gorm:"type:text[]"`
 
-	RelatedChats []messenger.Chat `gorm:"foreignKey:ChatID;constraint:OnDelete:CASCADE"`
+	RelatedChats []messenger.Chat `gorm:"foreignKey:CardID;constraint:OnDelete:CASCADE"`
 
 	CreatedAt time.Time `gorm:"not null"`
 	UpdatedAt time.Time `gorm:"not null"`

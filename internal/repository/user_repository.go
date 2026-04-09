@@ -84,8 +84,8 @@ func (r *userRepo) FindWithChats(userID uuid.UUID) (*entities.User, error) {
 
 	err := r.db.
 		Preload("Profile").
-		Preload("CustomerChats").
-		Preload("MerchantChats").
+		Preload("CustomerChats.Messages").
+		Preload("MerchantChats.Messages").
 		First(&user, userID).
 		Error
 

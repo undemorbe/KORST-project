@@ -36,7 +36,7 @@ CREATE TABLE messages (
 
     text TEXT,
 
-    reated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
     FOREIGN KEY (chat_id)

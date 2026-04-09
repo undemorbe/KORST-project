@@ -65,12 +65,14 @@ func (h *UserHandler) SaveImage(c *gin.Context) {
 
 	fileHeader, err := c.FormFile("image")
 	if err != nil {
+		logger.Log.Warn("Ошибка при получении файла: ", err)
 		c.Error(errors.ErrorInvalidInput)
 		return
 	}
 
 	file, err := fileHeader.Open()
 	if err != nil {
+		logger.Log.Warn("Ошибка при открытии полученного файла: ", err)
 		c.Error(errors.ErrorInvalidInput)
 		return
 	}
@@ -108,6 +110,7 @@ func (h *UserHandler) GetUserInfo(c *gin.Context) {
 
 	userID, err := uuid.Parse(req.UserID)
 	if err != nil {
+		logger.Log.Warn("Ошибка при парсинге uuid: ", err)
 		c.Error(errors.ErrorInvalidInput)
 		return
 	}

@@ -9,9 +9,8 @@ import (
 // CreateChatRequest - структура для запроса
 // на создания чата между двумя пользователями
 type CreateChatRequest struct {
-	UserID     uuid.UUID `json:"user-id" binding:"required"`
-	IsMerchant bool      `json:"is-merchant" binding:"required"`
-	CardID     uuid.UUID `json:"card-id" binding:"required"`
+	UserID uuid.UUID `json:"user-id" binding:"required"`
+	CardID uuid.UUID `json:"card-id" binding:"required"`
 }
 
 // GetMessagesReponse - структура для запроса

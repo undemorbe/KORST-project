@@ -17,7 +17,7 @@ func RunMigrations(db *gorm.DB) error {
 
 	driver, err := postgres.WithInstance(DB, &postgres.Config{})
 	if err != nil {
-		return nil
+		return err
 	}
 
 	migrations, err := migrate.NewWithDatabaseInstance(

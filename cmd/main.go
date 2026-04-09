@@ -6,6 +6,9 @@ import (
 	"korst-backend/internal/infrastructure/database"
 	"korst-backend/internal/infrastructure/logger"
 	"korst-backend/internal/infrastructure/storage"
+	messengerHandlers "korst-backend/internal/messenger/handlers"
+	messengerRepositories "korst-backend/internal/messenger/repositories"
+	messengerServices "korst-backend/internal/messenger/services"
 	"korst-backend/internal/middleware"
 	repositories "korst-backend/internal/repository"
 	"korst-backend/internal/services"
@@ -51,7 +54,7 @@ func main() {
 	// Подключение хранилища
 	storage := storage.NewLocalStorage(os.Getenv("BASE_PATH"))
 
-	// Подключение репозиториев
+	// Подключение общих репозиториев
 	userRepo := repositories.NewUserRepository(db)
 	otpRepo := repositories.NewOTPRepository(db)
 	refreshTokenRepo := repositories.NewRefreshTokenRepository(db)
@@ -59,7 +62,7 @@ func main() {
 	profileRepo := repositories.NewProfileRepository(db)
 	reviewRepo := repositories.NewReviewRepository(db)
 
-	// Подключение сервисов
+	// Подключение общих сервисов
 	tokenService := services.NewTokenService(userRepo, refreshTokenRepo)
 	fileService := services.NewFileService(storage)
 	authService := services.NewAuthService(userRepo, refreshTokenRepo, tokenService)
@@ -68,12 +71,22 @@ func main() {
 	userService := services.NewUserService(userRepo, profileRepo, fileService)
 	reviewService := services.NewReviewService(userRepo, profileRepo, reviewRepo)
 
-	// Подключение хэндлеров
+	// Подключение общих хэндлеров
 	authHandler := handlers.NewAuthHandler(authService, tokenService)
 	otpHandler := handlers.NewOTPHandler(otpService)
 	cardHandler := handlers.NewCardHandler(cardService, tokenService)
 	userHandler := handlers.NewUserHandler(userService, tokenService)
 	reviewHandler := handlers.NewReviewHandler(reviewService, tokenService)
+
+	// Подключение модулей мессенджера
+	chatRepo := messengerRepositories.NewChatRepository(db)
+	messageRepo := messengerRepositories.NewMessageRepository(db)
+
+	chatService := messengerServices.NewChatService(userRepo, cardRepo, chatRepo)
+	messageService := messengerServices.NewMessageService(userRepo, chatRepo, messageRepo)
+
+	chatHandler := messengerHandlers.NewChatHandler(chatService, tokenService)
+	messageHandler := messengerHandlers.NewMessageHandler(messageService, tokenService)
 
 	// Регистрация маршрутов
 	api := r.Group("/api")
@@ -106,6 +119,17 @@ func main() {
 
 		user.GET("/reviews", reviewHandler.GetReviews)
 		user.POST("/post-review", reviewHandler.PostReview)
+	}
+
+	messenger := api.Group("/messenger")
+	{
+		messenger.GET("/chats", chatHandler.GetChats)
+		messenger.GET("/messages", chatHandler.GetMessages)
+		messenger.POST("/create-chat", chatHandler.CreateChat)
+
+		messenger.POST("/send-message", messageHandler.SendMessage)
+		messenger.PUT("/change-message", messageHandler.ChangeMessage)
+		messenger.DELETE("/delete-message", messageHandler.DeleteMessage)
 	}
 
 	// Маршруты для получения изображений

@@ -98,18 +98,21 @@ func (h *CardHandler) SaveImage(c *gin.Context) {
 
 	cardID, err := uuid.Parse(rawCardID)
 	if err != nil {
+		logger.Log.Warn("Ошибка при парсинге uuid: ", err)
 		c.Error(errors.ErrorInvalidInput)
 		return
 	}
 
 	fileHeader, err := c.FormFile("image")
 	if err != nil {
+		logger.Log.Warn("Ошибка при получении файла: ", err)
 		c.Error(errors.ErrorInvalidInput)
 		return
 	}
 
 	file, err := fileHeader.Open()
 	if err != nil {
+		logger.Log.Warn("Ошибка при открытии полученного файла: ", err)
 		c.Error(errors.ErrorInvalidInput)
 		return
 	}
@@ -176,6 +179,7 @@ func (h *CardHandler) GetCardInfo(c *gin.Context) {
 
 	cardID, err := uuid.Parse(req.CardID)
 	if err != nil {
+		logger.Log.Warn("Ошибка при парсинге uuid: ", err)
 		c.Error(errors.ErrorInvalidInput)
 		return
 	}

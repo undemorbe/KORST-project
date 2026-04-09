@@ -26,6 +26,7 @@ func ErrorHandler() gin.HandlerFunc {
 			logger.Log.Warn("Возникла ошибка при обработке запроса: ", appErr.Code)
 
 			switch appErr.Code {
+
 			case errors.CodeInvalidInput,
 				errors.CodeInvalidPhone,
 				errors.CodeOTPExpired,

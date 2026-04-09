@@ -107,17 +107,38 @@ func (s *ChatService) CreateChat(authorID uuid.UUID,
 
 	var newChat messengerEntities.Chat
 
-	newChat.CardID = req.CardID
-
-	if req.IsMerchant {
-		newChat.MerchantID = req.UserID
-		newChat.CustomerID = authorID
-	} else {
-		newChat.MerchantID = authorID
-		newChat.CustomerID = req.UserID
+	card, err := s.cardRepo.FindByID(req.CardID)
+	if err != nil {
+		logger.Log.Error("Ошибка при поиске карточки: ", err)
+		return err
 	}
 
-	err := s.chatRepo.CreateChat(&newChat)
+	if card == nil {
+		logger.Log.Warn("Указанная карточка не найдена")
+		return errors.ErrorCardNotFound
+	}
+
+	switch card.UserID {
+
+	case authorID:
+
+		newChat.MerchantID = authorID
+		newChat.CustomerID = req.UserID
+
+	case req.UserID:
+
+		newChat.MerchantID = req.UserID
+		newChat.CustomerID = authorID
+
+	default:
+
+		logger.Log.Warn("Ни один из пользователей не является автором карточки")
+		return errors.ErrorInvalidInput
+	}
+
+	newChat.CardID = req.CardID
+
+	err = s.chatRepo.CreateChat(&newChat)
 	if err != nil {
 		logger.Log.Error("Ошибка при создании чата: ", err)
 		return err
@@ -220,9 +241,10 @@ func (s *ChatService) convertChat(userID uuid.UUID,
 			return b.CreatedAt.Compare(a.CreatedAt)
 		})
 
-	lastMessage := s.convertMessage(&messages[0])
-
-	convertedChat.LastMessage = lastMessage
+	if len(messages) > 0 {
+		lastMessage := s.convertMessage(&messages[0])
+		convertedChat.LastMessage = &lastMessage
+	}
 
 	return convertedChat, nil
 }

@@ -51,7 +51,7 @@ func (h *ChatHandler) GetChats(c *gin.Context) {
 		return
 	}
 
-	logger.Log.Info("Получение чатов пользователя успшно выполнено")
+	logger.Log.Info("Получение чатов пользователя успешно выполнено")
 	c.JSON(http.StatusOK, response)
 }
 
@@ -98,6 +98,7 @@ func (h *ChatHandler) GetMessages(c *gin.Context) {
 
 	chatID, err := uuid.Parse(req.ChatID)
 	if err != nil {
+		logger.Log.Warn("Ошибка при парсинге uuid: ", err)
 		c.Error(errors.ErrorInvalidInput)
 		return
 	}
@@ -109,6 +110,6 @@ func (h *ChatHandler) GetMessages(c *gin.Context) {
 		return
 	}
 
-	logger.Log.Info("Получение всех сообщений в чате  прошло успешно")
+	logger.Log.Info("Получение всех сообщений в чате прошло успешно")
 	c.JSON(http.StatusOK, response)
 }

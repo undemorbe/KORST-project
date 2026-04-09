@@ -26,7 +26,7 @@ type GetMessagesReponse struct {
 type ChatInfo struct {
 	ID          uuid.UUID `json:"id"`
 	User        UserInfo  `json:"user"`
-	LastMessage Message   `json:"last-message"`
+	LastMessage *Message  `json:"last-message,omitempty"`
 	Card        CardInfo  `json:"card"`
 }
 
