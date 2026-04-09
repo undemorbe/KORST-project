@@ -35,6 +35,7 @@ func (s *FileService) SaveProfileImage(file io.Reader,
 
 	name := userID.String() + ext
 	dirName := os.Getenv("PROFILE_IMAGE_DIR")
+	basePath := os.Getenv("BASE_PATH")
 
 	path := filepath.Join(dirName, name)
 
@@ -43,7 +44,13 @@ func (s *FileService) SaveProfileImage(file io.Reader,
 		return "", err
 	}
 
-	return s.storage.Save(file, path)
+	fullPath, err := s.storage.Save(file, path)
+	if err != nil || fullPath == "" {
+		return "", errors.ErrorInternal
+	}
+
+	url := "/" + basePath + "/" + dirName + "/" + name
+	return url, nil
 }
 
 // SaveCardImage сохраняет изображение карточки в
@@ -58,6 +65,7 @@ func (s *FileService) SaveCardImage(file io.Reader,
 
 	name := cardID.String() + ext
 	dirName := os.Getenv("CARD_IMAGE_DIR")
+	basePath := os.Getenv("BASE_PATH")
 
 	path := filepath.Join(dirName, name)
 
@@ -66,7 +74,13 @@ func (s *FileService) SaveCardImage(file io.Reader,
 		return "", err
 	}
 
-	return s.storage.Save(file, path)
+	fullPath, err := s.storage.Save(file, path)
+	if err != nil || fullPath == "" {
+		return "", errors.ErrorInternal
+	}
+
+	url := "/" + basePath + "/" + dirName + "/" + name
+	return url, nil
 }
 
 // isValidExtension проверяет, является ли расширение валидным

@@ -37,9 +37,6 @@ func NewCardService(
 	}
 }
 
-// baseURL - начало пути до api сервера
-var baseURL string = os.Getenv("BASE_URL")
-
 // SaveCard сохраняет карточку объявления, созданную пользователем
 func (s *CardService) SaveCard(userID uuid.UUID,
 	req *requests.SaveCardRequest) error {
@@ -130,6 +127,7 @@ func (s *CardService) SaveImage(cardID uuid.UUID,
 	}
 
 	card.ImageURL = url
+	card.UpdatedAt = time.Now().UTC()
 
 	err = s.cardRepo.UpdateCard(card)
 	if err != nil {
@@ -137,7 +135,9 @@ func (s *CardService) SaveImage(cardID uuid.UUID,
 		return "", err
 	}
 
-	return url, nil
+	baseURL := os.Getenv("BASE_URL")
+
+	return baseURL + url, nil
 }
 
 // GetCards возвращает несколько сжатых карточек
@@ -214,6 +214,8 @@ func (s *CardService) GetCardInfo(cardID uuid.UUID) (
 		UpdatedAt: updatedDate,
 	}
 
+	baseURL := os.Getenv("BASE_URL")
+
 	if card.ImageURL != "" {
 		response.ImageURL = baseURL + card.ImageURL
 	}
@@ -263,6 +265,8 @@ func (s *CardService) getAuthor(userID uuid.UUID) (
 		Rating: profile.Rating,
 	}
 
+	baseURL := os.Getenv("BASE_URL")
+
 	if profile.ImageURL != "" {
 		author.ImageURL = baseURL + profile.ImageURL
 	}
@@ -294,6 +298,8 @@ func (s *CardService) getCompressedCard(card *entities.Card) (
 		CreatedAt: card.CreatedAt,
 		UpdatedAt: card.UpdatedAt,
 	}
+
+	baseURL := os.Getenv("BASE_URL")
 
 	if card.ImageURL != "" {
 		compressedCard.ImageURL = baseURL + card.ImageURL

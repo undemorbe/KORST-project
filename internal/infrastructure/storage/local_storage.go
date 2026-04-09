@@ -45,7 +45,7 @@ func (s *LocalStorage) Save(file io.Reader, path string) (string, error) {
 		return "", err
 	}
 
-	return "/" + fullPath, nil
+	return "/" + s.BasePath + "/" + path, nil
 }
 
 // Delete удаляет изображение в хранилище по заданному пути

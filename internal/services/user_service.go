@@ -9,6 +9,7 @@ import (
 	"korst-backend/internal/errors"
 	"korst-backend/internal/infrastructure/logger"
 	"korst-backend/internal/ports"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -135,6 +136,7 @@ func (s *UserService) SaveImage(userID uuid.UUID,
 	}
 
 	profile.ImageURL = url
+	profile.UpdatedAt = time.Now().UTC()
 
 	err = s.profileRepo.UpdateProfile(profile)
 	if err != nil {
@@ -142,7 +144,9 @@ func (s *UserService) SaveImage(userID uuid.UUID,
 		return "", err
 	}
 
-	return url, nil
+	baseURL := os.Getenv("BASE_URL")
+
+	return baseURL + url, nil
 }
 
 // GetUserInfo получает подробную информацию
@@ -185,6 +189,8 @@ func (s *UserService) GetUserInfo(userID uuid.UUID) (
 		response.CreatedAt = profile.CreatedAt
 	}
 
+	baseURL := os.Getenv("BASE_URL")
+
 	if profile.ImageURL != "" {
 		response.ImageURL = baseURL + profile.ImageURL
 	}
@@ -216,6 +222,8 @@ func (s *UserService) getCompressedCard(
 		CreatedAt: card.CreatedAt,
 		UpdatedAt: card.UpdatedAt,
 	}
+
+	baseURL := os.Getenv("BASE_URL")
 
 	if card.ImageURL != "" {
 		compressedCard.ImageURL = baseURL + card.ImageURL
