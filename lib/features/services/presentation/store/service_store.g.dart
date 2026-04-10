@@ -169,6 +169,14 @@ mixin _$ServiceStore on _ServiceStore, Store {
     return _$createServiceAsyncAction.run(() => super.createService(service));
   }
 
+  late final _$updateServiceAsyncAction =
+      AsyncAction('_ServiceStore.updateService', context: context);
+
+  @override
+  Future<void> updateService(ServiceEntity service) {
+    return _$updateServiceAsyncAction.run(() => super.updateService(service));
+  }
+
   late final _$addReviewAsyncAction =
       AsyncAction('_ServiceStore.addReview', context: context);
 

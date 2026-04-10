@@ -5,6 +5,7 @@ import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../services/presentation/store/service_store.dart';
 import '../../../services/presentation/widgets/service_card.dart';
+import '../../../services/presentation/widgets/service_card_shimmer.dart';
 import '../store/favorites_store.dart';
 
 class FavoritesPage extends StatelessWidget {
@@ -22,6 +23,14 @@ class FavoritesPage extends StatelessWidget {
       ),
       body: Observer(
         builder: (_) {
+          if (serviceStore.services.isEmpty && !serviceStore.isLoading) {
+            serviceStore.loadServices();
+          }
+
+          if (serviceStore.isLoading) {
+            return const ServiceCardShimmerList(itemCount: 6);
+          }
+
           final favoriteServices = serviceStore.services
               .where((s) => favoritesStore.favoriteIds.contains(s.id))
               .toList();

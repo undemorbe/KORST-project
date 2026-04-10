@@ -16,6 +16,9 @@ import '../../features/bookings/presentation/store/bookings_store.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/presentation/store/auth_store.dart';
+import '../../features/auth/presentation/store/session_store.dart';
+import '../../features/users/data/repositories/user_profile_repository_impl.dart';
+import '../../features/users/domain/repositories/user_profile_repository.dart';
 
 final sl = GetIt.instance;
 
@@ -78,11 +81,15 @@ Future<void> init() async {
   // Features - Auth
   sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(sl(), sl(), sl()));
   sl.registerLazySingleton(() => AuthStore(sl()));
+  sl.registerLazySingleton(() => SessionStore(sl(), sl()));
 
   // Features - Services
   sl.registerLazySingleton<ServiceRepository>(() => ServiceRepositoryImpl(sl()));
   // sl.registerLazySingleton(() => GetServices(sl())); // Removed as we use Repo directly in Store
   sl.registerLazySingleton(() => ServiceStore(sl()));
+
+  // Features - Users
+  sl.registerLazySingleton<UserProfileRepository>(() => UserProfileRepositoryImpl(sl()));
 
   // Features - Settings
   sl.registerLazySingleton(() => SettingsStore());

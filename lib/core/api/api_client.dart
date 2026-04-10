@@ -5,12 +5,20 @@ import 'api_error_codes.dart';
 import 'api_exception.dart';
 import 'token_storage.dart';
 
+enum ApiSessionEvent {
+  tokensRefreshed,
+  sessionExpired,
+}
+
 class ApiClient {
   final Dio _dio;
   final Dio _refreshDio;
   final TokenStorage _tokenStorage;
+  final StreamController<ApiSessionEvent> _sessionEventsController = StreamController<ApiSessionEvent>.broadcast();
 
   Future<void>? _refreshing;
+
+  Stream<ApiSessionEvent> get sessionEvents => _sessionEventsController.stream;
 
   ApiClient({
     required Dio dio,
@@ -39,19 +47,35 @@ class ApiClient {
             options.headers[ApiConstants.headerAccessToken] = accessToken;
             options.headers[ApiConstants.headerAuthorization] = accessToken;
           }
+          final userId = _tokenStorage.getUserId();
+          if (userId != null && userId.isNotEmpty) {
+            options.headers[ApiConstants.headerUserId] = userId;
+          }
           handler.next(options);
         },
         onError: (err, handler) async {
           final code = _extractErrorCode(err.response?.data);
-          final shouldRefresh = code == ApiErrorCodes.accessTokenExpired || err.response?.statusCode == 401;
+          final shouldRefresh = code == ApiErrorCodes.accessTokenExpired ||
+              code == ApiErrorCodes.refreshTokenExpired ||
+              code == 'SESSION_EXPIRED' ||
+              err.response?.statusCode == 401;
 
           if (!shouldRefresh) {
             handler.next(err);
             return;
           }
 
+          if (code == ApiErrorCodes.refreshTokenExpired || code == 'SESSION_EXPIRED') {
+            await _tokenStorage.clearTokens();
+            _sessionEventsController.add(ApiSessionEvent.sessionExpired);
+            handler.next(err);
+            return;
+          }
+
           final refreshToken = _tokenStorage.getRefreshToken();
           if (refreshToken == null) {
+            await _tokenStorage.clearTokens();
+            _sessionEventsController.add(ApiSessionEvent.sessionExpired);
             handler.next(err);
             return;
           }
@@ -62,6 +86,7 @@ class ApiClient {
           } catch (_) {
             _refreshing = null;
             await _tokenStorage.clearTokens();
+            _sessionEventsController.add(ApiSessionEvent.sessionExpired);
             handler.next(err);
             return;
           } finally {
@@ -151,12 +176,17 @@ class ApiClient {
     }
 
     await _tokenStorage.saveTokens(accessToken: access, refreshToken: refresh);
+    _sessionEventsController.add(ApiSessionEvent.tokensRefreshed);
   }
 
   Future<Response<dynamic>> _retry(RequestOptions requestOptions, String accessToken) {
     final headers = Map<String, dynamic>.from(requestOptions.headers);
     headers[ApiConstants.headerAccessToken] = accessToken;
     headers[ApiConstants.headerAuthorization] = accessToken;
+    final userId = _tokenStorage.getUserId();
+    if (userId != null && userId.isNotEmpty) {
+      headers[ApiConstants.headerUserId] = userId;
+    }
 
     final options = Options(
       method: requestOptions.method,

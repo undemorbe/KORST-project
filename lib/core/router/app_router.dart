@@ -2,7 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 import '../../features/services/presentation/pages/create_service_page.dart';
+import '../../features/services/presentation/pages/my_services_page.dart';
+import '../../features/services/presentation/pages/service_deeplink_page.dart';
+import '../../features/services/presentation/pages/service_editor_page.dart';
 import '../../features/settings/presentation/pages/edit_profile_page.dart';
+import '../../features/settings/presentation/pages/privacy_policy_page.dart';
+import '../../features/settings/presentation/pages/profile_page.dart';
+import '../../features/settings/presentation/pages/settings_all_page.dart';
+import '../../features/settings/presentation/pages/terms_of_use_page.dart';
 import '../../features/auth/presentation/pages/auth_gate_page.dart';
 import '../../features/auth/presentation/pages/onboarding_page.dart';
 import '../../features/auth/presentation/pages/phone_number_page.dart';
@@ -18,9 +25,42 @@ import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/bookings/presentation/pages/bookings_page.dart';
 import '../../features/favorites/presentation/pages/favorites_page.dart';
 import '../../features/main/presentation/pages/main_shell_page.dart';
+import '../../features/users/presentation/pages/user_profile_page.dart';
 
 class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
+
+  static CustomTransitionPage<void> _buildTransitionPage(
+    GoRouterState state,
+    Widget child,
+  ) {
+    return CustomTransitionPage<void>(
+      key: state.pageKey,
+      child: child,
+      transitionDuration: const Duration(milliseconds: 420),
+      reverseTransitionDuration: const Duration(milliseconds: 320),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        final curved = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic,
+        );
+        return FadeTransition(
+          opacity: Tween<double>(begin: 0.0, end: 1.0).animate(curved),
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0.06, 0.02),
+              end: Offset.zero,
+            ).animate(curved),
+            child: ScaleTransition(
+              scale: Tween<double>(begin: 0.985, end: 1.0).animate(curved),
+              child: child,
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   static final GoRouter router = GoRouter(
     navigatorKey: _rootNavigatorKey,
@@ -55,23 +95,28 @@ class AppRouter {
     routes: [
       GoRoute(
         path: '/auth-gate',
-        builder: (context, state) => const AuthGatePage(),
+        pageBuilder: (context, state) =>
+            _buildTransitionPage(state, const AuthGatePage()),
       ),
       GoRoute(
         path: '/onboarding',
-        builder: (context, state) => const OnboardingPage(),
+        pageBuilder: (context, state) =>
+            _buildTransitionPage(state, const OnboardingPage()),
       ),
       GoRoute(
         path: '/auth/phone',
-        builder: (context, state) => const PhoneNumberPage(),
+        pageBuilder: (context, state) =>
+            _buildTransitionPage(state, const PhoneNumberPage()),
       ),
       GoRoute(
         path: '/auth/otp',
-        builder: (context, state) => const OtpPage(),
+        pageBuilder: (context, state) =>
+            _buildTransitionPage(state, const OtpPage()),
       ),
       GoRoute(
         path: '/auth/create-profile',
-        builder: (context, state) => const CreateProfilePage(),
+        pageBuilder: (context, state) =>
+            _buildTransitionPage(state, const CreateProfilePage()),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
@@ -82,7 +127,8 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/',
-                builder: (context, state) => const ServicesHomePage(),
+                pageBuilder: (context, state) =>
+                    _buildTransitionPage(state, const ServicesHomePage()),
               ),
             ],
           ),
@@ -90,7 +136,8 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/favorites',
-                builder: (context, state) => const FavoritesPage(),
+                pageBuilder: (context, state) =>
+                    _buildTransitionPage(state, const FavoritesPage()),
               ),
             ],
           ),
@@ -98,7 +145,8 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/bookings',
-                builder: (context, state) => const BookingsPage(),
+                pageBuilder: (context, state) =>
+                    _buildTransitionPage(state, const BookingsPage()),
               ),
             ],
           ),
@@ -106,7 +154,8 @@ class AppRouter {
             routes: [
               GoRoute(
                 path: '/settings',
-                builder: (context, state) => const SettingsPage(),
+                pageBuilder: (context, state) =>
+                    _buildTransitionPage(state, const SettingsPage()),
               ),
             ],
           ),
@@ -115,25 +164,88 @@ class AppRouter {
       GoRoute(
         path: '/service-details',
         parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final service = state.extra as ServiceEntity;
-          return ServiceDetailsPage(service: service);
+          return _buildTransitionPage(
+            state,
+            ServiceDetailsPage(service: service),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/service/:serviceId',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) {
+          final id = state.pathParameters['serviceId'] ?? '';
+          return _buildTransitionPage(state, ServiceDeeplinkPage(serviceId: id));
         },
       ),
       GoRoute(
         path: '/create-service',
         parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const CreateServicePage(),
+        pageBuilder: (context, state) =>
+            _buildTransitionPage(state, const CreateServicePage()),
+      ),
+      GoRoute(
+        path: '/edit-service',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) {
+          final service = state.extra as ServiceEntity;
+          return _buildTransitionPage(
+            state,
+            ServiceEditorPage(initialService: service),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/my-services',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _buildTransitionPage(state, const MyServicesPage()),
       ),
       GoRoute(
         path: '/edit-profile',
         parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => const EditProfilePage(),
+        pageBuilder: (context, state) =>
+            _buildTransitionPage(state, const EditProfilePage()),
+      ),
+      GoRoute(
+        path: '/profile',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _buildTransitionPage(state, const ProfilePage()),
+      ),
+      GoRoute(
+        path: '/settings-all',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _buildTransitionPage(state, const SettingsAllPage()),
+      ),
+      GoRoute(
+        path: '/privacy',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _buildTransitionPage(state, const PrivacyPolicyPage()),
+      ),
+      GoRoute(
+        path: '/terms',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _buildTransitionPage(state, const TermsOfUsePage()),
+      ),
+      GoRoute(
+        path: '/user-profile/:userId',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) {
+          final userId = state.pathParameters['userId'] ?? '';
+          return _buildTransitionPage(state, UserProfilePage(userId: userId));
+        },
       ),
       GoRoute(
         path: '/logs',
         parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => TalkerScreen(talker: sl<Talker>()),
+        pageBuilder: (context, state) =>
+            _buildTransitionPage(state, TalkerScreen(talker: sl<Talker>())),
       ),
     ],
   );

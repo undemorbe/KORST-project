@@ -5,6 +5,7 @@ class ApiConstants {
 
   static String get headerAccessToken => EnvConfig.headerAccessToken;
   static String get headerAuthorization => EnvConfig.headerAuthorization;
+  static String get headerUserId => EnvConfig.headerUserId;
 
   static String get authorizeSendOtp => EnvConfig.authorizeSendOtp;
   static String get authorizeVerifyOtp => EnvConfig.authorizeVerifyOtp;
@@ -13,6 +14,9 @@ class ApiConstants {
   static String get authorizeRefresh => EnvConfig.authorizeRefresh;
 
   static String get userUpdate => EnvConfig.userUpdate;
+  static String get userGetInfo => EnvConfig.userGetInfo;
+  static String get userReviews => EnvConfig.userReviews;
+  static String get userPostReview => EnvConfig.userPostReview;
 
   static String get cardsSaveCard => EnvConfig.cardsSaveCard;
   static String get cardsCardInfo => EnvConfig.cardsCardInfo;

@@ -84,6 +84,25 @@ class ServiceRepositoryImpl implements ServiceRepository {
   }
 
   @override
+  Future<void> updateService(ServiceEntity service) async {
+    final payload = {
+      'card-id': _nullIfEmpty(service.id),
+      'name': _nullIfEmpty(service.title),
+      'description': _nullIfEmpty(service.description),
+      'price': service.price,
+      'currency': _nullIfEmpty(service.currency),
+      'type': _nullIfEmpty(service.type),
+      'tags': service.tags,
+    };
+
+    try {
+      await _api.post(ApiConstants.cardsSaveCard, data: payload);
+    } on DioException catch (e) {
+      throw _toApiException(e, fallbackMessage: 'Не удалось обновить карточку');
+    }
+  }
+
+  @override
   Future<void> addReview(String serviceId, ReviewEntity review) async {
     return;
   }
@@ -102,14 +121,17 @@ class ServiceRepositoryImpl implements ServiceRepository {
     UserEntity? author;
     if (authorRaw is Map) {
       final m = Map<String, dynamic>.from(authorRaw);
+      final authorId = (m['id'] as String?) ?? (m['uid'] as String?) ?? '';
+      final authorPhone = (m['phone'] as String?) ?? '';
+      final authorRating = (m['rating'] as num?)?.toDouble();
       author = UserEntity(
-        uid: '',
+        uid: authorId,
         name: (m['name'] as String?) ?? '',
         surname: m['surname'] as String?,
         description: null,
-        phone: '',
+        phone: authorPhone,
         photoUrl: null,
-        contacts: {'rating': (m['rating'] as num?)?.toDouble()},
+        contacts: {'rating': authorRating},
         createdCards: const [],
         bookings: const {},
         created: DateTime.now(),
