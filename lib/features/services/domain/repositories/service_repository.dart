@@ -6,5 +6,6 @@ abstract class ServiceRepository {
   Future<CardsPage> getServices({required String? key});
   Future<ServiceEntity> getService(String id);
   Future<void> createService(ServiceEntity service);
+  Future<void> updateService(ServiceEntity service);
   Future<void> addReview(String serviceId, ReviewEntity review);
 }

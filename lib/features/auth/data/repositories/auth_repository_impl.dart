@@ -53,7 +53,12 @@ class AuthRepositoryImpl implements AuthRepository {
       }
       final data = res.data;
       if (data is Map) {
-        return AuthUserStatusX.fromApi(data['status'] as String?);
+        final map = Map<String, dynamic>.from(data);
+        final userId = _extractUserId(map);
+        if (userId != null) {
+          await _cacheUserId(userId: userId, phone: phone);
+        }
+        return AuthUserStatusX.fromApi(map['status'] as String?);
       }
       return AuthUserStatus.notFound;
     } on DioException catch (e) {
@@ -81,15 +86,22 @@ class AuthRepositoryImpl implements AuthRepository {
       final accessToken = data['access-token'];
       final refreshToken = data['refresh-token'];
       final statusStr = data['status'] as String?;
+      final userId = _extractUserId(Map<String, dynamic>.from(data));
 
       if (accessToken is String && refreshToken is String) {
         await _tokenStorage.saveTokens(accessToken: accessToken, refreshToken: refreshToken);
+      }
+      if (userId != null) {
+        await _tokenStorage.saveUserId(userId);
       }
 
       final status = AuthUserStatusX.fromApi(statusStr);
 
       final cached = await getUserProfile();
-      final updated = (cached ?? UserEntity.empty(phone: phone)).copyWith(phone: phone);
+      final updated = (cached ?? UserEntity.empty(phone: phone)).copyWith(
+        uid: userId ?? (cached?.uid),
+        phone: phone,
+      );
       await _localStorage.put(_userKey, json.encode(updated.toJson()));
 
       return status;
@@ -166,6 +178,33 @@ class AuthRepositoryImpl implements AuthRepository {
     if (v == null) return null;
     final s = v.trim();
     return s.isEmpty ? null : s;
+  }
+
+  static String? _extractUserId(Map<String, dynamic> data) {
+    final candidates = [
+      data['user-id'],
+      data['user_id'],
+      data['userId'],
+      data['id'],
+      data['uid'],
+    ];
+    for (final value in candidates) {
+      if (value is String && value.trim().isNotEmpty) return value.trim();
+    }
+    return null;
+  }
+
+  Future<void> _cacheUserId({
+    required String userId,
+    required String phone,
+  }) async {
+    await _tokenStorage.saveUserId(userId);
+    final cached = await getUserProfile();
+    final updated = (cached ?? UserEntity.empty(phone: phone)).copyWith(
+      uid: userId,
+      phone: phone,
+    );
+    await _localStorage.put(_userKey, json.encode(updated.toJson()));
   }
 
   static ApiException _toApiException(DioException e, {required String fallbackMessage}) {

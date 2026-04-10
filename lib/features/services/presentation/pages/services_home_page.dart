@@ -6,6 +6,7 @@ import '../../../../core/di/injection_container.dart';
 import '../../domain/entities/service_category.dart';
 import '../store/service_store.dart';
 import '../widgets/service_card.dart';
+import '../widgets/service_card_shimmer.dart';
 import '../../../favorites/presentation/store/favorites_store.dart';
 
 class ServicesHomePage extends StatefulWidget {
@@ -106,7 +107,7 @@ class _ServicesHomePageState extends State<ServicesHomePage> {
             child: Observer(
               builder: (_) {
                 if (_store.isLoading) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const ServiceCardShimmerList(itemCount: 6);
                 }
 
                 if (_store.errorMessage != null) {
@@ -141,14 +142,19 @@ class _ServicesHomePageState extends State<ServicesHomePage> {
                       if (index == _store.filteredServices.length) {
                         if (_store.isLoadingMore) {
                           return const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 16),
-                            child: Center(child: CircularProgressIndicator()),
+                            padding: EdgeInsets.only(top: 4, bottom: 12),
+                            child: Column(
+                              children: [
+                                ServiceCardShimmer(),
+                                ServiceCardShimmer(),
+                              ],
+                            ),
                           );
                         }
                         if (!_store.hasMore) {
                           return const Padding(
                             padding: EdgeInsets.symmetric(vertical: 24),
-                            child: Center(child: Text('Больше карточек нет')),
+                            child: Center(child: Text('Дальше бога нет')),
                           );
                         }
                         return const SizedBox(height: 24);

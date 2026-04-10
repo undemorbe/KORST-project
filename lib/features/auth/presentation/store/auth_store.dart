@@ -57,6 +57,7 @@ abstract class _AuthStore with Store {
       if (isLoggedIn && phone != null && phone.isNotEmpty) {
         try {
           userStatus = await _authRepository.checkUser(phone);
+          userProfile = await _authRepository.getUserProfile();
           if (userStatus == AuthUserStatus.notFound) {
             await _authRepository.logout();
             isLoggedIn = false;

@@ -98,6 +98,20 @@ abstract class _ServiceStore with Store {
   }
 
   @action
+  Future<void> updateService(ServiceEntity service) async {
+    isLoading = true;
+    errorMessage = null;
+    try {
+      await _serviceRepository.updateService(service);
+      await loadServices();
+    } catch (e) {
+      errorMessage = e.toString();
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  @action
   Future<void> addReview(String serviceId, ReviewEntity review) async {
     isLoading = true;
     errorMessage = null;

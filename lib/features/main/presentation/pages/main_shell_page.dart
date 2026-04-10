@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../l10n/generated/app_localizations.dart';
-import '../../../../core/di/injection_container.dart';
-import '../../../services/presentation/store/service_store.dart';
 
 class MainShellPage extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
@@ -22,12 +20,6 @@ class MainShellPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    
-    // Trigger load services if needed (safeguard)
-    final serviceStore = sl<ServiceStore>();
-    if (serviceStore.services.isEmpty && !serviceStore.isLoading) {
-      serviceStore.loadServices();
-    }
 
     return Scaffold(
       body: navigationShell,
