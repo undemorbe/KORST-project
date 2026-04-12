@@ -40,6 +40,29 @@ func (r *chatRepo) FindByID(chatID uuid.UUID) (*entities.Chat, error) {
 	return &chat, nil
 }
 
+// FindByCardAndUsers находит чат по ID карточки
+// и пользователей, к которым относится этот чат
+func (r *chatRepo) FindByCardAndUsers(cardID uuid.UUID,
+	customerID uuid.UUID, merchantID uuid.UUID) (*entities.Chat, error) {
+
+	var chat entities.Chat
+
+	err := r.db.
+		Where("card_id = ?", cardID).
+		Where("customer_id = ?", customerID).
+		Where("merchant_id = ?", merchantID).
+		First(&chat).
+		Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &chat, nil
+}
+
 // CreateChat создает новый объект чата в БД
 func (r *chatRepo) CreateChat(chat *entities.Chat) error {
 	return r.db.Create(chat).Error

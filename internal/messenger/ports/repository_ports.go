@@ -12,6 +12,11 @@ type ChatRepository interface {
 	// FindByID находит чат по его ID
 	FindByID(chatID uuid.UUID) (*entities.Chat, error)
 
+	// FindByCardAndUsers находит чат по ID карточки
+	// и пользователей, к которым относится этот чат
+	FindByCardAndUsers(cardID uuid.UUID, customerID uuid.UUID,
+		merchantID uuid.UUID) (*entities.Chat, error)
+
 	// CreateChat создает новый объект чата в БД
 	CreateChat(chat *entities.Chat) error
 }

@@ -24,6 +24,18 @@ func (m *MockChatRepo) FindByID(chatID uuid.UUID) (*entities.Chat, error) {
 	return args.Get(0).(*entities.Chat), args.Error(1)
 }
 
+// FindByCardAndUsers задает фиктивную реализацию нахождения чата по ID карточкм=и и пользователей
+func (m *MockChatRepo) FindByCardAndUsers(cardID uuid.UUID,
+	customerID uuid.UUID, merchantID uuid.UUID) (*entities.Chat, error) {
+	args := m.Called(cardID, customerID, merchantID)
+
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+
+	return args.Get(0).(*entities.Chat), args.Error(1)
+}
+
 // CreateChat задает фиктивную реализацию создания чата
 func (m *MockChatRepo) CreateChat(chat *entities.Chat) error {
 	args := m.Called(chat)

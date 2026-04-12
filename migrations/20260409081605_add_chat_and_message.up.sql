@@ -37,7 +37,6 @@ CREATE TABLE messages (
     text TEXT,
 
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
 
     FOREIGN KEY (chat_id)
         REFERENCES chats(id)

@@ -138,6 +138,18 @@ func (s *ChatService) CreateChat(authorID uuid.UUID,
 
 	newChat.CardID = req.CardID
 
+	chat, err := s.chatRepo.FindByCardAndUsers(
+		newChat.CardID, newChat.CustomerID, newChat.MerchantID)
+
+	if err != nil {
+		logger.Log.Error("Ошибка при поиске чата по ID пользователей: ", err)
+	}
+
+	if chat != nil {
+		logger.Log.Error("Чат с такими параметрами уже существует")
+		return nil
+	}
+
 	err = s.chatRepo.CreateChat(&newChat)
 	if err != nil {
 		logger.Log.Error("Ошибка при создании чата: ", err)
