@@ -70,6 +70,11 @@ type CardRepository interface {
 	// которые больше ключа и отсортированны по времени.
 	FindCardsByTime(key *time.Time, limit int) ([]entities.Card, error)
 
+	// FindCardsByQuery находит заданное количество карточек
+	// по запросу поиска пользователя (query)
+	FindCardsByQuery(key *time.Time, query string,
+		limit int) ([]entities.Card, error)
+
 	// CreateCard создает новый объект карточки объявления в БД
 	CreateCard(card *entities.Card) error
 

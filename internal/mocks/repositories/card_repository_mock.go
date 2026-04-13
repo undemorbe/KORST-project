@@ -31,6 +31,12 @@ func (m *MockCardRepo) FindCardsByTime(key *time.Time, limit int) ([]entities.Ca
 	return args.Get(0).([]entities.Card), args.Error(1)
 }
 
+// FindCardsByQuery задает фиктивную реализацию нахождения карточек по поиску
+func (m *MockCardRepo) FindCardsByQuery(key *time.Time, query string, limit int) ([]entities.Card, error) {
+	args := m.Called(key, query, limit)
+	return args.Get(0).([]entities.Card), args.Error(1)
+}
+
 // CreateCard задает фиктивную реализацию создания сущности карточки
 func (m *MockCardRepo) CreateCard(card *entities.Card) error {
 	args := m.Called(card)

@@ -155,7 +155,7 @@ func (h *CardHandler) GetCards(c *gin.Context) {
 		key = &parsedTime
 	}
 
-	response, err := h.cardService.GetCards(key)
+	response, err := h.cardService.GetCards(key, nil)
 
 	if err != nil {
 		c.Error(err)
@@ -163,6 +163,43 @@ func (h *CardHandler) GetCards(c *gin.Context) {
 	}
 
 	logger.Log.Info("Получение карточек прошло успешно")
+	c.JSON(http.StatusOK, response)
+}
+
+// GetWithQuery обрабатывает запрос на получение
+// карточек по времени и запросу в поиске
+func (h *CardHandler) GetWithQuery(c *gin.Context) {
+	var req requests.GetWithQueryRequest
+	var key *time.Time = nil
+
+	err := c.ShouldBindQuery(&req)
+	if err != nil {
+		c.Error(errors.ErrorInvalidInput)
+		return
+	}
+
+	if req.Key != nil {
+
+		rawTime := strings.Trim(*req.Key, `"`)
+
+		parsedTime, err := time.Parse(time.RFC3339Nano, rawTime)
+		if err != nil {
+			logger.Log.Warn("Ошибка при парсинге времени в key: ", err)
+			c.Error(errors.ErrorInvalidInput)
+			return
+		}
+
+		key = &parsedTime
+	}
+
+	response, err := h.cardService.GetCards(key, req.Query)
+
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	logger.Log.Info("Получение карточек по запросу поиска прошло успешно")
 	c.JSON(http.StatusOK, response)
 }
 

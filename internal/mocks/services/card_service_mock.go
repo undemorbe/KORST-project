@@ -35,8 +35,8 @@ func (m *MockCardService) SaveImage(cardID uuid.UUID, file io.Reader, fileName s
 }
 
 // GetCards задает фиктивную реализацию получения страницы карточек
-func (m *MockCardService) GetCards(key *time.Time) (responses.GetCardsResponse, error) {
-	args := m.Called(key)
+func (m *MockCardService) GetCards(key *time.Time, query *string) (responses.GetCardsResponse, error) {
+	args := m.Called(key, query)
 	return args.Get(0).(responses.GetCardsResponse), args.Error(1)
 }
 

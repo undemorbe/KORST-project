@@ -163,7 +163,7 @@ func TestGetCards(t *testing.T) {
 		On("FindByID", userID).
 		Return(user, nil)
 
-	response, err := cardService.GetCards(&key)
+	response, err := cardService.GetCards(&key, nil)
 
 	require.NoError(t, err)
 	require.Equal(t, cardName1, response.Cards[0].Name)

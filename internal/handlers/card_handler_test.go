@@ -20,6 +20,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestSaveCard тестирует обработку запроса на
+// сохранение карточки объявления
 func TestSaveCard(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	logger.InitLoggerTest()
@@ -77,6 +79,8 @@ func TestSaveCard(t *testing.T) {
 	mockCardService.AssertExpectations(t)
 }
 
+// TestGetCards тестирует обработку запроса на
+// получение карточек объявлений (с пагинацией)
 func TestGetCards(t *testing.T) {
 
 	mockCardService := &mockServices.MockCardService{}
@@ -84,12 +88,14 @@ func TestGetCards(t *testing.T) {
 
 	cardHandler := NewCardHandler(mockCardService, mockTokenService)
 
+	var query *string = nil
+
 	router := gin.New()
 	router.Use(middleware.ErrorHandler())
 	router.GET("/get-cards", cardHandler.GetCards)
 
 	mockCardService.
-		On("GetCards", mock.AnythingOfType("*time.Time")).
+		On("GetCards", mock.AnythingOfType("*time.Time"), query).
 		Return(responses.GetCardsResponse{}, nil)
 
 	req := httptest.NewRequest(
@@ -107,6 +113,8 @@ func TestGetCards(t *testing.T) {
 	mockCardService.AssertExpectations(t)
 }
 
+// TestGetCardInfo тестирует обработку запроса на
+// получение информации об определенной карточке
 func TestGetCardInfo(t *testing.T) {
 
 	mockCardService := &mockServices.MockCardService{}

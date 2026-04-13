@@ -142,7 +142,7 @@ func (s *CardService) SaveImage(cardID uuid.UUID,
 
 // GetCards возвращает несколько сжатых карточек
 // с объявлениями для просмотра пользователями
-func (s *CardService) GetCards(key *time.Time) (
+func (s *CardService) GetCards(key *time.Time, query *string) (
 	responses.GetCardsResponse, error) {
 
 	response := responses.GetCardsResponse{
@@ -155,7 +155,14 @@ func (s *CardService) GetCards(key *time.Time) (
 			errors.ErrorInternal
 	}
 
-	cards, err := s.cardRepo.FindCardsByTime(key, limit)
+	var cards []entities.Card
+
+	if query != nil && len(*query) > 0 {
+		cards, err = s.cardRepo.FindCardsByQuery(key, *query, limit)
+	} else {
+		cards, err = s.cardRepo.FindCardsByTime(key, limit)
+	}
+
 	if err != nil {
 		return responses.GetCardsResponse{},
 			err

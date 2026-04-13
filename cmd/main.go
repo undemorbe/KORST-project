@@ -107,6 +107,7 @@ func main() {
 		cards.POST("/save-image", cardHandler.SaveImage)
 
 		cards.GET("/get-cards", cardHandler.GetCards)
+		cards.GET("/get-with-query", cardHandler.GetWithQuery)
 		cards.GET("/card-info", cardHandler.GetCardInfo)
 	}
 

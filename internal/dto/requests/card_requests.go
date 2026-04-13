@@ -10,6 +10,13 @@ type GetCardsRequest struct {
 	Key *string `form:"key"`
 }
 
+// GetWithQueryRequest - структура для запроса
+// на просмотр карточек по поиску
+type GetWithQueryRequest struct {
+	Key   *string `form:"key"`
+	Query *string `form:"query" binding:"required"`
+}
+
 // CardInfoRequest - структура для запроса на просмотр конкретной карточки
 type CardInfoRequest struct {
 	CardID string `form:"card-id" binding:"required"`

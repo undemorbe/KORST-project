@@ -61,7 +61,7 @@ type CardService interface {
 
 	// GetCards возвращает несколько сжатых карточек
 	// с объявлениями для просмотра пользователями
-	GetCards(key *time.Time) (responses.GetCardsResponse, error)
+	GetCards(key *time.Time, query *string) (responses.GetCardsResponse, error)
 
 	// GetCardInfo возвращает подробную информацию
 	// об одной конкретной карточке объявления

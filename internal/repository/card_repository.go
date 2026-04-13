@@ -57,6 +57,36 @@ func (r *cardRepo) FindCardsByTime(key *time.Time,
 	return cards, nil
 }
 
+// FindCardsByQuery находит заданное количество корточек
+// по запросу поиска пользователя (query)
+func (r *cardRepo) FindCardsByQuery(key *time.Time,
+	query string, limit int) ([]entities.Card, error) {
+
+	var cards []entities.Card
+
+	search := "%" + query + "%"
+
+	db := r.db.
+		Where(`(
+			name ILIKE ?
+			OR description ILIKE ?
+			OR tags::text ILIKE ?
+		)`, search, search, search).
+		Order("updated_at DESC").
+		Limit(limit)
+
+	if key != nil {
+		db = db.Where("updated_at < ?", *key)
+	}
+
+	err := db.Find(&cards).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return cards, nil
+}
+
 // CreateCard создает новый объект карточки объявления в БД
 func (r *cardRepo) CreateCard(card *entities.Card) error {
 	return r.db.Create(card).Error
