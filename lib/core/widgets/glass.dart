@@ -49,3 +49,100 @@ class Glass extends StatelessWidget {
     );
   }
 }
+
+class GlassCard extends StatelessWidget {
+  final Widget? child;
+  final EdgeInsetsGeometry? margin;
+  final Clip clipBehavior;
+  final ShapeBorder? shape;
+  final Color? color;
+  final double? elevation;
+  final Color? shadowColor;
+
+  const GlassCard({
+    super.key,
+    this.child,
+    this.margin,
+    this.clipBehavior = Clip.none,
+    this.shape,
+    this.color,
+    this.elevation,
+    this.shadowColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final themeColor = Theme.of(context).colorScheme.surface.withValues(alpha: 0.85);
+    final borderColor = Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3);
+
+    Widget content = child ?? const SizedBox.shrink();
+
+    if (clipBehavior != Clip.none) {
+      content = ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: content,
+      );
+    }
+
+    return Padding(
+      padding: margin ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Glass(
+        blurSigma: 24,
+        opacity: 0.85,
+        color: color ?? themeColor,
+        borderColor: borderColor,
+        borderWidth: 1,
+        borderRadius: BorderRadius.circular(20),
+        child: content,
+      ),
+    );
+  }
+}
+
+class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
+  final Widget? title;
+  final List<Widget>? actions;
+  final Widget? leading;
+  final bool? centerTitle;
+  final PreferredSizeWidget? bottom;
+  final Color? backgroundColor;
+  final double? elevation;
+  final bool automaticallyImplyLeading;
+
+  const GlassAppBar({
+    super.key,
+    this.title,
+    this.actions,
+    this.leading,
+    this.centerTitle,
+    this.bottom,
+    this.backgroundColor,
+    this.elevation,
+    this.automaticallyImplyLeading = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final bg = backgroundColor ?? colors.surface.withValues(alpha: 0.85);
+
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+        child: AppBar(
+          title: title,
+          actions: actions,
+          leading: leading,
+          automaticallyImplyLeading: automaticallyImplyLeading,
+          centerTitle: centerTitle,
+          bottom: bottom,
+          backgroundColor: bg,
+          elevation: elevation ?? 0,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Size get preferredSize => Size.fromHeight(kToolbarHeight + (bottom?.preferredSize.height ?? 0.0));
+}

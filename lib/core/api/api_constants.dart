@@ -15,10 +15,21 @@ class ApiConstants {
 
   static String get userUpdate => EnvConfig.userUpdate;
   static String get userGetInfo => EnvConfig.userGetInfo;
+  static String get userMe => EnvConfig.userMe;
+  static String get userSaveImage => EnvConfig.userSaveImage;
   static String get userReviews => EnvConfig.userReviews;
   static String get userPostReview => EnvConfig.userPostReview;
 
   static String get cardsSaveCard => EnvConfig.cardsSaveCard;
+  static String get cardsUpdateCard => EnvConfig.cardsUpdateCard;
   static String get cardsCardInfo => EnvConfig.cardsCardInfo;
   static String get cardsGetCards => EnvConfig.cardsGetCards;
+  static String get cardsSaveImage => EnvConfig.cardsSaveImage;
+
+  static String get messengerChats => EnvConfig.messengerChats;
+  static String get messengerMessages => EnvConfig.messengerMessages;
+  static String get messengerCreateChat => EnvConfig.messengerCreateChat;
+  static String get messengerSendMessage => EnvConfig.messengerSendMessage;
+  static String get messengerChangeMessage => EnvConfig.messengerChangeMessage;
+  static String get messengerDeleteMessage => EnvConfig.messengerDeleteMessage;
 }

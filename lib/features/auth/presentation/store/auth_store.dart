@@ -77,7 +77,6 @@ abstract class _AuthStore with Store {
     }
   }
 
-
   @action
   Future<void> sendOtp(String phone) async {
     isLoading = true;
@@ -123,10 +122,7 @@ abstract class _AuthStore with Store {
       final updated = base.copyWith(
         name: name,
         photoUrl: photoUrl,
-        contacts: {
-          ...base.contacts,
-          'other': contacts,
-        },
+        contacts: {...base.contacts, 'other': contacts},
         updated: DateTime.now(),
       );
       await _authRepository.updateProfile(updated);
@@ -160,6 +156,12 @@ abstract class _AuthStore with Store {
     } finally {
       isLoading = false;
     }
+  }
+
+  @action
+  Future<void> updateLocalProfile(UserEntity user) async {
+    userProfile = user;
+    await _authRepository.saveLocalProfile(user);
   }
 
   @action

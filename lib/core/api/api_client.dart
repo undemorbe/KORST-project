@@ -19,6 +19,7 @@ class ApiClient {
   Future<void>? _refreshing;
 
   Stream<ApiSessionEvent> get sessionEvents => _sessionEventsController.stream;
+  String? get userId => _tokenStorage.getUserId();
 
   ApiClient({
     required Dio dio,
@@ -39,7 +40,8 @@ class ApiClient {
       responseType: ResponseType.json,
     );
 
-    _dio.interceptors.add(
+    _dio.interceptors.insert(
+      0,
       QueuedInterceptorsWrapper(
         onRequest: (options, handler) {
           final accessToken = _tokenStorage.getAccessToken();
@@ -99,8 +101,19 @@ class ApiClient {
             return;
           }
 
+          // Prevent infinite retry loops by checking if we've already retried this request
+          final hasRetried = err.requestOptions.extra['_tokenRetry'] == true;
+          if (hasRetried) {
+            handler.next(err);
+            return;
+          }
+
           try {
-            final response = await _retry(err.requestOptions, newAccessToken);
+            final response = await _retry(
+              err.requestOptions,
+              newAccessToken,
+              markAsRetried: true,
+            );
             handler.resolve(response);
           } catch (e) {
             handler.next(e is DioException ? e : err);
@@ -138,6 +151,52 @@ class ApiClient {
     );
   }
 
+  Future<Response<T>> put<T>(
+    String path, {
+    Object? data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+  }) {
+    return _dio.put<T>(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      options: options,
+    );
+  }
+
+  Future<Response<T>> delete<T>(
+    String path, {
+    Object? data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+  }) {
+    return _dio.delete<T>(
+      path,
+      data: data,
+      queryParameters: queryParameters,
+      options: options,
+    );
+  }
+
+  Future<Response<T>> uploadFile<T>(
+    String path, {
+    required String filePath,
+    String fileFieldName = 'image',
+    Map<String, dynamic>? extraFields,
+  }) async {
+    final formData = FormData.fromMap({
+      fileFieldName: await MultipartFile.fromFile(filePath, filename: filePath.split('/').last),
+      ...?extraFields,
+    });
+
+    return _dio.post<T>(
+      path,
+      data: formData,
+      options: Options(contentType: Headers.multipartFormDataContentType),
+    );
+  }
+
   static String? _extractErrorCode(dynamic data) {
     if (data is Map) {
       final v = data['code'];
@@ -151,7 +210,7 @@ class ApiClient {
     try {
       res = await _refreshDio.get(
         ApiConstants.authorizeRefresh,
-        data: {'refresh-token': refreshToken},
+        queryParameters: {'refresh-token': refreshToken},
       );
     } on DioException catch (e) {
       final code = _extractErrorCode(e.response?.data);
@@ -160,37 +219,43 @@ class ApiClient {
 
       res = await _refreshDio.get(
         ApiConstants.authorizeRefresh,
-        queryParameters: {'refresh-token': refreshToken},
+        data: {'refresh-token': refreshToken},
       );
     }
 
     final data = res.data;
     if (data is! Map) {
-      throw ApiException(message: 'Ошибка обновления токена', statusCode: res.statusCode);
+      throw ApiException(message: 'Error updating token', statusCode: res.statusCode);
     }
 
     final access = data['access-token'];
     final refresh = data['refresh-token'];
     if (access is! String || refresh is! String) {
-      throw ApiException(message: 'Ошибка обновления токена', statusCode: res.statusCode);
+      throw ApiException(message: 'Error updating token', statusCode: res.statusCode);
     }
 
     await _tokenStorage.saveTokens(accessToken: access, refreshToken: refresh);
     _sessionEventsController.add(ApiSessionEvent.tokensRefreshed);
   }
 
-  Future<Response<dynamic>> _retry(RequestOptions requestOptions, String accessToken) {
-    final headers = Map<String, dynamic>.from(requestOptions.headers);
-    headers[ApiConstants.headerAccessToken] = accessToken;
-    headers[ApiConstants.headerAuthorization] = accessToken;
-    final userId = _tokenStorage.getUserId();
-    if (userId != null && userId.isNotEmpty) {
-      headers[ApiConstants.headerUserId] = userId;
+  Future<Response<T>> _retry<T>(
+    RequestOptions requestOptions,
+    String accessToken, {
+    bool markAsRetried = false,
+  }) {
+    final extra = Map<String, dynamic>.from(requestOptions.extra);
+    if (markAsRetried) {
+      extra['_tokenRetry'] = true;
     }
 
     final options = Options(
       method: requestOptions.method,
-      headers: headers,
+      headers: {
+        ...requestOptions.headers,
+        ApiConstants.headerAccessToken: accessToken,
+        ApiConstants.headerAuthorization: accessToken,
+      },
+      extra: extra,
       responseType: requestOptions.responseType,
       contentType: requestOptions.contentType,
       validateStatus: requestOptions.validateStatus,
@@ -200,7 +265,7 @@ class ApiClient {
       sendTimeout: requestOptions.sendTimeout,
     );
 
-    return _dio.request<dynamic>(
+    return _dio.request<T>(
       requestOptions.path,
       data: requestOptions.data,
       queryParameters: requestOptions.queryParameters,

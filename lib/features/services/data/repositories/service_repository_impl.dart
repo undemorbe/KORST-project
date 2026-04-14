@@ -1,8 +1,11 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import '../../../../core/api/api_client.dart';
 import '../../../../core/api/api_constants.dart';
 import '../../../../core/api/api_error_codes.dart';
 import '../../../../core/api/api_exception.dart';
+import '../../../../core/storage/local_storage.dart';
+import '../../../../core/di/injection_container.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../domain/entities/cards_page.dart';
 import '../../domain/entities/service_entity.dart';
@@ -19,13 +22,22 @@ class ServiceRepositoryImpl implements ServiceRepository {
   Future<CardsPage> getServices({required String? key}) async {
     try {
       Response<dynamic> res;
+      // Only include key parameter if it's not null (for pagination)
+      final queryParams = key != null ? {'key': key} : null;
       try {
-        res = await _api.get(ApiConstants.cardsGetCards, data: {'key': key});
+        res = await _api.get(
+          ApiConstants.cardsGetCards,
+          queryParameters: queryParams,
+        );
       } on DioException catch (e) {
         final code = _extractErrorCode(e.response?.data);
-        final isInvalidInput = code == ApiErrorCodes.invalidInput || e.response?.statusCode == 400;
+        final isInvalidInput =
+            code == ApiErrorCodes.invalidInput || e.response?.statusCode == 400;
         if (!isInvalidInput) rethrow;
-        res = await _api.get(ApiConstants.cardsGetCards, queryParameters: {'key': key});
+        res = await _api.get(
+          ApiConstants.cardsGetCards,
+          data: queryParams,
+        );
       }
 
       final data = res.data;
@@ -34,10 +46,32 @@ class ServiceRepositoryImpl implements ServiceRepository {
       if (rawCards is! List) return CardsPage(cards: const [], nextKey: null);
 
       final cards = rawCards.map((e) => _fromCardsListItem(e)).toList();
-      final nextKey = cards.isNotEmpty ? cards.last.created.toUtc().toIso8601String() : null;
-      return CardsPage(cards: cards, nextKey: nextKey);
+      final nextKey = cards.isNotEmpty
+          ? cards.last.created.toUtc().toIso8601String()
+          : null;
+      final page = CardsPage(cards: cards, nextKey: nextKey);
+      
+      // Cache the first page
+      if (key == null) {
+        try {
+          sl<LocalStorageService>().put('cache_services_page', jsonEncode(page.toJson()));
+        } catch (_) {}
+      }
+      
+      return page;
     } on DioException catch (e) {
-      throw _toApiException(e, fallbackMessage: 'Не удалось загрузить карточки');
+      if (key == null) {
+        try {
+          final cachedStr = sl<LocalStorageService>().get('cache_services_page') as String?;
+          if (cachedStr != null) {
+            return CardsPage.fromJson(jsonDecode(cachedStr));
+          }
+        } catch (_) {}
+      }
+      throw _toApiException(
+        e,
+        fallbackMessage: 'Failed to load cards',
+      );
     }
   }
 
@@ -46,59 +80,91 @@ class ServiceRepositoryImpl implements ServiceRepository {
     try {
       Response<dynamic> res;
       try {
-        res = await _api.get(ApiConstants.cardsCardInfo, data: {'card-id': id});
+        res = await _api.get(
+          ApiConstants.cardsCardInfo,
+          queryParameters: {'card-id': id},
+        );
       } on DioException catch (e) {
         final code = _extractErrorCode(e.response?.data);
-        final isInvalidInput = code == ApiErrorCodes.invalidInput || e.response?.statusCode == 400;
+        final isInvalidInput =
+            code == ApiErrorCodes.invalidInput || e.response?.statusCode == 400;
         if (!isInvalidInput) rethrow;
-        res = await _api.get(ApiConstants.cardsCardInfo, queryParameters: {'card-id': id});
+        res = await _api.get(
+          ApiConstants.cardsCardInfo,
+          data: {'card-id': id},
+        );
       }
 
       final data = res.data;
       if (data is! Map) {
-        throw ApiException(message: 'Некорректный ответ сервера', statusCode: res.statusCode);
+        throw ApiException(
+          message: 'Invalid server response',
+          statusCode: res.statusCode,
+        );
       }
 
-      return _fromCardInfo(data, id);
+      final service = _fromCardInfo(data, id);
+      try {
+        sl<LocalStorageService>().put('cache_service_$id', jsonEncode(service.toJson()));
+      } catch (_) {}
+      return service;
     } on DioException catch (e) {
-      throw _toApiException(e, fallbackMessage: 'Не удалось загрузить карточку');
+      try {
+        final cachedStr = sl<LocalStorageService>().get('cache_service_$id') as String?;
+        if (cachedStr != null) {
+          return ServiceEntity.fromJson(jsonDecode(cachedStr));
+        }
+      } catch (_) {}
+      throw _toApiException(
+        e,
+        fallbackMessage: 'Failed to load card',
+      );
     }
   }
 
   @override
-  Future<void> createService(ServiceEntity service) async {
+  Future<String?> createService(ServiceEntity service) async {
     final payload = {
-      'name': _nullIfEmpty(service.title),
-      'description': _nullIfEmpty(service.description),
-      'price': service.price,
-      'currency': _nullIfEmpty(service.currency),
-      'type': _nullIfEmpty(service.type),
-      'tags': service.tags,
-    };
+        'name': _nullIfEmpty(service.title),
+        'description': _nullIfEmpty(service.description),
+        'price': service.price.toInt(),
+        'currency': _nullIfEmpty(service.currency),
+        'type': _nullIfEmpty(service.type),
+        'tags': service.tags,
+      };
 
     try {
-      await _api.post(ApiConstants.cardsSaveCard, data: payload);
+      final response = await _api.post(
+        ApiConstants.cardsSaveCard,
+        data: payload,
+      );
+      final data = response.data;
+      if (data is Map) {
+        if (data.containsKey('card-id')) return data['card-id']?.toString();
+        if (data.containsKey('id')) return data['id']?.toString();
+      }
+      return null;
     } on DioException catch (e) {
-      throw _toApiException(e, fallbackMessage: 'Не удалось создать карточку');
+      throw _toApiException(e, fallbackMessage: 'Failed to create card');
     }
   }
 
   @override
   Future<void> updateService(ServiceEntity service) async {
     final payload = {
-      'card-id': _nullIfEmpty(service.id),
-      'name': _nullIfEmpty(service.title),
-      'description': _nullIfEmpty(service.description),
-      'price': service.price,
-      'currency': _nullIfEmpty(service.currency),
-      'type': _nullIfEmpty(service.type),
-      'tags': service.tags,
-    };
+        'card-id': _nullIfEmpty(service.id),
+        'name': _nullIfEmpty(service.title),
+        'description': _nullIfEmpty(service.description),
+        'price': service.price.toInt(),
+        'currency': _nullIfEmpty(service.currency),
+        'type': _nullIfEmpty(service.type),
+        'tags': service.tags,
+      };
 
     try {
-      await _api.post(ApiConstants.cardsSaveCard, data: payload);
+      await _api.post(ApiConstants.cardsUpdateCard, data: payload);
     } on DioException catch (e) {
-      throw _toApiException(e, fallbackMessage: 'Не удалось обновить карточку');
+      throw _toApiException(e, fallbackMessage: 'Failed to update card');
     }
   }
 
@@ -107,15 +173,59 @@ class ServiceRepositoryImpl implements ServiceRepository {
     return;
   }
 
+  @override
+  Future<String> uploadCardImage(String cardId, String filePath) async {
+    try {
+      final res = await _api.uploadFile(
+        ApiConstants.cardsSaveImage,
+        filePath: filePath,
+        fileFieldName: 'image',
+        extraFields: {'card-id': cardId},
+      );
+
+      final data = res.data;
+      if (data is! Map) {
+        throw ApiException(
+          message: 'Invalid server response',
+          statusCode: res.statusCode,
+        );
+      }
+
+      final imageUrl = data['image-url'] as String?;
+      if (imageUrl == null || imageUrl.isEmpty) {
+        throw ApiException(
+          message: 'Error loading image',
+          statusCode: res.statusCode,
+        );
+      }
+
+      return imageUrl;
+    } on DioException catch (e) {
+      throw _toApiException(
+        e,
+        fallbackMessage: 'Failed to load card image',
+      );
+    }
+  }
+
   static ServiceEntity _fromCardsListItem(dynamic raw) {
-    final Map<String, dynamic> json = raw is Map ? Map<String, dynamic>.from(raw) : const {};
+    final Map<String, dynamic> json = raw is Map
+        ? Map<String, dynamic>.from(raw)
+        : const {};
     final id = (json['id'] as String?) ?? '';
     final name = (json['name'] as String?) ?? '';
     final price = (json['price'] as num?)?.toDouble() ?? 0.0;
     final currency = (json['currency'] as String?) ?? 'USD';
-    final type = (json['type'] as String?) ?? 'услуга';
-    final tags = (json['tags'] as List?)?.map((e) => e.toString()).toList() ?? <String>[];
-    final created = json['created'] is String ? DateTime.parse(json['created'] as String) : DateTime.now();
+    final type = (json['type'] as String?) ?? 'service';
+    final tags =
+        (json['tags'] as List?)?.map((e) => e.toString()).toList() ??
+        <String>[];
+    final created = json['created'] is String
+        ? DateTime.parse(json['created'] as String)
+        : DateTime.now();
+    final updated = json['updated'] is String
+        ? DateTime.parse(json['updated'] as String)
+        : created;
 
     final authorRaw = json['author'];
     UserEntity? author;
@@ -124,19 +234,47 @@ class ServiceRepositoryImpl implements ServiceRepository {
       final authorId = (m['id'] as String?) ?? (m['uid'] as String?) ?? '';
       final authorPhone = (m['phone'] as String?) ?? '';
       final authorRating = (m['rating'] as num?)?.toDouble();
+      final authorContactsRaw = m['contacts'];
+      final authorContacts = authorContactsRaw is Map
+          ? Map<String, dynamic>.from(authorContactsRaw)
+          : <String, dynamic>{};
+      if (authorRating != null) {
+        authorContacts['rating'] = authorRating;
+      }
+      
+      String? authorPhotoUrl = m['image-url'] as String?;
+      if (authorPhotoUrl != null && authorPhotoUrl.isNotEmpty && !authorPhotoUrl.contains('?v=')) {
+        authorPhotoUrl = '$authorPhotoUrl?v=${updated.millisecondsSinceEpoch}';
+      }
+
       author = UserEntity(
         uid: authorId,
         name: (m['name'] as String?) ?? '',
         surname: m['surname'] as String?,
         description: null,
         phone: authorPhone,
-        photoUrl: null,
-        contacts: {'rating': authorRating},
+        photoUrl: authorPhotoUrl,
+        contacts: authorContacts,
         createdCards: const [],
         bookings: const {},
         created: DateTime.now(),
         updated: DateTime.now(),
       );
+    }
+
+    String imageUrl = (json['image-url'] as String?) ?? 'https://placehold.co/600x400';
+    if (imageUrl != 'https://placehold.co/600x400' && !imageUrl.contains('?v=')) {
+      imageUrl = '$imageUrl?v=${updated.millisecondsSinceEpoch}';
+    }
+
+    // Try to get rating from multiple sources: top-level json, then author.rating
+    double rating = 0.0;
+    final jsonRating = json['rating'];
+    final authorRating = author?.contacts['rating'];
+    if (jsonRating is num) {
+      rating = jsonRating.toDouble();
+    } else if (authorRating is num) {
+      rating = authorRating.toDouble();
     }
 
     return ServiceEntity(
@@ -148,13 +286,13 @@ class ServiceRepositoryImpl implements ServiceRepository {
       type: type,
       author: author,
       timesBooked: 0,
-      rating: author?.contacts['rating'] is num ? (author!.contacts['rating'] as num).toDouble() : 0.0,
+      rating: rating,
       reviews: const [],
       tags: tags,
       created: created,
       updated: created,
       category: ServiceCategory.other,
-      imageUrl: 'https://placehold.co/600x400',
+      imageUrl: imageUrl,
     );
   }
 
@@ -164,25 +302,43 @@ class ServiceRepositoryImpl implements ServiceRepository {
     final description = (json['description'] as String?) ?? '';
     final price = (json['price'] as num?)?.toDouble() ?? 0.0;
     final currency = (json['currency'] as String?) ?? 'USD';
-    final type = (json['type'] as String?) ?? 'услуга';
-    final tags = (json['tags'] as List?)?.map((e) => e.toString()).toList() ?? <String>[];
+    final type = (json['type'] as String?) ?? 'service';
+    final tags =
+        (json['tags'] as List?)?.map((e) => e.toString()).toList() ??
+        <String>[];
 
-    final created = json['created'] is String ? DateTime.parse(json['created'] as String) : DateTime.now();
-    final updated = json['updated'] is String ? DateTime.parse(json['updated'] as String) : created;
+    final created = json['created'] is String
+        ? DateTime.parse(json['created'] as String)
+        : DateTime.now();
+    final updated = json['updated'] is String
+        ? DateTime.parse(json['updated'] as String)
+        : created;
 
     UserEntity? author;
     final authorRaw = json['author'];
     if (authorRaw is Map) {
       final a = Map<String, dynamic>.from(authorRaw);
       final contactsRaw = a['contacts'];
-      final contacts = contactsRaw is Map ? Map<String, dynamic>.from(contactsRaw) : <String, dynamic>{};
+      final contacts = contactsRaw is Map
+          ? Map<String, dynamic>.from(contactsRaw)
+          : <String, dynamic>{};
+      final authorRating = (a['rating'] as num?)?.toDouble();
+      if (authorRating != null) {
+        contacts['rating'] = authorRating;
+      }
+      
+      String? authorPhotoUrl = a['image-url'] as String?;
+      if (authorPhotoUrl != null && authorPhotoUrl.isNotEmpty && !authorPhotoUrl.contains('?v=')) {
+        authorPhotoUrl = '$authorPhotoUrl?v=${updated.millisecondsSinceEpoch}';
+      }
+
       author = UserEntity(
         uid: (a['id'] as String?) ?? '',
         name: (a['name'] as String?) ?? '',
         surname: a['surname'] as String?,
         description: null,
         phone: (a['phone'] as String?) ?? '',
-        photoUrl: null,
+        photoUrl: authorPhotoUrl,
         contacts: contacts,
         createdCards: const [],
         bookings: const {},
@@ -192,8 +348,19 @@ class ServiceRepositoryImpl implements ServiceRepository {
     }
 
     double rating = 0.0;
-    final ar = author?.contacts['rating'];
-    if (ar is num) rating = ar.toDouble();
+    // Try to get rating from multiple possible sources
+    final jsonRating = json['rating'];
+    final authorRating = author?.contacts['rating'];
+    if (jsonRating is num) {
+      rating = jsonRating.toDouble();
+    } else if (authorRating is num) {
+      rating = authorRating.toDouble();
+    }
+
+    String imageUrl = (json['image-url'] as String?) ?? 'https://placehold.co/600x400';
+    if (imageUrl != 'https://placehold.co/600x400' && !imageUrl.contains('?v=')) {
+      imageUrl = '$imageUrl?v=${updated.millisecondsSinceEpoch}';
+    }
 
     return ServiceEntity(
       uid: id,
@@ -210,7 +377,7 @@ class ServiceRepositoryImpl implements ServiceRepository {
       created: created,
       updated: updated,
       category: ServiceCategory.other,
-      imageUrl: 'https://placehold.co/600x400',
+      imageUrl: imageUrl,
     );
   }
 
@@ -228,7 +395,10 @@ class ServiceRepositoryImpl implements ServiceRepository {
     return null;
   }
 
-  static ApiException _toApiException(DioException e, {required String fallbackMessage}) {
+  static ApiException _toApiException(
+    DioException e, {
+    required String fallbackMessage,
+  }) {
     final res = e.response;
     final data = res?.data;
     String? code;
@@ -241,6 +411,10 @@ class ServiceRepositoryImpl implements ServiceRepository {
       if (m is String && m.trim().isNotEmpty) message = m;
     }
 
-    return ApiException(message: message, code: code, statusCode: res?.statusCode);
+    return ApiException(
+      message: message,
+      code: code,
+      statusCode: res?.statusCode,
+    );
   }
 }

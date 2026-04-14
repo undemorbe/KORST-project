@@ -18,15 +18,12 @@ class AuthRepositoryImpl implements AuthRepository {
   final TokenStorage _tokenStorage;
   final LocalStorageService _localStorage;
 
-  AuthRepositoryImpl(
-    this._api,
-    this._tokenStorage,
-    this._localStorage,
-  );
+  AuthRepositoryImpl(this._api, this._tokenStorage, this._localStorage);
 
   @override
   Future<bool> isLoggedIn() async {
-    return _tokenStorage.getAccessToken() != null && _tokenStorage.getRefreshToken() != null;
+    return _tokenStorage.getAccessToken() != null &&
+        _tokenStorage.getRefreshToken() != null;
   }
 
   @override
@@ -35,7 +32,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await _api.post(ApiConstants.authorizeSendOtp, data: {'phone': phone});
     } on DioException catch (e) {
-      throw _toApiException(e, fallbackMessage: 'Не удалось отправить OTP');
+      throw _toApiException(e, fallbackMessage: 'Failed to send OTP');
     }
   }
 
@@ -44,12 +41,19 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       Response<dynamic> res;
       try {
-        res = await _api.get(ApiConstants.authorizeCheckUser, data: {'phone': phone});
+        res = await _api.get(
+          ApiConstants.authorizeCheckUser,
+          queryParameters: {'phone': phone},
+        );
       } on DioException catch (e) {
         final code = _extractErrorCode(e.response?.data);
-        final isInvalidInput = code == ApiErrorCodes.invalidInput || e.response?.statusCode == 400;
+        final isInvalidInput =
+            code == ApiErrorCodes.invalidInput || e.response?.statusCode == 400;
         if (!isInvalidInput) rethrow;
-        res = await _api.get(ApiConstants.authorizeCheckUser, queryParameters: {'phone': phone});
+        res = await _api.get(
+          ApiConstants.authorizeCheckUser,
+          data: {'phone': phone},
+        );
       }
       final data = res.data;
       if (data is Map) {
@@ -62,25 +66,31 @@ class AuthRepositoryImpl implements AuthRepository {
       }
       return AuthUserStatus.notFound;
     } on DioException catch (e) {
-      throw _toApiException(e, fallbackMessage: 'Не удалось проверить пользователя');
+      throw _toApiException(
+        e,
+        fallbackMessage: 'Failed to verify user',
+      );
     }
   }
 
   @override
-  Future<AuthUserStatus> verifyOtp({required String phone, required String otp}) async {
+  Future<AuthUserStatus> verifyOtp({
+    required String phone,
+    required String otp,
+  }) async {
     await _localStorage.put(_tempPhoneKey, phone);
     try {
       final res = await _api.post(
         ApiConstants.authorizeVerifyOtp,
-        data: {
-          'phone': phone,
-          'otp': otp,
-        },
+        data: {'phone': phone, 'otp': otp},
       );
 
       final data = res.data;
       if (data is! Map) {
-        throw ApiException(message: 'Некорректный ответ сервера', statusCode: res.statusCode);
+        throw ApiException(
+          message: 'Invalid server response',
+          statusCode: res.statusCode,
+        );
       }
 
       final accessToken = data['access-token'];
@@ -89,7 +99,10 @@ class AuthRepositoryImpl implements AuthRepository {
       final userId = _extractUserId(Map<String, dynamic>.from(data));
 
       if (accessToken is String && refreshToken is String) {
-        await _tokenStorage.saveTokens(accessToken: accessToken, refreshToken: refreshToken);
+        await _tokenStorage.saveTokens(
+          accessToken: accessToken,
+          refreshToken: refreshToken,
+        );
       }
       if (userId != null) {
         await _tokenStorage.saveUserId(userId);
@@ -106,7 +119,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
       return status;
     } on DioException catch (e) {
-      throw _toApiException(e, fallbackMessage: 'Не удалось подтвердить OTP');
+      throw _toApiException(e, fallbackMessage: 'Failed to confirm OTP');
     }
   }
 
@@ -138,6 +151,11 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<void> saveLocalProfile(UserEntity user) async {
+    await _localStorage.put(_userKey, json.encode(user.toJson()));
+  }
+
+  @override
   Future<void> updateProfile(UserEntity user) async {
     final contacts = user.contacts;
     final email = contacts['email'];
@@ -146,7 +164,9 @@ class AuthRepositoryImpl implements AuthRepository {
     Map<String, dynamic>? othersMap;
     if (others is Map && others.isNotEmpty) {
       final raw = Map<String, dynamic>.from(others);
-      othersMap = raw.map((k, v) => MapEntry(k.toString(), v?.toString() ?? ''));
+      othersMap = raw.map(
+        (k, v) => MapEntry(k.toString(), v?.toString() ?? ''),
+      );
       othersMap.removeWhere((key, value) => value.trim().isEmpty);
     } else if (others is String) {
       final s = others.trim();
@@ -170,7 +190,7 @@ class AuthRepositoryImpl implements AuthRepository {
       await _api.post(ApiConstants.userUpdate, data: request);
       await _localStorage.put(_userKey, json.encode(user.toJson()));
     } on DioException catch (e) {
-      throw _toApiException(e, fallbackMessage: 'Не удалось обновить профиль');
+      throw _toApiException(e, fallbackMessage: 'Failed to update profile');
     }
   }
 
@@ -207,7 +227,10 @@ class AuthRepositoryImpl implements AuthRepository {
     await _localStorage.put(_userKey, json.encode(updated.toJson()));
   }
 
-  static ApiException _toApiException(DioException e, {required String fallbackMessage}) {
+  static ApiException _toApiException(
+    DioException e, {
+    required String fallbackMessage,
+  }) {
     final res = e.response;
     final data = res?.data;
     String? code;
@@ -220,7 +243,11 @@ class AuthRepositoryImpl implements AuthRepository {
       if (m is String && m.trim().isNotEmpty) message = m;
     }
 
-    return ApiException(message: message, code: code, statusCode: res?.statusCode);
+    return ApiException(
+      message: message,
+      code: code,
+      statusCode: res?.statusCode,
+    );
   }
 
   static String? _extractErrorCode(dynamic data) {

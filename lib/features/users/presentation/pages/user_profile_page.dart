@@ -1,6 +1,10 @@
+import 'package:korst/core/widgets/glass.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../auth/presentation/store/auth_store.dart';
 import '../../domain/entities/user_profile_entity.dart';
 import '../../domain/repositories/user_profile_repository.dart';
@@ -27,14 +31,59 @@ class _UserProfilePageState extends State<UserProfilePage> {
   @override
   void initState() {
     super.initState();
-    _futureProfile = _repository.getUserProfile(widget.userId);
+    _futureProfile = _loadProfile();
+  }
+
+  Future<UserProfileEntity> _loadProfile() {
+    if (widget.isOwnProfileHint) {
+      return _repository.getOwnProfile();
+    }
+    return _repository.getUserProfile(widget.userId);
   }
 
   Future<void> _reload() async {
     setState(() {
-      _futureProfile = _repository.getUserProfile(widget.userId);
+      _futureProfile = _loadProfile();
     });
     await _futureProfile;
+  }
+
+  Future<void> _uploadPhoto() async {
+    final picker = ImagePicker();
+    final file = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1080,
+      maxHeight: 1080,
+      imageQuality: 60,
+    );
+    if (file == null) return;
+
+    if (!mounted) return;
+
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      await _repository.uploadProfileImage(file.path);
+      // Wait, we need to also update the user entity in AuthStore?
+      // Since we just uploaded it, the backend should associate it with the user if we call /user/save-image
+      // We will reload the profile.
+      if (mounted) {
+        Navigator.pop(context); // close dialog
+        _reload();
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // close dialog
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("${AppLocalizations.of(context)!.errorLoadingPhotoPrefix}$e")));
+      }
+    }
   }
 
   Future<void> _showReviewDialog() async {
@@ -44,36 +93,61 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
     await showDialog<void>(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return StatefulBuilder(
-          builder: (context, setStateDialog) {
+          builder: (builderContext, setStateDialog) {
             return AlertDialog(
-              title: const Text('Оставить отзыв'),
+              title: Text(AppLocalizations.of(context)!.profileReviews),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(5, (index) {
-                      final current = index + 1;
-                      return IconButton(
-                        onPressed: isSubmitting
-                            ? null
-                            : () {
+                      final currentFull = index + 1;
+                      return GestureDetector(
+                        onTapDown: (details) {
+                          if (isSubmitting) return;
                           setStateDialog(() {
-                            rating = current.toDouble();
+                            if (details.localPosition.dx < 20) { // size is 32 + 8 padding total roughly 40, half is 20
+                              rating = currentFull - 0.5;
+                            } else {
+                              rating = currentFull.toDouble();
+                            }
                           });
                         },
-                        icon: Icon(
-                          current <= rating ? Icons.star : Icons.star_border,
-                          color: Colors.amber,
+                        onPanUpdate: (details) {
+                          if (isSubmitting) return;
+                          setStateDialog(() {
+                            if (details.localPosition.dx < 20) {
+                              rating = currentFull - 0.5;
+                            } else {
+                              rating = currentFull.toDouble();
+                            }
+                          });
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                          child: Icon(
+                            rating >= currentFull
+                                ? Icons.star
+                                : rating >= currentFull - 0.5
+                                    ? Icons.star_half
+                                    : Icons.star_border,
+                            color: Colors.amber,
+                            size: 32,
+                          ),
                         ),
                       );
                     }),
                   ),
                   TextField(
                     controller: commentController,
-                    decoration: const InputDecoration(labelText: 'Комментарий'),
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(
+                        context,
+                      )!.profileDescription,
+                    ),
                     maxLines: 3,
                     enabled: !isSubmitting,
                   ),
@@ -81,19 +155,26 @@ class _UserProfilePageState extends State<UserProfilePage> {
               ),
               actions: [
                 TextButton(
-                  onPressed: isSubmitting ? null : () => Navigator.of(context).pop(),
-                  child: const Text('Отмена'),
+                  onPressed: isSubmitting
+                      ? null
+                      : () => Navigator.of(dialogContext).pop(),
+                  child: Text(AppLocalizations.of(context)!.cancel),
                 ),
                 FilledButton(
                   onPressed: () async {
                     final text = commentController.text.trim();
                     if (text.isEmpty) {
-                      ScaffoldMessenger.of(this.context).showSnackBar(
-                        const SnackBar(content: Text('Введите комментарий')),
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            AppLocalizations.of(context)!.errorValidation,
+                          ),
+                        ),
                       );
                       return;
                     }
                     try {
+                      if (!builderContext.mounted) return;
                       setStateDialog(() {
                         isSubmitting = true;
                       });
@@ -102,21 +183,24 @@ class _UserProfilePageState extends State<UserProfilePage> {
                         rating: rating,
                         comment: text,
                       );
-                      if (!context.mounted) return;
-                      Navigator.of(context).pop();
+                      if (!builderContext.mounted) return;
+                      Navigator.of(builderContext).pop();
                       await _reload();
-                      if (!context.mounted) return;
+                      if (!mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Отзыв отправлен')),
+                        SnackBar(
+                          content: Text(AppLocalizations.of(context)!.done),
+                        ),
                       );
                     } catch (e) {
+                      if (!builderContext.mounted) return;
                       setStateDialog(() {
                         isSubmitting = false;
                       });
-                      if (!context.mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(e.toString())),
-                      );
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text(e.toString())));
                     }
                   },
                   child: isSubmitting
@@ -125,7 +209,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                           width: 18,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Отправить'),
+                      : Text(AppLocalizations.of(context)!.messagesSend),
                 ),
               ],
             );
@@ -137,8 +221,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Профиль пользователя')),
+    final l10n = AppLocalizations.of(context)!;
+    return Scaffold(extendBodyBehindAppBar: true, extendBody: true,
+      appBar: GlassAppBar(title: Text(l10n.profileTitle)),
       body: FutureBuilder<UserProfileEntity>(
         future: _futureProfile,
         builder: (context, snapshot) {
@@ -155,10 +240,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   children: [
                     Text(snapshot.error.toString()),
                     const SizedBox(height: 12),
-                    OutlinedButton(
-                      onPressed: _reload,
-                      child: const Text('Повторить'),
-                    ),
+                    OutlinedButton(onPressed: _reload, child: Text(l10n.retry)),
                   ],
                 ),
               ),
@@ -167,7 +249,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
           final profile = snapshot.data;
           if (profile == null) {
-            return const Center(child: Text('Профиль не найден'));
+            return Center(child: Text(l10n.errorNotFound));
           }
 
           final isMe = _isMe(profile);
@@ -175,22 +257,73 @@ class _UserProfilePageState extends State<UserProfilePage> {
           return RefreshIndicator(
             onRefresh: _reload,
             child: ListView(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.only(
+                top: MediaQuery.of(context).padding.top + kToolbarHeight + 16,
+                left: 16,
+                right: 16,
+                bottom: MediaQuery.of(context).padding.bottom + 100,
+              ),
               children: [
-                Card(
+                GlassCard(
                   clipBehavior: Clip.antiAlias,
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        CircleAvatar(
-                          radius: 28,
-                          child: Text(
-                            (profile.name.trim().isNotEmpty ? profile.name.trim()[0] : '?').toUpperCase(),
+                        GestureDetector(
+                          onTap: isMe ? _uploadPhoto : null,
+                          child: Stack(
+                            children: [
+                              CircleAvatar(
+                                radius: 36,
+                                backgroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.surfaceContainerHighest,
+                                backgroundImage:
+                                    profile.photoUrl != null &&
+                                        profile.photoUrl!.isNotEmpty
+                                    ? CachedNetworkImageProvider(
+                                        profile.photoUrl!,
+                                      )
+                                    : null,
+                                child:
+                                    profile.photoUrl == null ||
+                                        profile.photoUrl!.isEmpty
+                                    ? Text(
+                                        (profile.name.trim().isNotEmpty
+                                                ? profile.name.trim()[0]
+                                                : '?')
+                                            .toUpperCase(),
+                                        style: const TextStyle(fontSize: 24),
+                                      )
+                                    : null,
+                              ),
+                              if (isMe)
+                                Positioned(
+                                  bottom: 0,
+                                  right: 0,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.camera_alt,
+                                      size: 16,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onPrimary,
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 16),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -199,23 +332,39 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                 children: [
                                   Expanded(
                                     child: Text(
-                                      '${profile.name} ${profile.surname ?? ''}'.trim(),
-                                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                      '${profile.name} ${profile.surname ?? ''}'
+                                          .trim(),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleLarge
+                                          ?.copyWith(
                                             fontWeight: FontWeight.bold,
                                           ),
                                     ),
                                   ),
                                   if (isMe)
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 6,
+                                      ),
                                       decoration: BoxDecoration(
-                                        color: Theme.of(context).colorScheme.primaryContainer,
-                                        borderRadius: BorderRadius.circular(999),
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primaryContainer,
+                                        borderRadius: BorderRadius.circular(
+                                          999,
+                                        ),
                                       ),
                                       child: Text(
-                                        'Это вы',
-                                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                              color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                        l10n.serviceYou,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelMedium
+                                            ?.copyWith(
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.onPrimaryContainer,
                                               fontWeight: FontWeight.w600,
                                             ),
                                       ),
@@ -225,9 +374,13 @@ class _UserProfilePageState extends State<UserProfilePage> {
                               if (isMe) ...[
                                 const SizedBox(height: 8),
                                 OutlinedButton.icon(
-                                  onPressed: () => context.push('/edit-profile'),
+                                  onPressed: () async {
+                                    await context.push('/edit-profile');
+                                    if (!mounted) return;
+                                    _reload();
+                                  },
                                   icon: const Icon(Icons.edit),
-                                  label: const Text('Редактировать профиль'),
+                                  label: Text(l10n.profileEdit),
                                 ),
                               ],
                               const SizedBox(height: 8),
@@ -252,20 +405,21 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Card(
+                GlassCard(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Контакты',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                          l10n.profileTitle,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 12),
                         _buildContactTile(
                           icon: Icons.phone,
-                          title: 'Телефон',
+                          title: l10n.profilePhone,
                           value: profile.phone,
                         ),
                         ..._buildContacts(profile.contacts),
@@ -274,7 +428,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Card(
+                GlassCard(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
@@ -284,29 +438,37 @@ class _UserProfilePageState extends State<UserProfilePage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Карточки пользователя',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                              l10n.profileServices,
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.bold),
                             ),
                             Text('${profile.cards.length}'),
                           ],
                         ),
                         const SizedBox(height: 12),
                         if (profile.cards.isEmpty)
-                          const Text('Пользователь ещё не создал карточек')
+                          Text(l10n.profileNoServices)
                         else
                           ListView.separated(
                             itemCount: profile.cards.length,
                             shrinkWrap: true,
+                            padding: EdgeInsets.zero,
                             physics: const NeverScrollableScrollPhysics(),
-                            separatorBuilder: (context, index) => const Divider(height: 16),
+                            separatorBuilder: (context, index) =>
+                                const Divider(height: 16),
                             itemBuilder: (context, index) {
                               final card = profile.cards[index];
                               return ListTile(
                                 contentPadding: EdgeInsets.zero,
                                 title: Text(card.title),
-                                subtitle: Text('${card.price.toStringAsFixed(0)} ${card.currency}'),
+                                subtitle: Text(
+                                  '${card.price.toStringAsFixed(0)} ${card.currency}',
+                                ),
                                 trailing: const Icon(Icons.chevron_right),
-                                onTap: () => context.push('/service-details', extra: card),
+                                onTap: () => context.push(
+                                  '/service-details',
+                                  extra: card,
+                                ),
                               );
                             },
                           ),
@@ -315,7 +477,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Card(
+                GlassCard(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
@@ -325,53 +487,86 @@ class _UserProfilePageState extends State<UserProfilePage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'Отзывы о пользователе',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                              l10n.profileReviews,
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.bold),
                             ),
                             if (!isMe)
                               FilledButton.icon(
                                 onPressed: _showReviewDialog,
                                 icon: const Icon(Icons.add_comment),
-                                label: const Text('Оставить отзыв'),
+                                label: Text(l10n.profileReviews),
                               ),
                           ],
                         ),
                         if (isMe) ...[
                           const SizedBox(height: 8),
                           Text(
-                            'Вы видите отзывы других пользователей о вас',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            'Reviews from other users about you',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                 ),
                           ),
                         ],
                         const SizedBox(height: 12),
                         if (profile.reviews.isEmpty)
-                          const Text('Пока нет отзывов')
+                          Text(
+                            l10n.noFavorites.replaceFirst(
+                              'favorites',
+                              'reviews',
+                            ),
+                          )
                         else
                           ListView.separated(
                             itemCount: profile.reviews.length,
                             shrinkWrap: true,
+                            padding: EdgeInsets.zero,
                             physics: const NeverScrollableScrollPhysics(),
-                            separatorBuilder: (context, index) => const Divider(height: 16),
+                            separatorBuilder: (context, index) =>
+                                const Divider(height: 16),
                             itemBuilder: (context, index) {
                               final review = profile.reviews[index];
                               final authorFullName =
-                                  '${review.author.name} ${review.author.surname ?? ''}'.trim();
+                                  '${review.author.name} ${review.author.surname ?? ''}'
+                                      .trim();
                               return ListTile(
                                 contentPadding: EdgeInsets.zero,
-                                leading: const CircleAvatar(child: Icon(Icons.person)),
+                                leading: const CircleAvatar(
+                                  child: Icon(Icons.person),
+                                ),
                                 title: Row(
                                   children: [
                                     Expanded(
                                       child: Text(
-                                        authorFullName.isEmpty ? 'Пользователь' : authorFullName,
-                                        style: const TextStyle(fontWeight: FontWeight.bold),
+                                        authorFullName.isEmpty
+                                            ? 'User'
+                                            : authorFullName,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ),
-                                    const Icon(Icons.star, size: 16, color: Colors.amber),
-                                    const SizedBox(width: 2),
-                                    Text(review.rating.toStringAsFixed(1)),
+                                    ...List.generate(5, (starIndex) {
+                                        IconData iconData;
+                                        final double diff = review.rating - starIndex;
+                                        if (diff >= 0.75) {
+                                          iconData = Icons.star;
+                                        } else if (diff >= 0.25) {
+                                          iconData = Icons.star_half;
+                                        } else {
+                                          iconData = Icons.star_border;
+                                        }
+                                        return Icon(
+                                          iconData,
+                                          size: 16,
+                                          color: Colors.amber,
+                                        );
+                                      }),
+                                      const SizedBox(width: 4),
+                                      Text(review.rating.toStringAsFixed(1)),
                                   ],
                                 ),
                                 subtitle: Text(review.comment),
@@ -384,10 +579,10 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Профиль обновлён: ${profile.updated.toLocal()}',
+                  '${l10n.updated}: ${profile.updated.toLocal()}',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -403,7 +598,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
     if (me == null) return false;
     if (widget.userId.isEmpty) return false;
     if (me.uid.isNotEmpty && me.uid == widget.userId) return true;
-    if (me.phone.isNotEmpty && profile.phone.isNotEmpty && me.phone == profile.phone) return true;
+    if (me.phone.isNotEmpty &&
+        profile.phone.isNotEmpty &&
+        me.phone == profile.phone) {
+      return true;
+    }
     return false;
   }
 
@@ -414,8 +613,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
       final icon = diff >= 0
           ? Icons.star
           : diff > -1
-              ? Icons.star_half
-              : Icons.star_border;
+          ? Icons.star_half
+          : Icons.star_border;
       widgets.add(Icon(icon, color: Colors.amber, size: 20));
     }
     return widgets;
@@ -435,9 +634,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
   }
 
   List<Widget> _buildContacts(Map<String, dynamic> contacts) {
-    final widgets = <Widget>[
-      const Divider(height: 16),
-    ];
+    final widgets = <Widget>[const Divider(height: 16)];
     final email = contacts['email'];
     final telegram = contacts['telegram'];
     final others = contacts['others'];
@@ -468,20 +665,13 @@ class _UserProfilePageState extends State<UserProfilePage> {
         final value = entry.value?.toString() ?? '';
         if (value.trim().isEmpty) continue;
         widgets.add(
-          _buildContactTile(
-            icon: Icons.link,
-            title: entry.key,
-            value: value,
-          ),
+          _buildContactTile(icon: Icons.link, title: entry.key, value: value),
         );
       }
     }
 
     if (widgets.length == 1) {
-      return [
-        const Divider(height: 16),
-        const Text('Контакты не заполнены'),
-      ];
+      return [const Divider(height: 16), const Text('No contacts provided')];
     }
 
     return widgets;

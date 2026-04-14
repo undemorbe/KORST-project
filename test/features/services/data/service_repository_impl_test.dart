@@ -85,7 +85,7 @@ void main() {
               'name': 'Service 1',
               'price': 100,
               'currency': 'USD',
-              'type': 'услуга',
+              'type': 'задание',
               'author': {'name': 'Oleg', 'surname': 'Olegovich', 'rating': 4.5},
               'tags': ['tag1', 'tag2'],
               'created': '2026-03-16T14:32:10Z',
@@ -102,7 +102,7 @@ void main() {
       expect(page.cards.first.title, 'Service 1');
       expect(page.cards.first.price, 100);
       expect(page.cards.first.currency, 'USD');
-      expect(page.cards.first.type, 'услуга');
+      expect(page.cards.first.type, 'задание');
     });
 
     test('getService parses card-info', () async {
@@ -116,7 +116,7 @@ void main() {
           'description': 'Описание',
           'price': 100,
           'currency': 'USD',
-          'type': 'услуга',
+          'type': 'задание',
           'author': {
             'id': 'u1',
             'name': 'Олег',
@@ -142,6 +142,7 @@ void main() {
       expect(s.description, 'Описание');
       expect(s.author?.uid, 'u1');
       expect(s.author?.phone, '+79123456789');
+      expect(s.type, 'задание');
     });
 
     test('createService sends save-card payload', () async {
@@ -183,6 +184,95 @@ void main() {
       );
 
       await repo.createService(received);
+    });
+
+    test('updateService sends update-card payload with card-id', () async {
+      dio.httpClientAdapter = _Adapter((options) async {
+        expect(options.path, ApiConstants.cardsUpdateCard);
+        expect(options.headers[ApiConstants.headerAuthorization], 'access-1');
+
+        final data = options.data as Map<String, dynamic>;
+        expect(data['card-id'], 'card-123');
+        expect(data['name'], 'Updated Service');
+        expect(data['description'], 'Updated Desc');
+        expect(data['price'], 200.0);
+        expect(data['currency'], 'EUR');
+        expect(data['type'], 'товар');
+        expect(data['tags'], ['tag3']);
+
+        return _jsonBody(200, {});
+      });
+      refreshDio.httpClientAdapter = _Adapter((options) async => _jsonBody(500, {}));
+
+      final service = ServiceEntity(
+        uid: 'card-123',
+        title: 'Updated Service',
+        description: 'Updated Desc',
+        price: 200,
+        currency: 'EUR',
+        type: 'товар',
+        timesBooked: 0,
+        rating: 0,
+        reviews: const [],
+        tags: const ['tag3'],
+        created: DateTime.now(),
+        updated: DateTime.now(),
+        category: ServiceCategory.other,
+        imageUrl: 'http://example.com/image.jpg',
+      );
+
+      await repo.updateService(service);
+    });
+
+    test('getServices parses image-url from API response', () async {
+      dio.httpClientAdapter = _Adapter((options) async {
+        return _jsonBody(200, {
+          'cards': [
+            {
+              'id': 'c1',
+              'name': 'Service 1',
+              'image-url': 'http://example.com/service1.jpg',
+              'price': 100,
+              'currency': 'USD',
+              'type': 'задание',
+              'author': {'name': 'Oleg', 'surname': 'Olegovich', 'rating': 4.5},
+              'tags': ['tag1'],
+              'created': '2026-03-16T14:32:10Z',
+            }
+          ]
+        });
+      });
+      refreshDio.httpClientAdapter = _Adapter((options) async => _jsonBody(500, {}));
+
+      final page = await repo.getServices(key: null);
+
+      expect(page.cards.first.imageUrl, 'http://example.com/service1.jpg');
+    });
+
+    test('getService parses image-url from card-info response', () async {
+      dio.httpClientAdapter = _Adapter((options) async {
+        return _jsonBody(200, {
+          'name': 'Service Detail',
+          'description': 'Desc',
+          'image-url': 'http://example.com/detail.jpg',
+          'price': 100,
+          'currency': 'USD',
+          'type': 'услуга',
+          'author': {
+            'id': 'u1',
+            'name': 'Oleg',
+            'surname': 'Olegovich',
+          },
+          'tags': [],
+          'created': '2023-01-01',
+          'updated': '2023-01-01',
+        });
+      });
+      refreshDio.httpClientAdapter = _Adapter((options) async => _jsonBody(500, {}));
+
+      final service = await repo.getService('c1');
+
+      expect(service.imageUrl, 'http://example.com/detail.jpg');
     });
   });
 }

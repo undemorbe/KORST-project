@@ -1,3 +1,4 @@
+import 'package:korst/core/widgets/glass.dart';
 import 'package:flutter/material.dart';
 
 class UserProfileShimmer extends StatelessWidget {
@@ -6,6 +7,8 @@ class UserProfileShimmer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
       children: const [
         _ShimmerCard(height: 150),
@@ -28,8 +31,10 @@ class _ShimmerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(14);
-    final surface = Theme.of(context).colorScheme.surface.withValues(alpha: 0.62);
-    return Card(
+    final surface = Theme.of(
+      context,
+    ).colorScheme.surface.withValues(alpha: 0.62);
+    return GlassCard(
       elevation: 0,
       color: surface,
       shape: RoundedRectangleBorder(borderRadius: radius),
@@ -59,10 +64,7 @@ class _ShimmerLine extends StatefulWidget {
   final double widthFactor;
   final double height;
 
-  const _ShimmerLine({
-    required this.widthFactor,
-    required this.height,
-  });
+  const _ShimmerLine({required this.widthFactor, required this.height});
 
   @override
   State<_ShimmerLine> createState() => _ShimmerLineState();
