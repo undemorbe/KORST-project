@@ -33,7 +33,7 @@ func NewAuthHandler(authService ports.AuthService,
 func (h *AuthHandler) CheckUser(c *gin.Context) {
 	var req requests.PhoneNumberRequest
 
-	err := c.ShouldBindJSON(&req)
+	err := c.ShouldBindQuery(&req)
 	if err != nil {
 		c.Error(errors.ErrorInvalidInput)
 		return
@@ -54,7 +54,7 @@ func (h *AuthHandler) CheckUser(c *gin.Context) {
 func (h *AuthHandler) RefreshTokens(c *gin.Context) {
 	var req requests.RefreshRequest
 
-	err := c.ShouldBindJSON(&req)
+	err := c.ShouldBindQuery(&req)
 	if err != nil {
 		c.Error(errors.ErrorInvalidInput)
 		return

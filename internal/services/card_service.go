@@ -2,6 +2,7 @@
 package services
 
 import (
+	"io"
 	"korst-backend/internal/dto/requests"
 	"korst-backend/internal/dto/responses"
 	"korst-backend/internal/entities"
@@ -19,21 +20,24 @@ import (
 // CardService - объект, содержащий методы для просмотра,
 // создания и изменения карточек объявлений
 type CardService struct {
-	cardRepo ports.CardRepository
-	userRepo ports.UserRepository
+	cardRepo    ports.CardRepository
+	userRepo    ports.UserRepository
+	fileService ports.FileService
 }
 
 // NewCardService создает и возвращает новый объект CardService
 func NewCardService(
 	cardRepo ports.CardRepository,
-	userRepo ports.UserRepository) ports.CardService {
+	userRepo ports.UserRepository,
+	fileService ports.FileService) ports.CardService {
 	return &CardService{
-		cardRepo: cardRepo,
-		userRepo: userRepo,
+		cardRepo:    cardRepo,
+		userRepo:    userRepo,
+		fileService: fileService,
 	}
 }
 
-// SaveCard сохраняет каторчку объявления, созданную пользователем
+// SaveCard сохраняет карточку объявления, созданную пользователем
 func (s *CardService) SaveCard(userID uuid.UUID,
 	req *requests.SaveCardRequest) error {
 
@@ -54,9 +58,91 @@ func (s *CardService) SaveCard(userID uuid.UUID,
 	return s.cardRepo.CreateCard(&newCard)
 }
 
+// UpdateCard обновляет данные определенной карточки объявления
+func (s *CardService) UpdateCard(userID uuid.UUID,
+	req *requests.UpdateCardRequest) error {
+
+	card, err := s.cardRepo.FindByID(req.CardID)
+	if err != nil {
+		logger.Log.Error("Ошибка при поиске карточки: ", err)
+		return err
+	}
+
+	if userID != card.UserID {
+		logger.Log.Warn("Попытка изменить чужую карточку")
+		return errors.ErrorForbidden
+	}
+
+	if req.Name != nil {
+		card.Name = *req.Name
+	}
+	if req.Description != nil {
+		card.Description = *req.Description
+	}
+
+	if req.Price != nil {
+		card.Price = *req.Price
+	}
+	if req.Currency != nil {
+		card.Currency = *req.Currency
+	}
+	if req.Type != nil {
+		card.Type = *req.Type
+	}
+	if req.Tags != nil {
+		card.Tags = *req.Tags
+	}
+
+	card.UpdatedAt = time.Now().UTC()
+
+	err = s.cardRepo.UpdateCard(card)
+	if err != nil {
+		logger.Log.Error("Ошибка при обновлении карточки в БД: ", err)
+		return err
+	}
+
+	return nil
+}
+
+// SaveImage вызывает FileService для сохранения изображения,
+// сохраняет ссылку на картинку для карточки в БД
+func (s *CardService) SaveImage(cardID uuid.UUID,
+	file io.Reader, fileName string) (string, error) {
+
+	card, err := s.cardRepo.FindByID(cardID)
+	if err != nil {
+		logger.Log.Error("Ошибка при поиске карточки: ", err)
+		return "", err
+	}
+
+	if card == nil {
+		logger.Log.Warn("Указанная карточка не найдена")
+		return "", errors.ErrorCardNotFound
+	}
+
+	url, err := s.fileService.SaveCardImage(file, fileName, cardID)
+	if err != nil {
+		logger.Log.Error("Ошибка при сохранении изображения карточки: ", err)
+		return "", err
+	}
+
+	card.ImageURL = url
+	card.UpdatedAt = time.Now().UTC()
+
+	err = s.cardRepo.UpdateCard(card)
+	if err != nil {
+		logger.Log.Error("Ошибка при обновлении карточки: ", err)
+		return "", err
+	}
+
+	baseURL := os.Getenv("BASE_URL")
+
+	return baseURL + url, nil
+}
+
 // GetCards возвращает несколько сжатых карточек
 // с объявлениями для просмотра пользователями
-func (s *CardService) GetCards(key *time.Time) (
+func (s *CardService) GetCards(key *time.Time, query *string) (
 	responses.GetCardsResponse, error) {
 
 	response := responses.GetCardsResponse{
@@ -69,7 +155,14 @@ func (s *CardService) GetCards(key *time.Time) (
 			errors.ErrorInternal
 	}
 
-	cards, err := s.cardRepo.FindCardsByTime(key, limit)
+	var cards []entities.Card
+
+	if query != nil && len(*query) > 0 {
+		cards, err = s.cardRepo.FindCardsByQuery(key, *query, limit)
+	} else {
+		cards, err = s.cardRepo.FindCardsByTime(key, limit)
+	}
+
 	if err != nil {
 		return responses.GetCardsResponse{},
 			err
@@ -78,8 +171,8 @@ func (s *CardService) GetCards(key *time.Time) (
 	for i := range cards {
 		card, err := s.getCompressedCard(&cards[i])
 		if err != nil {
-			return responses.GetCardsResponse{},
-				err
+			logger.Log.Warn("Ошибка при обработке карточки: ", err)
+			continue
 		}
 
 		response.Cards = append(response.Cards, card)
@@ -128,6 +221,12 @@ func (s *CardService) GetCardInfo(cardID uuid.UUID) (
 		UpdatedAt: updatedDate,
 	}
 
+	baseURL := os.Getenv("BASE_URL")
+
+	if card.ImageURL != "" {
+		response.ImageURL = baseURL + card.ImageURL
+	}
+
 	return response, nil
 }
 
@@ -173,6 +272,12 @@ func (s *CardService) getAuthor(userID uuid.UUID) (
 		Rating: profile.Rating,
 	}
 
+	baseURL := os.Getenv("BASE_URL")
+
+	if profile.ImageURL != "" {
+		author.ImageURL = baseURL + profile.ImageURL
+	}
+
 	return author, nil
 }
 
@@ -201,6 +306,12 @@ func (s *CardService) getCompressedCard(card *entities.Card) (
 		UpdatedAt: card.UpdatedAt,
 	}
 
+	baseURL := os.Getenv("BASE_URL")
+
+	if card.ImageURL != "" {
+		compressedCard.ImageURL = baseURL + card.ImageURL
+	}
+
 	return compressedCard, nil
 }
 
@@ -216,8 +327,10 @@ func (s *CardService) getCompressedAuthor(userID uuid.UUID) (
 	}
 
 	compressedAuthor := &responses.CompressedAuthor{
-		Name:    author.Name,
-		Surname: author.Surname,
+		ID:       author.ID,
+		Name:     author.Name,
+		Surname:  author.Surname,
+		ImageURL: author.ImageURL,
 
 		Rating: author.Rating,
 	}

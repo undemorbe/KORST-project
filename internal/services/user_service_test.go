@@ -5,7 +5,8 @@ import (
 	"korst-backend/internal/dto/requests"
 	"korst-backend/internal/entities"
 	"korst-backend/internal/infrastructure/logger"
-	"korst-backend/internal/mocks"
+	mockRepositories "korst-backend/internal/mocks/repositories"
+	mockService "korst-backend/internal/mocks/services"
 	"testing"
 
 	"github.com/google/uuid"
@@ -18,10 +19,11 @@ import (
 func TestUpdateUserInfo(t *testing.T) {
 	logger.InitLoggerTest()
 
-	mockUserRepo := &mocks.MockUserRepo{}
-	mockProfileRepo := &mocks.MockProfileRepo{}
+	mockUserRepo := &mockRepositories.MockUserRepo{}
+	mockProfileRepo := &mockRepositories.MockProfileRepo{}
+	mockFileService := &mockService.MockFileService{}
 
-	userService := NewUserService(mockUserRepo, mockProfileRepo)
+	userService := NewUserService(mockUserRepo, mockProfileRepo, mockFileService)
 
 	userID := uuid.New()
 	phone := "+79123456789"
@@ -56,15 +58,7 @@ func TestUpdateUserInfo(t *testing.T) {
 	mockUserRepo.On("FindByID", userID).Return(user, nil)
 
 	mockUserRepo.
-		On("CreateUser", mock.AnythingOfType("*entities.User")).
-		Return(nil)
-
-	mockUserRepo.
 		On("UpdateUser", mock.AnythingOfType("*entities.User")).
-		Return(nil)
-
-	mockProfileRepo.
-		On("CreateProfile", mock.AnythingOfType("*entities.Profile")).
 		Return(nil)
 
 	mockProfileRepo.
@@ -80,14 +74,17 @@ func TestUpdateUserInfo(t *testing.T) {
 	require.Equal(t, profile.Description, description)
 	require.Equal(t, profile.Telegram, telegram)
 	require.Equal(t, profile.Email, "")
+	mockUserRepo.AssertExpectations(t)
+	mockProfileRepo.AssertExpectations(t)
 }
 
 // TestGetUserInfo проверяет получение информации о пользователе
 func TestGetUserInfo(t *testing.T) {
-	mockUserRepo := &mocks.MockUserRepo{}
-	mockProfileRepo := &mocks.MockProfileRepo{}
+	mockUserRepo := &mockRepositories.MockUserRepo{}
+	mockProfileRepo := &mockRepositories.MockProfileRepo{}
+	mockFileService := &mockService.MockFileService{}
 
-	userService := NewUserService(mockUserRepo, mockProfileRepo)
+	userService := NewUserService(mockUserRepo, mockProfileRepo, mockFileService)
 
 	userID := uuid.New()
 	name := "Олег"
@@ -111,7 +108,7 @@ func TestGetUserInfo(t *testing.T) {
 	}
 
 	mockUserRepo.
-		On("FindByID", userID).
+		On("FindWithCards", userID).
 		Return(user, nil)
 
 	response, err := userService.GetUserInfo(userID)
@@ -120,4 +117,5 @@ func TestGetUserInfo(t *testing.T) {
 	require.Equal(t, name, response.Name)
 	require.Equal(t, telegram, response.Contacts.Telegram)
 	require.Equal(t, cardName, response.Cards[0].Name)
+	mockUserRepo.AssertExpectations(t)
 }

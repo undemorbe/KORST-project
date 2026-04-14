@@ -9,7 +9,7 @@ import (
 
 	"korst-backend/internal/dto/requests"
 	"korst-backend/internal/dto/responses"
-	"korst-backend/internal/mocks"
+	mockServices "korst-backend/internal/mocks/services"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -20,12 +20,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestSaveCard тестирует обработку запроса на
+// сохранение карточки объявления
 func TestSaveCard(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	logger.InitLoggerTest()
 
-	mockCardService := &mocks.MockCardService{}
-	mockTokenService := &mocks.MockTokenService{}
+	mockCardService := &mockServices.MockCardService{}
+	mockTokenService := &mockServices.MockTokenService{}
 
 	cardHandler := NewCardHandler(mockCardService, mockTokenService)
 
@@ -73,31 +75,33 @@ func TestSaveCard(t *testing.T) {
 	router.ServeHTTP(writer, req)
 
 	require.Equal(t, http.StatusOK, writer.Code)
+	mockTokenService.AssertExpectations(t)
+	mockCardService.AssertExpectations(t)
 }
 
+// TestGetCards тестирует обработку запроса на
+// получение карточек объявлений (с пагинацией)
 func TestGetCards(t *testing.T) {
 
-	mockCardService := &mocks.MockCardService{}
-	mockTokenService := &mocks.MockTokenService{}
+	mockCardService := &mockServices.MockCardService{}
+	mockTokenService := &mockServices.MockTokenService{}
 
 	cardHandler := NewCardHandler(mockCardService, mockTokenService)
 
+	var query *string = nil
+
 	router := gin.New()
 	router.Use(middleware.ErrorHandler())
-	router.POST("/get-cards", cardHandler.GetCards)
-
-	body := `{
-		"key": "2026-03-19T20:15:34.123Z"
-	}`
+	router.GET("/get-cards", cardHandler.GetCards)
 
 	mockCardService.
-		On("GetCards", mock.AnythingOfType("*time.Time")).
+		On("GetCards", mock.AnythingOfType("*time.Time"), query).
 		Return(responses.GetCardsResponse{}, nil)
 
 	req := httptest.NewRequest(
-		http.MethodPost,
-		"/get-cards",
-		bytes.NewBufferString(body),
+		http.MethodGet,
+		"/get-cards?key=2026-03-19T20:15:34.123Z",
+		nil,
 	)
 	req.Header.Set("Content-Type", "application/json")
 
@@ -106,24 +110,23 @@ func TestGetCards(t *testing.T) {
 	router.ServeHTTP(writer, req)
 
 	require.Equal(t, http.StatusOK, writer.Code)
+	mockCardService.AssertExpectations(t)
 }
 
+// TestGetCardInfo тестирует обработку запроса на
+// получение информации об определенной карточке
 func TestGetCardInfo(t *testing.T) {
 
-	mockCardService := &mocks.MockCardService{}
-	mockTokenService := &mocks.MockTokenService{}
+	mockCardService := &mockServices.MockCardService{}
+	mockTokenService := &mockServices.MockTokenService{}
 
 	cardHandler := NewCardHandler(mockCardService, mockTokenService)
 
 	router := gin.New()
 	router.Use(middleware.ErrorHandler())
-	router.POST("/card-info", cardHandler.GetCardInfo)
+	router.GET("/card-info", cardHandler.GetCardInfo)
 
 	cardID, _ := uuid.Parse("a807daa3-c98a-4da2-bd03-a88ed68cdd48")
-
-	body := `{
-		"card-id": "a807daa3-c98a-4da2-bd03-a88ed68cdd48"
-	}`
 
 	name := "Олег"
 	phone := "+79123456789"
@@ -142,9 +145,9 @@ func TestGetCardInfo(t *testing.T) {
 	mockCardService.On("GetCardInfo", cardID).Return(responseFromFunc, nil)
 
 	req := httptest.NewRequest(
-		http.MethodPost,
-		"/card-info",
-		bytes.NewBufferString(body),
+		http.MethodGet,
+		"/card-info?card-id=a807daa3-c98a-4da2-bd03-a88ed68cdd48",
+		nil,
 	)
 	req.Header.Set("Content-Type", "application/json")
 
@@ -161,4 +164,5 @@ func TestGetCardInfo(t *testing.T) {
 	require.Equal(t, name, response.Name)
 	require.Equal(t, phone, response.Author.Phone)
 	require.Equal(t, telegram, response.Author.Contacts.Telegram)
+	mockCardService.AssertExpectations(t)
 }

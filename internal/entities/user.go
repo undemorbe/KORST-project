@@ -2,13 +2,16 @@
 package entities
 
 import (
+	messenger "korst-backend/internal/messenger/entities"
+
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 // User - структура сущности пользователя в БД
 // Содержит ID, телефон, имя и фамилию пользователя,
-// значение IsRegistered, ссылку на refresh токен
+// значение IsRegistered, ссылку на refresh токен,
+// профиль, созданные и полученные отзывы, карточки
 type User struct {
 	ID    uuid.UUID `gorm:"type:uuid;primaryKey"`
 	Phone string    `gorm:"unique;not null"`
@@ -22,7 +25,11 @@ type User struct {
 
 	CreatedReviews []Review `gorm:"foreignKey:AuthorID;constraint:OnDelete:CASCADE"`
 	RelatedReviews []Review `gorm:"foreignKey:RelatedToID;constraint:OnDelete:CASCADE"`
-	Cards          []Card   `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
+
+	CustomerChats []messenger.Chat `gorm:"foreignKey:MerchantID;constraint:OnDelete:CASCADE"`
+	MerchantChats []messenger.Chat `gorm:"foreignKey:CustomerID;constraint:OnDelete:CASCADE"`
+
+	Cards []Card `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
 }
 
 // BeforeCreate создает необходимые отсутствющие поля при создании сущности

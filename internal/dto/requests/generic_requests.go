@@ -1,18 +1,14 @@
 // requests - пакет, содержащий структуры запросов по Api
 package requests
 
-import (
-	"github.com/google/uuid"
-)
-
 // PhoneNumberRequests - структура для запроса,
-// содержащего только номер телефона
+// содержащего только номер телефона в Params или Body
 type PhoneNumberRequest struct {
-	Phone string `json:"phone" binding:"required"`
+	Phone string `json:"phone" form:"phone" binding:"required"`
 }
 
 // UserIDRequest - структура для запросов, содержащих
-// только ID пользователя в Body
+// только ID пользователя в Params или Body
 type UserIDRequest struct {
-	UserID uuid.UUID `json:"user-id" binding:"required"`
+	UserID string `json:"user-id" form:"user-id" binding:"required"`
 }

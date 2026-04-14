@@ -2,6 +2,7 @@
 package entities
 
 import (
+	messenger "korst-backend/internal/messenger/entities"
 	"time"
 
 	"github.com/google/uuid"
@@ -18,11 +19,14 @@ type Card struct {
 
 	Name        string `gorm:"not null"`
 	Description string `gorm:"default:''"`
+	ImageURL    string `gorm:"default:''"`
 
 	Price    float64 `gorm:"not null"`
 	Currency string  `gorm:"not null"`
 	Type     string
 	Tags     pq.StringArray `gorm:"type:text[]"`
+
+	RelatedChats []messenger.Chat `gorm:"foreignKey:CardID;constraint:OnDelete:CASCADE"`
 
 	CreatedAt time.Time `gorm:"not null"`
 	UpdatedAt time.Time `gorm:"not null"`

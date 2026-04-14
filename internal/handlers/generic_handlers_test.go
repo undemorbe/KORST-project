@@ -9,7 +9,7 @@ import (
 	"korst-backend/internal/errors"
 	"korst-backend/internal/infrastructure/logger"
 	"korst-backend/internal/middleware"
-	"korst-backend/internal/mocks"
+	mockServices "korst-backend/internal/mocks/services"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -24,7 +24,7 @@ func TestInvalidRequest(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	logger.InitLoggerTest()
 
-	mockOTPService := &mocks.MockOTPService{}
+	mockOTPService := &mockServices.MockOTPService{}
 
 	otpHandler := NewOTPHandler(mockOTPService)
 
@@ -35,10 +35,6 @@ func TestInvalidRequest(t *testing.T) {
 	body := `{
 		"invalid_value": "+79123456789"
 	}`
-
-	mockOTPService.
-		On("SendOTP", "+79123456789").
-		Return(nil)
 
 	req := httptest.NewRequest(
 		http.MethodPost,
@@ -59,12 +55,13 @@ func TestInvalidRequest(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "INVALID_INPUT", response.Code)
 	require.Equal(t, "Некоректный формат входных данных", response.Message)
+	mockOTPService.AssertNotCalled(t, "SendOTP", "+79123456789")
 }
 
 // TestExpectedError проверяет обработку хэндлерами
 // ожидаемой (установленной заранее в errors) ошибки
 func TestExpectedError(t *testing.T) {
-	mockOTPService := new(mocks.MockOTPService)
+	mockOTPService := new(mockServices.MockOTPService)
 
 	otpHandler := NewOTPHandler(mockOTPService)
 
@@ -99,12 +96,13 @@ func TestExpectedError(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "NOT_FOUND", response.Code)
 	require.Equal(t, "Пользователь не найден", response.Message)
+	mockOTPService.AssertExpectations(t)
 }
 
 // TestUnexpectedError проверяет обработку хэндлерами
 // случайной (непредвиденной) ошибки
 func TestUnexpectedError(t *testing.T) {
-	mockOTPService := new(mocks.MockOTPService)
+	mockOTPService := new(mockServices.MockOTPService)
 
 	otpHandler := NewOTPHandler(mockOTPService)
 
@@ -139,4 +137,5 @@ func TestUnexpectedError(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "INTERNAL_ERROR", response.Code)
 	require.Equal(t, "Непредвиденная ошибка сервера. Попробуйте позже", response.Message)
+	mockOTPService.AssertExpectations(t)
 }

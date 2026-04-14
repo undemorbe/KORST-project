@@ -10,7 +10,7 @@ import (
 
 	"korst-backend/internal/dto/requests"
 	"korst-backend/internal/dto/responses"
-	"korst-backend/internal/mocks"
+	mockServices "korst-backend/internal/mocks/services"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -26,22 +26,20 @@ func TestGetReviews(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	logger.InitLoggerTest()
 
-	mockReviewService := &mocks.MockReviewService{}
-	mockTokenService := &mocks.MockTokenService{}
+	mockReviewService := &mockServices.MockReviewService{}
+	mockTokenService := &mockServices.MockTokenService{}
 
 	reviewHandler := NewReviewHandler(mockReviewService, mockTokenService)
 
 	router := gin.New()
 	router.Use(middleware.ErrorHandler())
-	router.POST("/reviews", reviewHandler.GetReviews)
+	router.GET("/reviews", reviewHandler.GetReviews)
 
 	userID := uuid.New()
 	rating := 4.5
 	name := "Олег"
 
-	body := fmt.Sprintf(`{
-		"user-id": "%s"
-	}`, userID.String())
+	target := fmt.Sprintf("/reviews?user-id=%s", userID.String())
 
 	review := responses.Review{
 		Rating: rating,
@@ -59,9 +57,9 @@ func TestGetReviews(t *testing.T) {
 		Return(responseFromFunc, nil)
 
 	req := httptest.NewRequest(
-		http.MethodPost,
-		"/reviews",
-		bytes.NewBufferString(body),
+		http.MethodGet,
+		target,
+		nil,
 	)
 	req.Header.Set("Content-Type", "application/json")
 
@@ -77,14 +75,15 @@ func TestGetReviews(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, rating, response.Reviews[0].Rating)
 	require.Equal(t, name, response.Reviews[0].Author.Name)
+	mockReviewService.AssertExpectations(t)
 }
 
 // TestPostReview проверяет обработку запроса на
 // размещение отзыва на пользователя
 func TestPostReview(t *testing.T) {
 
-	mockReviewService := &mocks.MockReviewService{}
-	mockTokenService := &mocks.MockTokenService{}
+	mockReviewService := &mockServices.MockReviewService{}
+	mockTokenService := &mockServices.MockTokenService{}
 
 	reviewHandler := NewReviewHandler(mockReviewService, mockTokenService)
 
@@ -128,4 +127,6 @@ func TestPostReview(t *testing.T) {
 	router.ServeHTTP(writer, req)
 
 	require.Equal(t, http.StatusOK, writer.Code)
+	mockTokenService.AssertExpectations(t)
+	mockReviewService.AssertExpectations(t)
 }

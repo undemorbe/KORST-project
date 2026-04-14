@@ -15,8 +15,9 @@ type GetCardsResponse struct {
 
 // CompressedCard - структура с краткой информацией о карточке
 type CompressedCard struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	ImageURL string `json:"image-url,omitempty"`
 
 	Price    float64 `json:"price"`
 	Currency string  `json:"currency"`
@@ -32,8 +33,10 @@ type CompressedCard struct {
 
 // CompressedAuthor - структура с краткой информацией об авторе карточки
 type CompressedAuthor struct {
-	Name    string `json:"name"`
-	Surname string `json:"surname"`
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	Surname  string `json:"surname"`
+	ImageURL string `json:"image-url,omitempty"`
 
 	Rating float64 `json:"rating"`
 }
@@ -43,6 +46,7 @@ type CompressedAuthor struct {
 type CardInfoResponse struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
+	ImageURL    string `json:"image-url,omitempty"`
 
 	Price    float64 `json:"price"`
 	Currency string  `json:"currency"`
@@ -58,9 +62,10 @@ type CardInfoResponse struct {
 
 // Author - структура с полной информацией об авторе карточки
 type Author struct {
-	ID      string `json:"id"`
-	Name    string `json:"name"`
-	Surname string `json:"surname"`
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	Surname  string `json:"surname"`
+	ImageURL string `json:"image-url,omitempty"`
 
 	Phone    string    `json:"phone"`
 	Contacts *Contacts `json:"contacts"`

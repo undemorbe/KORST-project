@@ -5,8 +5,8 @@ import (
 	"korst-backend/internal/dto/requests"
 	"korst-backend/internal/entities"
 	"korst-backend/internal/infrastructure/logger"
-	"korst-backend/internal/mocks"
-	"os"
+	mockRepositories "korst-backend/internal/mocks/repositories"
+	mockServices "korst-backend/internal/mocks/services"
 	"testing"
 	"time"
 
@@ -20,10 +20,11 @@ import (
 func TestSaveCard(t *testing.T) {
 	logger.InitLoggerTest()
 
-	mockCardRepo := &mocks.MockCardRepo{}
-	mockUserRepo := &mocks.MockUserRepo{}
+	mockCardRepo := &mockRepositories.MockCardRepo{}
+	mockUserRepo := &mockRepositories.MockUserRepo{}
+	mockFileService := &mockServices.MockFileService{}
 
-	cardService := NewCardService(mockCardRepo, mockUserRepo)
+	cardService := NewCardService(mockCardRepo, mockUserRepo, mockFileService)
 
 	userID := uuid.New()
 	name := "Название"
@@ -54,16 +55,62 @@ func TestSaveCard(t *testing.T) {
 	err := cardService.SaveCard(userID, req)
 
 	require.NoError(t, err)
+	mockCardRepo.AssertExpectations(t)
+}
+
+// TestUpdateCard тестирует обновление карточки объявления
+func TestUpdateCard(t *testing.T) {
+
+	mockCardRepo := &mockRepositories.MockCardRepo{}
+	mockUserRepo := &mockRepositories.MockUserRepo{}
+	mockFileService := &mockServices.MockFileService{}
+
+	cardService := NewCardService(mockCardRepo, mockUserRepo, mockFileService)
+
+	userID := uuid.New()
+	cardID := uuid.New()
+	oldName := "Старое название"
+	oldType := "Тип карточки"
+	newName := "Новое название"
+	newDescription := "Новое описание"
+
+	card := &entities.Card{
+		UserID: userID,
+		Name:   oldName,
+		Type:   oldType,
+	}
+
+	req := &requests.UpdateCardRequest{
+		CardID:      cardID,
+		Name:        &newName,
+		Description: &newDescription,
+	}
+
+	mockCardRepo.On("FindByID", cardID).Return(card, nil)
+
+	mockCardRepo.
+		On("UpdateCard", mock.AnythingOfType("*entities.Card")).
+		Return(nil)
+
+	err := cardService.UpdateCard(userID, req)
+
+	require.NoError(t, err)
+
+	require.Equal(t, newName, card.Name)
+	require.Equal(t, newDescription, card.Description)
+	require.Equal(t, oldType, card.Type)
+	mockCardRepo.AssertExpectations(t)
 }
 
 // TestGetCards проверяет получение нескольких карточек
 func TestGetCards(t *testing.T) {
-	os.Setenv("CARD_LIMIT", "12")
+	t.Setenv("CARD_LIMIT", "12")
 
-	mockCardRepo := &mocks.MockCardRepo{}
-	mockUserRepo := &mocks.MockUserRepo{}
+	mockCardRepo := &mockRepositories.MockCardRepo{}
+	mockUserRepo := &mockRepositories.MockUserRepo{}
+	mockFileService := &mockServices.MockFileService{}
 
-	cardService := NewCardService(mockCardRepo, mockUserRepo)
+	cardService := NewCardService(mockCardRepo, mockUserRepo, mockFileService)
 
 	userID := uuid.New()
 	userName := "Олег"
@@ -116,7 +163,7 @@ func TestGetCards(t *testing.T) {
 		On("FindByID", userID).
 		Return(user, nil)
 
-	response, err := cardService.GetCards(&key)
+	response, err := cardService.GetCards(&key, nil)
 
 	require.NoError(t, err)
 	require.Equal(t, cardName1, response.Cards[0].Name)
@@ -124,15 +171,18 @@ func TestGetCards(t *testing.T) {
 
 	require.Equal(t, userName, response.Cards[0].Author.Name)
 	require.Equal(t, userName, response.Cards[1].Author.Name)
+	mockCardRepo.AssertExpectations(t)
+	mockUserRepo.AssertExpectations(t)
 }
 
 // TestGetCardInfo проверяет получение конкретной карточки
 func TestGetCardInfo(t *testing.T) {
 
-	mockCardRepo := &mocks.MockCardRepo{}
-	mockUserRepo := &mocks.MockUserRepo{}
+	mockCardRepo := &mockRepositories.MockCardRepo{}
+	mockUserRepo := &mockRepositories.MockUserRepo{}
+	mockFileService := &mockServices.MockFileService{}
 
-	cardService := NewCardService(mockCardRepo, mockUserRepo)
+	cardService := NewCardService(mockCardRepo, mockUserRepo, mockFileService)
 
 	userID := uuid.New()
 	userName := "Олег"
@@ -174,4 +224,6 @@ func TestGetCardInfo(t *testing.T) {
 	require.Equal(t, cardName, response.Name)
 	require.Equal(t, userName, response.Author.Name)
 	require.Equal(t, telegram, response.Author.Contacts.Telegram)
+	mockCardRepo.AssertExpectations(t)
+	mockUserRepo.AssertExpectations(t)
 }

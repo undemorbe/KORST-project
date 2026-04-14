@@ -5,7 +5,7 @@ import (
 	"korst-backend/internal/dto/requests"
 	"korst-backend/internal/entities"
 	"korst-backend/internal/infrastructure/logger"
-	"korst-backend/internal/mocks"
+	mockRepositories "korst-backend/internal/mocks/repositories"
 	"testing"
 
 	"github.com/google/uuid"
@@ -18,9 +18,9 @@ import (
 func TestGetReviews(t *testing.T) {
 	logger.InitLoggerTest()
 
-	mockUserRepo := &mocks.MockUserRepo{}
-	mockProfileRepo := &mocks.MockProfileRepo{}
-	mockReviewRepo := &mocks.MockReviewRepo{}
+	mockUserRepo := &mockRepositories.MockUserRepo{}
+	mockProfileRepo := &mockRepositories.MockProfileRepo{}
+	mockReviewRepo := &mockRepositories.MockReviewRepo{}
 
 	reviewService := NewReviewService(mockUserRepo, mockProfileRepo, mockReviewRepo)
 
@@ -58,7 +58,7 @@ func TestGetReviews(t *testing.T) {
 		RelatedReviews: reviews,
 	}
 
-	mockUserRepo.On("FindByID", userID).Return(user, nil)
+	mockUserRepo.On("FindWithRelatedReviews", userID).Return(user, nil)
 
 	mockUserRepo.On("FindByID", authorID1).Return(author1, nil)
 
@@ -70,14 +70,15 @@ func TestGetReviews(t *testing.T) {
 
 	require.Equal(t, rating1, response.Reviews[0].Rating)
 	require.Equal(t, name, response.Reviews[1].Author.Name)
+	mockUserRepo.AssertExpectations(t)
 }
 
 // TestPostReview проверяет размещение нового отзыва
 func TestPostReview(t *testing.T) {
 
-	mockUserRepo := &mocks.MockUserRepo{}
-	mockProfileRepo := &mocks.MockProfileRepo{}
-	mockReviewRepo := &mocks.MockReviewRepo{}
+	mockUserRepo := &mockRepositories.MockUserRepo{}
+	mockProfileRepo := &mockRepositories.MockProfileRepo{}
+	mockReviewRepo := &mockRepositories.MockReviewRepo{}
 
 	userID := uuid.New()
 	authorID := uuid.New()
@@ -126,7 +127,7 @@ func TestPostReview(t *testing.T) {
 		On("CreateReview", mock.AnythingOfType("*entities.Review")).
 		Return(nil)
 
-	mockUserRepo.On("FindByID", userID).Return(user, nil)
+	mockUserRepo.On("FindWithRelatedReviews", userID).Return(user, nil)
 
 	mockProfileRepo.On("UpdateProfile", profile).Return(nil)
 
@@ -138,4 +139,7 @@ func TestPostReview(t *testing.T) {
 	require.Equal(t, comment, user.RelatedReviews[2].Comment)
 
 	require.Equal(t, 3.7, user.Profile.Rating)
+	mockReviewRepo.AssertExpectations(t)
+	mockUserRepo.AssertExpectations(t)
+	mockProfileRepo.AssertExpectations(t)
 }

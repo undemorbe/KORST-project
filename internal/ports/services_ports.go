@@ -2,6 +2,7 @@
 package ports
 
 import (
+	"io"
 	"korst-backend/internal/dto/requests"
 	"korst-backend/internal/dto/responses"
 	"korst-backend/internal/entities"
@@ -17,8 +18,7 @@ type OTPService interface {
 
 	// VerifyOTP сравнивает полученный Otp-код c сохраненным в БД
 	VerifyOTP(rawPhone string, otp string) (
-		responses.VerifyOTPResponse,
-		error)
+		responses.VerifyOTPResponse, error)
 }
 
 // AuthService содержит порты для методов, необходимых для авторизации
@@ -52,9 +52,16 @@ type CardService interface {
 	// SaveCard сохраняет каторчку объявления, созданную пользователем
 	SaveCard(userID uuid.UUID, req *requests.SaveCardRequest) error
 
+	// UpdateCard обновляет данные определенной карточки объявления
+	UpdateCard(userID uuid.UUID, req *requests.UpdateCardRequest) error
+
+	// SaveImage вызывает FileService для сохранения изображения,
+	// сохраняет ссылку на картинку для карточки в БД
+	SaveImage(cardID uuid.UUID, file io.Reader, fileName string) (string, error)
+
 	// GetCards возвращает несколько сжатых карточек
 	// с объявлениями для просмотра пользователями
-	GetCards(key *time.Time) (responses.GetCardsResponse, error)
+	GetCards(key *time.Time, query *string) (responses.GetCardsResponse, error)
 
 	// GetCardInfo возвращает подробную информацию
 	// об одной конкретной карточке объявления
@@ -68,6 +75,11 @@ type UserService interface {
 	// о каком-то конкретном пользователе
 	UpdateUserInfo(userID uuid.UUID,
 		req *requests.UpdateUserRequest) error
+
+	// SaveImage вызывает FileService для сохранения изображения в
+	// хранилище, сохраняет ссылку на него в профиле пользователя в БД
+	SaveImage(userID uuid.UUID,
+		file io.Reader, fileName string) (string, error)
 
 	// GetUserInfo получает подробную информацию
 	// о каком-то конкретном пользователе
@@ -86,4 +98,18 @@ type ReviewService interface {
 	// PostReview сохраняет отзыв на указанного пользователя
 	PostReview(authorID uuid.UUID,
 		req *requests.PostReviewRequest) error
+}
+
+// FileService содержит порты для методов для
+// работы с изображениями в хранилище
+type FileService interface {
+	// SaveProfileImage сохраняет изображение профиля в
+	// хранилище и возвращает ссылку на него
+	SaveProfileImage(file io.Reader,
+		fileName string, userID uuid.UUID) (string, error)
+
+	// SaveCardImage сохраняет изображение карточки в
+	// хранилище и возвращает ссылку на него
+	SaveCardImage(file io.Reader,
+		fileName string, cardID uuid.UUID) (string, error)
 }

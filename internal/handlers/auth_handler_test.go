@@ -2,12 +2,11 @@
 package handlers
 
 import (
-	"bytes"
 	"encoding/json"
 	"korst-backend/internal/dto/responses"
 	"korst-backend/internal/infrastructure/logger"
 	"korst-backend/internal/middleware"
-	"korst-backend/internal/mocks"
+	mockServices "korst-backend/internal/mocks/services"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -21,18 +20,14 @@ func TestCheckUser(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	logger.InitLoggerTest()
 
-	mockAuthService := &mocks.MockAuthService{}
-	mockTokenService := &mocks.MockTokenService{}
+	mockAuthService := &mockServices.MockAuthService{}
+	mockTokenService := &mockServices.MockTokenService{}
 
 	authHandler := NewAuthHandler(mockAuthService, mockTokenService)
 
 	router := gin.New()
 	router.Use(middleware.ErrorHandler())
-	router.POST("/check-user", authHandler.CheckUser)
-
-	body := `{
-		"phone": "+79123456789"
-	}`
+	router.GET("/check-user", authHandler.CheckUser)
 
 	mockAuthService.
 		On("CheckUser", "+79123456789").
@@ -41,9 +36,9 @@ func TestCheckUser(t *testing.T) {
 		}, nil)
 
 	req := httptest.NewRequest(
-		http.MethodPost,
-		"/check-user",
-		bytes.NewBufferString(body),
+		http.MethodGet,
+		"/check-user?phone=%2B79123456789",
+		nil,
 	)
 	req.Header.Set("Content-Type", "application/json")
 
@@ -58,23 +53,20 @@ func TestCheckUser(t *testing.T) {
 
 	require.NoError(t, err)
 	require.Equal(t, "registered", response.Status)
+	mockAuthService.AssertExpectations(t)
 }
 
 // TestRefreshTokens проверяет работу хэндлера RefreshTokens
 func TestRefreshTokens(t *testing.T) {
 
-	mockAuthService := &mocks.MockAuthService{}
-	mockTokenService := &mocks.MockTokenService{}
+	mockAuthService := &mockServices.MockAuthService{}
+	mockTokenService := &mockServices.MockTokenService{}
 
 	authHandler := NewAuthHandler(mockAuthService, mockTokenService)
 
 	router := gin.New()
 	router.Use(middleware.ErrorHandler())
-	router.POST("/refresh", authHandler.RefreshTokens)
-
-	body := `{
-		"refresh-token": "old-refresh-token"
-	}`
+	router.GET("/refresh", authHandler.RefreshTokens)
 
 	accessToken := "new-access-token"
 	refreshToken := "new-access-token"
@@ -87,9 +79,9 @@ func TestRefreshTokens(t *testing.T) {
 		}, nil)
 
 	req := httptest.NewRequest(
-		http.MethodPost,
-		"/refresh",
-		bytes.NewBufferString(body),
+		http.MethodGet,
+		"/refresh?refresh-token=old-refresh-token",
+		nil,
 	)
 	req.Header.Set("Content-Type", "application/json")
 
@@ -105,4 +97,5 @@ func TestRefreshTokens(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, accessToken, response.AccessToken)
 	require.Equal(t, refreshToken, response.RefreshToken)
+	mockAuthService.AssertExpectations(t)
 }

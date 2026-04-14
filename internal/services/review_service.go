@@ -39,7 +39,7 @@ func (s *ReviewService) GetReviews(userID uuid.UUID) (
 	var response responses.GetReviewsResponse
 	response.Reviews = []responses.Review{}
 
-	user, err := s.userRepo.FindByID(userID)
+	user, err := s.userRepo.FindWithRelatedReviews(userID)
 	if err != nil {
 		logger.Log.Error("Ошибка при поиске пользователя: ", err)
 		return responses.GetReviewsResponse{},
@@ -57,7 +57,7 @@ func (s *ReviewService) GetReviews(userID uuid.UUID) (
 	for i := range reviews {
 		convertedReview, err := s.getConvertedReview(&reviews[i])
 		if err != nil {
-			logger.Log.Error("Ошибка при обработке отзыва: ", err)
+			logger.Log.Warn("Ошибка при обработке отзыва: ", err)
 			continue
 		}
 
@@ -148,7 +148,7 @@ func (s *ReviewService) PostReview(authorID uuid.UUID,
 // пользователя после получения нового отзыва
 func (s *ReviewService) changeUserRating(userID uuid.UUID) error {
 
-	user, err := s.userRepo.FindByID(userID)
+	user, err := s.userRepo.FindWithRelatedReviews(userID)
 	if err != nil {
 		logger.Log.Error("Ошибка при поиске пользователя: ", err)
 		return err

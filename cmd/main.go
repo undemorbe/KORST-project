@@ -5,9 +5,14 @@ import (
 	"korst-backend/internal/handlers"
 	"korst-backend/internal/infrastructure/database"
 	"korst-backend/internal/infrastructure/logger"
+	"korst-backend/internal/infrastructure/storage"
+	messengerHandlers "korst-backend/internal/messenger/handlers"
+	messengerRepositories "korst-backend/internal/messenger/repositories"
+	messengerServices "korst-backend/internal/messenger/services"
 	"korst-backend/internal/middleware"
 	repositories "korst-backend/internal/repository"
 	"korst-backend/internal/services"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -46,7 +51,10 @@ func main() {
 	}
 	logger.Log.Info("Миграции успешно применены")
 
-	// Подключение репозиториев
+	// Подключение хранилища
+	storage := storage.NewLocalStorage(os.Getenv("BASE_PATH"))
+
+	// Подключение общих репозиториев
 	userRepo := repositories.NewUserRepository(db)
 	otpRepo := repositories.NewOTPRepository(db)
 	refreshTokenRepo := repositories.NewRefreshTokenRepository(db)
@@ -54,20 +62,31 @@ func main() {
 	profileRepo := repositories.NewProfileRepository(db)
 	reviewRepo := repositories.NewReviewRepository(db)
 
-	// Подключение сервисов
+	// Подключение общих сервисов
 	tokenService := services.NewTokenService(userRepo, refreshTokenRepo)
+	fileService := services.NewFileService(storage)
 	authService := services.NewAuthService(userRepo, refreshTokenRepo, tokenService)
 	otpService := services.NewOTPService(otpRepo, userRepo, tokenService)
-	cardService := services.NewCardService(cardRepo, userRepo)
-	userService := services.NewUserService(userRepo, profileRepo)
+	cardService := services.NewCardService(cardRepo, userRepo, fileService)
+	userService := services.NewUserService(userRepo, profileRepo, fileService)
 	reviewService := services.NewReviewService(userRepo, profileRepo, reviewRepo)
 
-	// Подключение хэндлеров
+	// Подключение общих хэндлеров
 	authHandler := handlers.NewAuthHandler(authService, tokenService)
 	otpHandler := handlers.NewOTPHandler(otpService)
 	cardHandler := handlers.NewCardHandler(cardService, tokenService)
 	userHandler := handlers.NewUserHandler(userService, tokenService)
 	reviewHandler := handlers.NewReviewHandler(reviewService, tokenService)
+
+	// Подключение модулей мессенджера
+	chatRepo := messengerRepositories.NewChatRepository(db)
+	messageRepo := messengerRepositories.NewMessageRepository(db)
+
+	chatService := messengerServices.NewChatService(userRepo, cardRepo, chatRepo)
+	messageService := messengerServices.NewMessageService(userRepo, chatRepo, messageRepo)
+
+	chatHandler := messengerHandlers.NewChatHandler(chatService, tokenService)
+	messageHandler := messengerHandlers.NewMessageHandler(messageService, tokenService)
 
 	// Регистрация маршрутов
 	api := r.Group("/api")
@@ -84,17 +103,41 @@ func main() {
 	cards := api.Group("/cards")
 	{
 		cards.POST("/save-card", cardHandler.SaveCard)
+		cards.POST("/update-card", cardHandler.UpdateCard)
+		cards.POST("/save-image", cardHandler.SaveImage)
+
 		cards.GET("/get-cards", cardHandler.GetCards)
+		cards.GET("/get-with-query", cardHandler.GetWithQuery)
 		cards.GET("/card-info", cardHandler.GetCardInfo)
 	}
 
 	user := api.Group("/user")
 	{
 		user.POST("/update", userHandler.UpdateUserInfo)
+		user.POST("/save-image", userHandler.SaveImage)
 		user.GET("/get-info", userHandler.GetUserInfo)
+		user.GET("/me", userHandler.GetMyInfo)
 
 		user.GET("/reviews", reviewHandler.GetReviews)
 		user.POST("/post-review", reviewHandler.PostReview)
+	}
+
+	messenger := api.Group("/messenger")
+	{
+		messenger.GET("/chats", chatHandler.GetChats)
+		messenger.GET("/messages", chatHandler.GetMessages)
+		messenger.POST("/create-chat", chatHandler.CreateChat)
+
+		messenger.POST("/send-message", messageHandler.SendMessage)
+		messenger.PUT("/change-message", messageHandler.ChangeMessage)
+		messenger.DELETE("/delete-message", messageHandler.DeleteMessage)
+	}
+
+	// Маршруты для получения изображений
+	uploads := r.Group("/uploads")
+	{
+		uploads.Static("/profiles", "./uploads/profiles")
+		uploads.Static("/cards", "./uploads/cards")
 	}
 
 	// Запуск сервера

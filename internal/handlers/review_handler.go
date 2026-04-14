@@ -10,6 +10,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // ReviewHandler - объект, содержащий методы для обработки
@@ -33,13 +34,20 @@ func NewReviewHandler(reviewService ports.ReviewService,
 func (h *ReviewHandler) GetReviews(c *gin.Context) {
 	var req requests.UserIDRequest
 
-	err := c.ShouldBindJSON(&req)
+	err := c.ShouldBindQuery(&req)
 	if err != nil {
 		c.Error(errors.ErrorInvalidInput)
 		return
 	}
 
-	response, err := h.reviewService.GetReviews(req.UserID)
+	userID, err := uuid.Parse(req.UserID)
+	if err != nil {
+		logger.Log.Warn("Ошибка при парсинге uuid: ", err)
+		c.Error(errors.ErrorInvalidInput)
+		return
+	}
+
+	response, err := h.reviewService.GetReviews(userID)
 
 	if err != nil {
 		c.Error(err)

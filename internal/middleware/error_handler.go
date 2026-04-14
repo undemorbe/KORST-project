@@ -26,6 +26,7 @@ func ErrorHandler() gin.HandlerFunc {
 			logger.Log.Warn("Возникла ошибка при обработке запроса: ", appErr.Code)
 
 			switch appErr.Code {
+
 			case errors.CodeInvalidInput,
 				errors.CodeInvalidPhone,
 				errors.CodeOTPExpired,
@@ -57,6 +58,14 @@ func ErrorHandler() gin.HandlerFunc {
 			case errors.CodeReviewExists:
 
 				c.JSON(http.StatusConflict, gin.H{
+					"code":    appErr.Code,
+					"message": appErr.Message,
+				})
+				return
+
+			case errors.CodeForbidden:
+
+				c.JSON(http.StatusForbidden, gin.H{
 					"code":    appErr.Code,
 					"message": appErr.Message,
 				})
