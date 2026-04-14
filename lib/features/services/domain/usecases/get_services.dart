@@ -1,4 +1,4 @@
-import '../entities/service_entity.dart';
+import '../entities/cards_page.dart';
 import '../repositories/service_repository.dart';
 
 class GetServices {
@@ -6,7 +6,7 @@ class GetServices {
 
   GetServices(this.repository);
 
-  Future<List<ServiceEntity>> call() async {
-    return await repository.getServices();
+  Future<CardsPage> call({required String? key}) async {
+    return await repository.getServices(key: key);
   }
 }

@@ -1,94 +1,134 @@
 import 'dart:convert';
+import 'package:dio/dio.dart';
+import '../../../../core/api/api_client.dart';
+import '../../../../core/api/api_constants.dart';
+import '../../../../core/api/api_error_codes.dart';
+import '../../../../core/api/api_exception.dart';
+import '../../../../core/api/token_storage.dart';
+import '../../../../core/storage/local_storage.dart';
+import '../../domain/entities/auth_user_status.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
-import '../../../../core/storage/local_storage.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
-  final LocalStorageService _localStorage;
-
-  AuthRepositoryImpl(this._localStorage);
-
-  static const String _isLoggedInKey = 'is_logged_in';
   static const String _userKey = 'user_data';
   static const String _tempPhoneKey = 'temp_phone';
 
+  final ApiClient _api;
+  final TokenStorage _tokenStorage;
+  final LocalStorageService _localStorage;
+
+  AuthRepositoryImpl(this._api, this._tokenStorage, this._localStorage);
+
   @override
   Future<bool> isLoggedIn() async {
-    return _localStorage.get(_isLoggedInKey, defaultValue: false);
+    return _tokenStorage.getAccessToken() != null &&
+        _tokenStorage.getRefreshToken() != null;
   }
 
   @override
-  Future<void> sendOtp(String phoneNumber) async {
-    await Future.delayed(const Duration(seconds: 1));
-    await _localStorage.put(_tempPhoneKey, phoneNumber);
-  }
-
-  @override
-  Future<bool> verifyOtp(String code) async {
-    await Future.delayed(const Duration(seconds: 1));
-    
-    if (code == '0000') {
-      throw Exception('Неверный код подтверждения');
+  Future<void> sendOtp(String phone) async {
+    await _localStorage.put(_tempPhoneKey, phone);
+    try {
+      await _api.post(ApiConstants.authorizeSendOtp, data: {'phone': phone});
+    } on DioException catch (e) {
+      throw _toApiException(e, fallbackMessage: 'Failed to send OTP');
     }
+  }
 
-    if (code == '1111') {
-      await _localStorage.put(_isLoggedInKey, true);
-      
-      if (_localStorage.get(_userKey) == null) {
-        final phone = _localStorage.get(_tempPhoneKey) ?? '+79990000000';
-        final user = UserEntity(
-          uid: '1234567890',
-          name: 'Иван Иванов',
-          phone: phone,
-          contacts: {
-            'email': 'ivan@example.com',
-            'telegram': '@ivan_ivanov',
-          },
-          createdCards: [],
-          bookings: {
-            'history_of_bookings_as_user': [],
-            'history_of_bookings_as_merchant': [],
-          },
-          created: DateTime(2023, 1, 1),
-          updated: DateTime(2023, 1, 1),
+  @override
+  Future<AuthUserStatus> checkUser(String phone) async {
+    try {
+      Response<dynamic> res;
+      try {
+        res = await _api.get(
+          ApiConstants.authorizeCheckUser,
+          queryParameters: {'phone': phone},
         );
-        await updateProfile(user);
+      } on DioException catch (e) {
+        final code = _extractErrorCode(e.response?.data);
+        final isInvalidInput =
+            code == ApiErrorCodes.invalidInput || e.response?.statusCode == 400;
+        if (!isInvalidInput) rethrow;
+        res = await _api.get(
+          ApiConstants.authorizeCheckUser,
+          data: {'phone': phone},
+        );
       }
-      return true;
+      final data = res.data;
+      if (data is Map) {
+        final map = Map<String, dynamic>.from(data);
+        final userId = _extractUserId(map);
+        if (userId != null) {
+          await _cacheUserId(userId: userId, phone: phone);
+        }
+        return AuthUserStatusX.fromApi(map['status'] as String?);
+      }
+      return AuthUserStatus.notFound;
+    } on DioException catch (e) {
+      throw _toApiException(
+        e,
+        fallbackMessage: 'Failed to verify user',
+      );
     }
-    
-    return false;
   }
 
   @override
-  Future<void> register(String name, String? photoUrl, String contactsStr) async {
-    await Future.delayed(const Duration(seconds: 1));
-    
-    final phone = _localStorage.get(_tempPhoneKey) ?? '';
-    final user = UserEntity(
-      uid: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: name,
-      phone: phone,
-      photoUrl: photoUrl,
-      contacts: {
-        'other': contactsStr,
-      },
-      createdCards: [],
-      bookings: {
-        'history_of_bookings_as_user': [],
-        'history_of_bookings_as_merchant': [],
-      },
-      created: DateTime.now(),
-      updated: DateTime.now(),
-    );
+  Future<AuthUserStatus> verifyOtp({
+    required String phone,
+    required String otp,
+  }) async {
+    await _localStorage.put(_tempPhoneKey, phone);
+    try {
+      final res = await _api.post(
+        ApiConstants.authorizeVerifyOtp,
+        data: {'phone': phone, 'otp': otp},
+      );
 
-    await _localStorage.put(_isLoggedInKey, true);
-    await updateProfile(user);
+      final data = res.data;
+      if (data is! Map) {
+        throw ApiException(
+          message: 'Invalid server response',
+          statusCode: res.statusCode,
+        );
+      }
+
+      final accessToken = data['access-token'];
+      final refreshToken = data['refresh-token'];
+      final statusStr = data['status'] as String?;
+      final userId = _extractUserId(Map<String, dynamic>.from(data));
+
+      if (accessToken is String && refreshToken is String) {
+        await _tokenStorage.saveTokens(
+          accessToken: accessToken,
+          refreshToken: refreshToken,
+        );
+      }
+      if (userId != null) {
+        await _tokenStorage.saveUserId(userId);
+      }
+
+      final status = AuthUserStatusX.fromApi(statusStr);
+
+      final cached = await getUserProfile();
+      final updated = (cached ?? UserEntity.empty(phone: phone)).copyWith(
+        uid: userId ?? (cached?.uid),
+        phone: phone,
+      );
+      await _localStorage.put(_userKey, json.encode(updated.toJson()));
+
+      return status;
+    } on DioException catch (e) {
+      throw _toApiException(e, fallbackMessage: 'Failed to confirm OTP');
+    }
   }
 
   @override
   Future<void> logout() async {
-    await _localStorage.put(_isLoggedInKey, false);
+    try {
+      await _api.post(ApiConstants.authorizeLogout, data: {});
+    } catch (_) {}
+    await _tokenStorage.clearTokens();
     await _localStorage.delete(_userKey);
     await _localStorage.delete(_tempPhoneKey);
   }
@@ -103,13 +143,118 @@ class AuthRepositoryImpl implements AuthRepository {
         } else if (jsonStr is Map) {
           return UserEntity.fromJson(Map<String, dynamic>.from(jsonStr));
         }
-      } catch (_) {}
+      } catch (_) {
+        return null;
+      }
     }
     return null;
   }
 
   @override
-  Future<void> updateProfile(UserEntity user) async {
+  Future<void> saveLocalProfile(UserEntity user) async {
     await _localStorage.put(_userKey, json.encode(user.toJson()));
+  }
+
+  @override
+  Future<void> updateProfile(UserEntity user) async {
+    final contacts = user.contacts;
+    final email = contacts['email'];
+    final telegram = contacts['telegram'];
+    final others = contacts['others'] ?? contacts['other'];
+    Map<String, dynamic>? othersMap;
+    if (others is Map && others.isNotEmpty) {
+      final raw = Map<String, dynamic>.from(others);
+      othersMap = raw.map(
+        (k, v) => MapEntry(k.toString(), v?.toString() ?? ''),
+      );
+      othersMap.removeWhere((key, value) => value.trim().isEmpty);
+    } else if (others is String) {
+      final s = others.trim();
+      if (s.isNotEmpty) {
+        othersMap = {'other': s};
+      }
+    }
+
+    final Map<String, dynamic> request = {
+      'name': _nullIfEmpty(user.name),
+      'surname': _nullIfEmpty(user.surname),
+      'description': _nullIfEmpty(user.description),
+      'contacts': {
+        'email': _nullIfEmpty(email is String ? email : null),
+        'telegram': _nullIfEmpty(telegram is String ? telegram : null),
+        'others': othersMap ?? <String, dynamic>{},
+      },
+    };
+
+    try {
+      await _api.post(ApiConstants.userUpdate, data: request);
+      await _localStorage.put(_userKey, json.encode(user.toJson()));
+    } on DioException catch (e) {
+      throw _toApiException(e, fallbackMessage: 'Failed to update profile');
+    }
+  }
+
+  static String? _nullIfEmpty(String? v) {
+    if (v == null) return null;
+    final s = v.trim();
+    return s.isEmpty ? null : s;
+  }
+
+  static String? _extractUserId(Map<String, dynamic> data) {
+    final candidates = [
+      data['user-id'],
+      data['user_id'],
+      data['userId'],
+      data['id'],
+      data['uid'],
+    ];
+    for (final value in candidates) {
+      if (value is String && value.trim().isNotEmpty) return value.trim();
+    }
+    return null;
+  }
+
+  Future<void> _cacheUserId({
+    required String userId,
+    required String phone,
+  }) async {
+    await _tokenStorage.saveUserId(userId);
+    final cached = await getUserProfile();
+    final updated = (cached ?? UserEntity.empty(phone: phone)).copyWith(
+      uid: userId,
+      phone: phone,
+    );
+    await _localStorage.put(_userKey, json.encode(updated.toJson()));
+  }
+
+  static ApiException _toApiException(
+    DioException e, {
+    required String fallbackMessage,
+  }) {
+    final res = e.response;
+    final data = res?.data;
+    String? code;
+    String message = fallbackMessage;
+
+    if (data is Map) {
+      final c = data['code'];
+      if (c is String) code = c;
+      final m = data['message'];
+      if (m is String && m.trim().isNotEmpty) message = m;
+    }
+
+    return ApiException(
+      message: message,
+      code: code,
+      statusCode: res?.statusCode,
+    );
+  }
+
+  static String? _extractErrorCode(dynamic data) {
+    if (data is Map) {
+      final v = data['code'];
+      return v is String ? v : null;
+    }
+    return null;
   }
 }

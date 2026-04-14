@@ -1,6 +1,1 @@
-enum ServiceCategory {
-  cleaning,
-  repair,
-  consulting,
-  other
-}
+enum ServiceCategory { cleaning, repair, consulting, other }

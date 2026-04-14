@@ -3,6 +3,7 @@ name: Flutter CI
 on:
   push:
     branches: [ "main", "frontend", "frontend-dev" ]
+    tags: [ "v*" ]
   pull_request:
     branches: [ "main", "frontend", "frontend-dev" ]
 
@@ -19,6 +20,38 @@ jobs:
         channel: 'stable'
         cache: true
 
+    - name: Prepare .env for PR
+      if: github.event_name == 'pull_request'
+      run: cp .env.example .env
+
+    - name: Prepare .env for push (from secrets)
+      if: github.event_name == 'push'
+      shell: bash
+      run: |
+        if [ -n "${{ secrets.DOTENV_BASE64 }}" ]; then
+          if echo "${{ secrets.DOTENV_BASE64 }}" | base64 -d > .env 2>/dev/null; then
+            echo "Decoded .env from DOTENV_BASE64"
+            exit 0
+          else
+            echo "DOTENV_BASE64 provided but base64 decode failed; trying DOTENV plain secret..."
+            if [ -n "${{ secrets.DOTENV }}" ]; then
+              printf "%s" "${{ secrets.DOTENV }}" > .env
+              echo "Wrote .env from DOTENV"
+              exit 0
+            else
+              echo "Invalid DOTENV_BASE64 and DOTENV not provided" >&2
+              exit 1
+            fi
+          fi
+        elif [ -n "${{ secrets.DOTENV }}" ]; then
+          printf "%s" "${{ secrets.DOTENV }}" > .env
+          echo "Wrote .env from DOTENV"
+          exit 0
+        else
+          echo "Missing DOTENV_BASE64 or DOTENV secret" >&2
+          exit 1
+        fi
+
     - name: Get dependencies
       run: flutter pub get
 
@@ -27,3 +60,21 @@ jobs:
 
     - name: Run tests
       run: flutter test
+
+    - name: Build release APK
+      if: github.event_name == 'push'
+      run: flutter build apk --release
+
+    - name: Upload APK artifact
+      if: github.event_name == 'push'
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-release-apk
+        path: build/app/outputs/flutter-apk/app-release.apk
+        if-no-files-found: error
+
+    - name: Publish APK to GitHub Release
+      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v2
+      with:
+        files: build/app/outputs/flutter-apk/app-release.apk

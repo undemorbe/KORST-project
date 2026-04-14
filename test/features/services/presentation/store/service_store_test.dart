@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:korst/features/services/domain/entities/cards_page.dart';
 import 'package:korst/features/services/domain/entities/review_entity.dart';
 import 'package:korst/features/services/domain/entities/service_category.dart';
 import 'package:korst/features/services/domain/entities/service_entity.dart';
@@ -70,7 +71,8 @@ void main() {
     });
 
     test('loadServices success', () async {
-      when(() => mockServiceRepository.getServices()).thenAnswer((_) async => testServices);
+      when(() => mockServiceRepository.getServices(key: any(named: 'key')))
+          .thenAnswer((_) async => CardsPage(cards: testServices, nextKey: null));
 
       await store.loadServices();
 
@@ -80,7 +82,7 @@ void main() {
     });
 
     test('loadServices failure', () async {
-      when(() => mockServiceRepository.getServices()).thenAnswer((_) async {
+      when(() => mockServiceRepository.getServices(key: any(named: 'key'))).thenAnswer((_) async {
         await Future.delayed(const Duration(milliseconds: 10));
         throw Exception('Error loading');
       });
@@ -94,17 +96,18 @@ void main() {
 
     test('createService success', () async {
       final newService = testServices[0];
-      when(() => mockServiceRepository.createService(any())).thenAnswer((_) async {});
-      when(() => mockServiceRepository.getServices()).thenAnswer((_) async => [newService]);
+      when(() => mockServiceRepository.createService(any())).thenAnswer((_) async => '123');
+      when(() => mockServiceRepository.getServices(key: any(named: 'key')))
+          .thenAnswer((_) async => CardsPage(cards: [newService], nextKey: null));
 
       await store.createService(newService);
 
+      expect(store.errorMessage, null, reason: 'Error was: ${store.errorMessage}');
       expect(store.services.length, 1);
       expect(store.services.first, newService);
       expect(store.isLoading, false);
-      expect(store.errorMessage, null);
       verify(() => mockServiceRepository.createService(any())).called(1);
-      verify(() => mockServiceRepository.getServices()).called(1);
+      verify(() => mockServiceRepository.getServices(key: any(named: 'key'))).called(1);
     });
 
     test('addReview success', () async {
@@ -116,14 +119,15 @@ void main() {
         updated: DateTime.now(),
       );
       when(() => mockServiceRepository.addReview(any(), any())).thenAnswer((_) async {});
-      when(() => mockServiceRepository.getServices()).thenAnswer((_) async => testServices);
+      when(() => mockServiceRepository.getServices(key: any(named: 'key')))
+          .thenAnswer((_) async => CardsPage(cards: testServices, nextKey: null));
 
       await store.addReview('1', review);
 
       expect(store.isLoading, false);
       expect(store.errorMessage, null);
       verify(() => mockServiceRepository.addReview('1', any())).called(1);
-      verify(() => mockServiceRepository.getServices()).called(1);
+      verify(() => mockServiceRepository.getServices(key: any(named: 'key'))).called(1);
     });
 
     test('filtering works correctly', () async {

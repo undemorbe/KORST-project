@@ -89,12 +89,36 @@ mixin _$AuthStore on _AuthStore, Store {
     });
   }
 
+  late final _$userStatusAtom =
+      Atom(name: '_AuthStore.userStatus', context: context);
+
+  @override
+  AuthUserStatus? get userStatus {
+    _$userStatusAtom.reportRead();
+    return super.userStatus;
+  }
+
+  @override
+  set userStatus(AuthUserStatus? value) {
+    _$userStatusAtom.reportWrite(value, super.userStatus, () {
+      super.userStatus = value;
+    });
+  }
+
   late final _$checkLoginStatusAsyncAction =
       AsyncAction('_AuthStore.checkLoginStatus', context: context);
 
   @override
   Future<void> checkLoginStatus() {
     return _$checkLoginStatusAsyncAction.run(() => super.checkLoginStatus());
+  }
+
+  late final _$bootstrapAsyncAction =
+      AsyncAction('_AuthStore.bootstrap', context: context);
+
+  @override
+  Future<void> bootstrap() {
+    return _$bootstrapAsyncAction.run(() => super.bootstrap());
   }
 
   late final _$sendOtpAsyncAction =
@@ -109,8 +133,8 @@ mixin _$AuthStore on _AuthStore, Store {
       AsyncAction('_AuthStore.verifyOtp', context: context);
 
   @override
-  Future<bool> verifyOtp(String code) {
-    return _$verifyOtpAsyncAction.run(() => super.verifyOtp(code));
+  Future<AuthUserStatus?> verifyOtp(String otp) {
+    return _$verifyOtpAsyncAction.run(() => super.verifyOtp(otp));
   }
 
   late final _$registerAsyncAction =
@@ -130,6 +154,15 @@ mixin _$AuthStore on _AuthStore, Store {
     return _$updateProfileAsyncAction.run(() => super.updateProfile(user));
   }
 
+  late final _$updateLocalProfileAsyncAction =
+      AsyncAction('_AuthStore.updateLocalProfile', context: context);
+
+  @override
+  Future<void> updateLocalProfile(UserEntity user) {
+    return _$updateLocalProfileAsyncAction
+        .run(() => super.updateLocalProfile(user));
+  }
+
   late final _$logoutAsyncAction =
       AsyncAction('_AuthStore.logout', context: context);
 
@@ -145,7 +178,8 @@ isLoading: ${isLoading},
 isLoggedIn: ${isLoggedIn},
 userProfile: ${userProfile},
 errorMessage: ${errorMessage},
-phoneNumber: ${phoneNumber}
+phoneNumber: ${phoneNumber},
+userStatus: ${userStatus}
     ''';
   }
 }

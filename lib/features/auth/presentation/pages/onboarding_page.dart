@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:korst/l10n/generated/app_localizations.dart';
 
 class OnboardingPage extends StatelessWidget {
   const OnboardingPage({super.key});
@@ -22,19 +23,19 @@ class OnboardingPage extends StatelessWidget {
               ),
               const SizedBox(height: 32),
               Text(
-                'Добро пожаловать в Korst',
+                AppLocalizations.of(context)!.welcomeToKorst,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 16),
               Text(
-                'Найдите лучшие услуги красоты и здоровья рядом с вами',
+                AppLocalizations.of(context)!.findServicesNearby,
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Colors.grey,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyLarge?.copyWith(color: Colors.grey),
               ),
               const Spacer(),
               ElevatedButton(
@@ -47,8 +48,8 @@ class OnboardingPage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
-                  'Начать',
+                child: Text(
+                  AppLocalizations.of(context)!.start,
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
