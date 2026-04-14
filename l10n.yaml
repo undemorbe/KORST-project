@@ -3,3 +3,15 @@ template-arb-file: app_en.arb
 output-localization-file: app_localizations.dart
 synthetic-package: false
 output-dir: lib/l10n/generated
+preferred-supported-locales:
+  - en
+  - ru
+  - es
+  - de
+  - zh
+supported-locales:
+  - en
+  - ru
+  - es
+  - de
+  - zh

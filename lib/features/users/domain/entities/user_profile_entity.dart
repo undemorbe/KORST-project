@@ -6,6 +6,7 @@ class UserProfileEntity {
   final String name;
   final String? surname;
   final String phone;
+  final String? photoUrl;
   final String? description;
   final double rating;
   final Map<String, dynamic> contacts;
@@ -19,6 +20,7 @@ class UserProfileEntity {
     required this.name,
     this.surname,
     required this.phone,
+    this.photoUrl,
     this.description,
     required this.rating,
     required this.contacts,

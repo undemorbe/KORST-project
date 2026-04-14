@@ -2,11 +2,13 @@ class ReviewAuthorEntity {
   final String name;
   final String? surname;
   final double rating;
+  final String? photoUrl;
 
   ReviewAuthorEntity({
     required this.name,
     this.surname,
     required this.rating,
+    this.photoUrl,
   });
 }
 

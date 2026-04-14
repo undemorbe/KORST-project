@@ -145,6 +145,70 @@ mixin _$ServiceStore on _ServiceStore, Store {
     });
   }
 
+  late final _$minPriceAtom =
+      Atom(name: '_ServiceStore.minPrice', context: context);
+
+  @override
+  double? get minPrice {
+    _$minPriceAtom.reportRead();
+    return super.minPrice;
+  }
+
+  @override
+  set minPrice(double? value) {
+    _$minPriceAtom.reportWrite(value, super.minPrice, () {
+      super.minPrice = value;
+    });
+  }
+
+  late final _$maxPriceAtom =
+      Atom(name: '_ServiceStore.maxPrice', context: context);
+
+  @override
+  double? get maxPrice {
+    _$maxPriceAtom.reportRead();
+    return super.maxPrice;
+  }
+
+  @override
+  set maxPrice(double? value) {
+    _$maxPriceAtom.reportWrite(value, super.maxPrice, () {
+      super.maxPrice = value;
+    });
+  }
+
+  late final _$minRatingAtom =
+      Atom(name: '_ServiceStore.minRating', context: context);
+
+  @override
+  double? get minRating {
+    _$minRatingAtom.reportRead();
+    return super.minRating;
+  }
+
+  @override
+  set minRating(double? value) {
+    _$minRatingAtom.reportWrite(value, super.minRating, () {
+      super.minRating = value;
+    });
+  }
+
+  late final _$sortByAtom =
+      Atom(name: '_ServiceStore.sortBy', context: context);
+
+  @override
+  SortOption get sortBy {
+    _$sortByAtom.reportRead();
+    return super.sortBy;
+  }
+
+  @override
+  set sortBy(SortOption value) {
+    _$sortByAtom.reportWrite(value, super.sortBy, () {
+      super.sortBy = value;
+    });
+  }
+
   late final _$loadServicesAsyncAction =
       AsyncAction('_ServiceStore.loadServices', context: context);
 
@@ -165,8 +229,17 @@ mixin _$ServiceStore on _ServiceStore, Store {
       AsyncAction('_ServiceStore.createService', context: context);
 
   @override
-  Future<void> createService(ServiceEntity service) {
+  Future<String?> createService(ServiceEntity service) {
     return _$createServiceAsyncAction.run(() => super.createService(service));
+  }
+
+  late final _$uploadCardImageAsyncAction =
+      AsyncAction('_ServiceStore.uploadCardImage', context: context);
+
+  @override
+  Future<void> uploadCardImage(String cardId, String filePath) {
+    return _$uploadCardImageAsyncAction
+        .run(() => super.uploadCardImage(cardId, filePath));
   }
 
   late final _$updateServiceAsyncAction =
@@ -220,6 +293,25 @@ mixin _$ServiceStore on _ServiceStore, Store {
   }
 
   @override
+  void setFilters(
+      {double? minPrice,
+      double? maxPrice,
+      double? minRating,
+      SortOption? sortBy}) {
+    final _$actionInfo = _$_ServiceStoreActionController.startAction(
+        name: '_ServiceStore.setFilters');
+    try {
+      return super.setFilters(
+          minPrice: minPrice,
+          maxPrice: maxPrice,
+          minRating: minRating,
+          sortBy: sortBy);
+    } finally {
+      _$_ServiceStoreActionController.endAction(_$actionInfo);
+    }
+  }
+
+  @override
   String toString() {
     return '''
 services: ${services},
@@ -230,6 +322,10 @@ searchQuery: ${searchQuery},
 selectedCategory: ${selectedCategory},
 nextKey: ${nextKey},
 hasMore: ${hasMore},
+minPrice: ${minPrice},
+maxPrice: ${maxPrice},
+minRating: ${minRating},
+sortBy: ${sortBy},
 filteredServices: ${filteredServices}
     ''';
   }

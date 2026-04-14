@@ -58,4 +58,3 @@ class _AuthGatePageState extends State<AuthGatePage> {
     );
   }
 }
-

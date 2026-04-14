@@ -1,9 +1,4 @@
-enum AuthUserStatus {
-  notFound,
-  notRegistered,
-  user,
-  admin,
-}
+enum AuthUserStatus { notFound, notRegistered, user, admin }
 
 extension AuthUserStatusX on AuthUserStatus {
   static AuthUserStatus fromApi(String? value) {
@@ -22,4 +17,3 @@ extension AuthUserStatusX on AuthUserStatus {
     }
   }
 }
-

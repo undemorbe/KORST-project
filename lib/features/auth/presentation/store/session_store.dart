@@ -43,4 +43,3 @@ class SessionStore {
     _isHandling = false;
   }
 }
-

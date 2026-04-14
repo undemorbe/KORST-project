@@ -9,7 +9,8 @@ class ServiceEntity {
   final double price;
   final String currency;
   final String type;
-  final UserEntity? author; // Nullable to break circular dependency during serialization/deserialization if needed
+  final UserEntity?
+  author; // Nullable to break circular dependency during serialization/deserialization if needed
   final int timesBooked;
   final double rating;
   final List<ReviewEntity> reviews;
@@ -48,18 +49,31 @@ class ServiceEntity {
       price: (json['price'] as num).toDouble(),
       currency: json['currency'] as String? ?? 'RUB',
       type: json['type'] as String? ?? 'service',
-      author: json['author'] != null ? UserEntity.fromJson(json['author']) : null,
+      author: json['author'] != null
+          ? UserEntity.fromJson(json['author'])
+          : null,
       timesBooked: json['times_booked'] as int? ?? 0,
       rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
-      reviews: (json['reviews'] as List<dynamic>?)
+      reviews:
+          (json['reviews'] as List<dynamic>?)
               ?.map((e) => ReviewEntity.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
-      tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
-      created: json['created'] != null ? DateTime.parse(json['created']) : DateTime.now(),
-      updated: json['updated'] != null ? DateTime.parse(json['updated']) : DateTime.now(),
-      category: ServiceCategory.other, // Default or map from type/tags
-      imageUrl: 'https://placehold.co/600x400', // Placeholder
+      tags:
+          (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+          [],
+      created: json['created'] != null
+          ? DateTime.parse(json['created'])
+          : DateTime.now(),
+      updated: json['updated'] != null
+          ? DateTime.parse(json['updated'])
+          : DateTime.now(),
+      category: json['category'] != null
+          ? ServiceCategory.values.firstWhere(
+              (e) => e.toString().split('.').last == json['category'],
+              orElse: () => ServiceCategory.other)
+          : ServiceCategory.other,
+      imageUrl: json['image-url'] as String? ?? json['imageUrl'] as String? ?? 'https://placehold.co/600x400',
     );
   }
 
@@ -78,6 +92,8 @@ class ServiceEntity {
       'tags': tags,
       'created': created.toIso8601String(),
       'updated': updated.toIso8601String(),
+      'category': category.toString().split('.').last,
+      'image-url': imageUrl,
     };
   }
 }

@@ -96,16 +96,16 @@ void main() {
 
     test('createService success', () async {
       final newService = testServices[0];
-      when(() => mockServiceRepository.createService(any())).thenAnswer((_) async {});
+      when(() => mockServiceRepository.createService(any())).thenAnswer((_) async => '123');
       when(() => mockServiceRepository.getServices(key: any(named: 'key')))
           .thenAnswer((_) async => CardsPage(cards: [newService], nextKey: null));
 
       await store.createService(newService);
 
+      expect(store.errorMessage, null, reason: 'Error was: ${store.errorMessage}');
       expect(store.services.length, 1);
       expect(store.services.first, newService);
       expect(store.isLoading, false);
-      expect(store.errorMessage, null);
       verify(() => mockServiceRepository.createService(any())).called(1);
       verify(() => mockServiceRepository.getServices(key: any(named: 'key'))).called(1);
     });

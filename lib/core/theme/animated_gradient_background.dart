@@ -39,10 +39,10 @@ class _AnimatedGradientBackgroundState extends State<AnimatedGradientBackground>
       begin: Alignment(-1.0 + drift, -1.0),
       end: Alignment(1.0 - drift, 1.0),
       colors: const [
-        Color(0xFFFFFFFF),
-        Color(0xFFF3F3F3),
-        Color(0xFFDADDE3),
-        Color(0xFFB3B9C5),
+        Color(0xFFF8FAFC),
+        Color(0xFFEEF2FF),
+        Color(0xFFE0E7FF),
+        Color(0xFFF3E8FF),
       ],
       stops: [
         0.0,
@@ -54,20 +54,20 @@ class _AnimatedGradientBackgroundState extends State<AnimatedGradientBackground>
   }
 
   LinearGradient _buildDarkGradient(double t) {
-    final drift = math.cos(t * math.pi * 2) * 0.18;
+    final drift = math.cos(t * math.pi * 2) * 0.15;
     return LinearGradient(
       begin: Alignment(-1.0, -0.9 + drift),
       end: Alignment(1.0, 0.9 - drift),
       colors: const [
-        Color(0xFF2A2E35),
-        Color(0xFF1E222A),
-        Color(0xFF12161E),
-        Color(0xFF06080C),
+        Color(0xFF020617), // Slate 950
+        Color(0xFF0F172A), // Slate 900
+        Color(0xFF1E1B4B), // Indigo 950
+        Color(0xFF020617), // Slate 950
       ],
       stops: [
         0.0,
-        0.36 + drift * 0.16,
-        0.74 + drift * 0.06,
+        0.4 + drift * 0.1,
+        0.7 + drift * 0.05,
         1.0,
       ],
     );

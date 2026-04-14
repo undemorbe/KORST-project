@@ -7,6 +7,8 @@ import '../../domain/repositories/service_repository.dart';
 
 part 'service_store.g.dart';
 
+enum SortOption { newest, priceAsc, priceDesc, rating }
+
 // ignore: library_private_types_in_public_api
 class ServiceStore = _ServiceStore with _$ServiceStore;
 
@@ -39,17 +41,52 @@ abstract class _ServiceStore with Store {
   @observable
   bool hasMore = true;
 
+  @observable
+  double? minPrice;
+
+  @observable
+  double? maxPrice;
+
+  @observable
+  double? minRating;
+
+  @observable
+  SortOption sortBy = SortOption.newest;
+
   @computed
   List<ServiceEntity> get filteredServices {
-    return services.where((service) {
-      final matchesSearch = service.title.toLowerCase().contains(searchQuery.toLowerCase());
-      final matchesCategory = selectedCategory == null || service.category == selectedCategory;
-      return matchesSearch && matchesCategory;
+    var result = services.where((service) {
+      final matchesSearch = service.title.toLowerCase().contains(
+        searchQuery.toLowerCase(),
+      );
+      final matchesCategory =
+          selectedCategory == null || service.category == selectedCategory;
+      final matchesMinPrice = minPrice == null || service.price >= minPrice!;
+      final matchesMaxPrice = maxPrice == null || service.price <= maxPrice!;
+      final matchesMinRating = minRating == null || service.rating >= minRating!;
+      return matchesSearch && matchesCategory && matchesMinPrice && matchesMaxPrice && matchesMinRating;
     }).toList();
+
+    switch (sortBy) {
+      case SortOption.priceAsc:
+        result.sort((a, b) => a.price.compareTo(b.price));
+        break;
+      case SortOption.priceDesc:
+        result.sort((a, b) => b.price.compareTo(a.price));
+        break;
+      case SortOption.rating:
+        result.sort((a, b) => b.rating.compareTo(a.rating));
+        break;
+      case SortOption.newest:
+        result.sort((a, b) => b.created.compareTo(a.created));
+        break;
+    }
+    return result;
   }
 
   @action
   Future<void> loadServices() async {
+    if (isLoading) return; // Prevent multiple simultaneous requests
     isLoading = true;
     errorMessage = null;
     try {
@@ -72,7 +109,9 @@ abstract class _ServiceStore with Store {
     try {
       final CardsPage page = await _serviceRepository.getServices(key: nextKey);
       final existingIds = services.map((e) => e.id).toSet();
-      final newItems = page.cards.where((c) => !existingIds.contains(c.id)).toList();
+      final newItems = page.cards
+          .where((c) => !existingIds.contains(c.id))
+          .toList();
       services.addAll(newItems);
       nextKey = page.nextKey;
       hasMore = page.nextKey != null && page.cards.isNotEmpty;
@@ -84,11 +123,44 @@ abstract class _ServiceStore with Store {
   }
 
   @action
-  Future<void> createService(ServiceEntity service) async {
+  Future<String?> createService(ServiceEntity service) async {
     isLoading = true;
     errorMessage = null;
     try {
-      await _serviceRepository.createService(service);
+      final cardId = await _serviceRepository.createService(service);
+      isLoading = false;
+      await loadServices();
+      if (cardId != null) return cardId;
+
+      // Try to find the newly created service if the backend didn't return an ID
+      final matchingServices = services
+          .where(
+            (s) =>
+                s.title == service.title &&
+                s.price == service.price,
+          )
+          .toList();
+
+      if (matchingServices.isNotEmpty) {
+        // Assume the latest created is the first or last depending on sort, but let's take the first one
+        return matchingServices.first.id;
+      }
+      return null;
+    } catch (e) {
+      errorMessage = e.toString();
+      return null;
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  @action
+  Future<void> uploadCardImage(String cardId, String filePath) async {
+    isLoading = true;
+    errorMessage = null;
+    try {
+      await _serviceRepository.uploadCardImage(cardId, filePath);
+      isLoading = false;
       await loadServices();
     } catch (e) {
       errorMessage = e.toString();
@@ -103,6 +175,7 @@ abstract class _ServiceStore with Store {
     errorMessage = null;
     try {
       await _serviceRepository.updateService(service);
+      isLoading = false;
       await loadServices();
     } catch (e) {
       errorMessage = e.toString();
@@ -117,6 +190,7 @@ abstract class _ServiceStore with Store {
     errorMessage = null;
     try {
       await _serviceRepository.addReview(serviceId, review);
+      isLoading = false;
       await loadServices();
     } catch (e) {
       errorMessage = e.toString();
@@ -127,6 +201,7 @@ abstract class _ServiceStore with Store {
 
   @action
   Future<void> loadServiceDetails(String id) async {
+    if (isLoading) return; // Prevent multiple simultaneous requests
     isLoading = true;
     errorMessage = null;
     try {
@@ -152,5 +227,18 @@ abstract class _ServiceStore with Store {
   @action
   void setCategory(ServiceCategory? category) {
     selectedCategory = category;
+  }
+
+  @action
+  void setFilters({
+    double? minPrice,
+    double? maxPrice,
+    double? minRating,
+    SortOption? sortBy,
+  }) {
+    this.minPrice = minPrice;
+    this.maxPrice = maxPrice;
+    this.minRating = minRating;
+    if (sortBy != null) this.sortBy = sortBy;
   }
 }

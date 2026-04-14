@@ -154,6 +154,15 @@ mixin _$AuthStore on _AuthStore, Store {
     return _$updateProfileAsyncAction.run(() => super.updateProfile(user));
   }
 
+  late final _$updateLocalProfileAsyncAction =
+      AsyncAction('_AuthStore.updateLocalProfile', context: context);
+
+  @override
+  Future<void> updateLocalProfile(UserEntity user) {
+    return _$updateLocalProfileAsyncAction
+        .run(() => super.updateLocalProfile(user));
+  }
+
   late final _$logoutAsyncAction =
       AsyncAction('_AuthStore.logout', context: context);
 

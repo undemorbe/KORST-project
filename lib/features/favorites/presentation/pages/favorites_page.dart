@@ -1,3 +1,4 @@
+import 'package:korst/core/widgets/glass.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:go_router/go_router.dart';
@@ -17,10 +18,8 @@ class FavoritesPage extends StatelessWidget {
     final favoritesStore = sl<FavoritesStore>();
     final serviceStore = sl<ServiceStore>();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.favoritesTitle),
-      ),
+    return Scaffold(extendBodyBehindAppBar: true, extendBody: true,
+      appBar: GlassAppBar(title: Text(l10n.favoritesTitle)),
       body: Observer(
         builder: (_) {
           if (serviceStore.services.isEmpty && !serviceStore.isLoading) {
@@ -36,21 +35,29 @@ class FavoritesPage extends StatelessWidget {
               .toList();
 
           if (favoriteServices.isEmpty) {
-            return Center(
-              child: Text(l10n.noFavorites),
-            );
+            return Center(child: Text(l10n.noFavorites));
           }
 
           return ListView.builder(
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top + kToolbarHeight + 16,
+              bottom: MediaQuery.of(context).padding.bottom + 100,
+            ),
             itemCount: favoriteServices.length,
             itemBuilder: (context, index) {
               final service = favoriteServices[index];
+              final heroTag = 'service-image-${service.id}-fav-$index';
               return ServiceCard(
                 service: service,
+                heroTag: heroTag,
                 isFavorite: true,
-                onFavoriteToggle: () => favoritesStore.toggleFavorite(service.id),
+                onFavoriteToggle: () =>
+                    favoritesStore.toggleFavorite(service.id),
                 onTap: () {
-                  context.push('/service-details', extra: service);
+                  context.push(
+                    '/service-details',
+                    extra: {'service': service, 'heroTag': heroTag},
+                  );
                 },
               );
             },

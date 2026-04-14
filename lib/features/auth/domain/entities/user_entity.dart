@@ -74,20 +74,29 @@ class UserEntity {
 
   factory UserEntity.fromJson(Map<String, dynamic> json) {
     return UserEntity(
-      uid: (json['uid'] as String?) ?? (json['id'] as String?) ?? (json['phone'] as String?) ?? '',
+      uid:
+          (json['uid'] as String?) ??
+          (json['id'] as String?) ??
+          (json['phone'] as String?) ??
+          '',
       name: (json['name'] as String?) ?? '',
       surname: json['surname'] as String?,
       description: json['description'] as String?,
       phone: (json['phone'] as String?) ?? '',
       photoUrl: json['photo_url'] as String?,
       contacts: Map<String, dynamic>.from(json['contacts'] ?? {}),
-      createdCards: (json['created_cards'] as List<dynamic>?)
+      createdCards:
+          (json['created_cards'] as List<dynamic>?)
               ?.map((e) => ServiceEntity.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
       bookings: Map<String, List<dynamic>>.from(json['bookings'] ?? {}),
-      created: json['created'] is String ? DateTime.parse(json['created'] as String) : DateTime.now(),
-      updated: json['updated'] is String ? DateTime.parse(json['updated'] as String) : DateTime.now(),
+      created: json['created'] is String
+          ? DateTime.parse(json['created'] as String)
+          : DateTime.now(),
+      updated: json['updated'] is String
+          ? DateTime.parse(json['updated'] as String)
+          : DateTime.now(),
     );
   }
 
