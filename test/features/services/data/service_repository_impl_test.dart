@@ -246,7 +246,8 @@ void main() {
 
       final page = await repo.getServices(key: null);
 
-      expect(page.cards.first.imageUrl, 'http://example.com/service1.jpg');
+      // Image URL should include cache-busting query parameter
+      expect(page.cards.first.imageUrl, startsWith('http://example.com/service1.jpg?v='));
     });
 
     test('getService parses image-url from card-info response', () async {
@@ -272,7 +273,8 @@ void main() {
 
       final service = await repo.getService('c1');
 
-      expect(service.imageUrl, 'http://example.com/detail.jpg');
+      // Image URL should include cache-busting query parameter
+      expect(service.imageUrl, startsWith('http://example.com/detail.jpg?v='));
     });
   });
 }
