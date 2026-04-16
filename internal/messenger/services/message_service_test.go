@@ -8,6 +8,7 @@ import (
 	messengerEntities "korst-backend/internal/messenger/entities"
 	messengerMocks "korst-backend/internal/messenger/mocks"
 	mockRepositories "korst-backend/internal/mocks/repositories"
+	mockServices "korst-backend/internal/mocks/services"
 	"testing"
 
 	"github.com/google/uuid"
@@ -21,8 +22,10 @@ func TestSendMessage(t *testing.T) {
 	mockUserRepo := &mockRepositories.MockUserRepo{}
 	mockChatRepo := &messengerMocks.MockChatRepo{}
 	mockMessageRepo := &messengerMocks.MockMessageRepo{}
+	mockFileService := &mockServices.MockFileService{}
 
-	MessageService := NewMessageService(mockUserRepo, mockChatRepo, mockMessageRepo)
+	MessageService := NewMessageService(mockUserRepo,
+		mockChatRepo, mockMessageRepo, mockFileService)
 
 	authorID := uuid.New()
 	chatID := uuid.New()
@@ -56,8 +59,10 @@ func TestChangeMessage(t *testing.T) {
 	mockUserRepo := &mockRepositories.MockUserRepo{}
 	mockChatRepo := &messengerMocks.MockChatRepo{}
 	mockMessageRepo := &messengerMocks.MockMessageRepo{}
+	mockFileService := &mockServices.MockFileService{}
 
-	MessageService := NewMessageService(mockUserRepo, mockChatRepo, mockMessageRepo)
+	MessageService := NewMessageService(mockUserRepo,
+		mockChatRepo, mockMessageRepo, mockFileService)
 
 	authorID := uuid.New()
 	messageID := uuid.New()
@@ -91,8 +96,10 @@ func TestDeleteMessage(t *testing.T) {
 	mockUserRepo := &mockRepositories.MockUserRepo{}
 	mockChatRepo := &messengerMocks.MockChatRepo{}
 	mockMessageRepo := &messengerMocks.MockMessageRepo{}
+	mockFileService := &mockServices.MockFileService{}
 
-	MessageService := NewMessageService(mockUserRepo, mockChatRepo, mockMessageRepo)
+	MessageService := NewMessageService(mockUserRepo,
+		mockChatRepo, mockMessageRepo, mockFileService)
 
 	authorID := uuid.New()
 	messageID := uuid.New()

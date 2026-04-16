@@ -83,7 +83,7 @@ func main() {
 	messageRepo := messengerRepositories.NewMessageRepository(db)
 
 	chatService := messengerServices.NewChatService(userRepo, cardRepo, chatRepo)
-	messageService := messengerServices.NewMessageService(userRepo, chatRepo, messageRepo)
+	messageService := messengerServices.NewMessageService(userRepo, chatRepo, messageRepo, fileService)
 
 	chatHandler := messengerHandlers.NewChatHandler(chatService, tokenService)
 	messageHandler := messengerHandlers.NewMessageHandler(messageService, tokenService)

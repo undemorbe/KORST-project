@@ -112,4 +112,9 @@ type FileService interface {
 	// хранилище и возвращает ссылку на него
 	SaveCardImage(file io.Reader,
 		fileName string, cardID uuid.UUID) (string, error)
+
+	// SaveMessageImage сохраняет изображение для сообщения
+	// в хранилище и возвращает ссылку на него
+	SaveMessageImage(file io.Reader,
+		fileName string, messageID uuid.UUID) (string, error)
 }

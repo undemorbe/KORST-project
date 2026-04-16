@@ -3,6 +3,7 @@
 package services
 
 import (
+	"io"
 	"korst-backend/internal/errors"
 	"korst-backend/internal/infrastructure/logger"
 	"korst-backend/internal/messenger/entities"
@@ -18,16 +19,19 @@ type MessageService struct {
 	userRepo    ports.UserRepository
 	chatRepo    messengerPorts.ChatRepository
 	messageRepo messengerPorts.MessageRepository
+	fileService ports.FileService
 }
 
 // NewMessageService создает и возращает новый объект MessageService
 func NewMessageService(userRepo ports.UserRepository,
 	chatRepo messengerPorts.ChatRepository,
-	messageRepo messengerPorts.MessageRepository) messengerPorts.MessageService {
+	messageRepo messengerPorts.MessageRepository,
+	fileService ports.FileService) messengerPorts.MessageService {
 	return &MessageService{
 		userRepo:    userRepo,
 		chatRepo:    chatRepo,
 		messageRepo: messageRepo,
+		fileService: fileService,
 	}
 }
 
@@ -35,6 +39,45 @@ func NewMessageService(userRepo ports.UserRepository,
 // и отправляет его к другому пользователю
 func (s *MessageService) SendMessage(authorID uuid.UUID,
 	chatID uuid.UUID, text string) error {
+
+	err := s.saveMessage(authorID, chatID, text, nil)
+	if err != nil {
+		logger.Log.Error("Ошибка при сохранении сообщения в чате: ", err)
+		return err
+	}
+
+	// TODO: добавить отправку сообщения по web-socket
+
+	return nil
+}
+
+// SendImage сохраняет изображение для определенного
+// чата и отправляет сообщение с ним другому пользователю
+func (s *MessageService) SendImage(authorID uuid.UUID, chatID uuid.UUID,
+	text string, file io.Reader, fileName string) error {
+
+	messageID := uuid.New()
+
+	url, err := s.fileService.SaveMessageImage(file, fileName, messageID)
+	if err != nil {
+		logger.Log.Error("Ошибка при сохранении изображения в чате: ", err)
+		return err
+	}
+
+	err = s.saveMessage(authorID, chatID, text, &url)
+	if err != nil {
+		logger.Log.Error("Ошибка при сохранении сообщения в чате: ", err)
+		return err
+	}
+
+	// TODO: добавить отправку сообщения по web-socket
+
+	return nil
+}
+
+// saveMessage сохраняет определенное сообщение указанном чате
+func (s *MessageService) saveMessage(authorID uuid.UUID,
+	chatID uuid.UUID, text string, imageURL *string) error {
 
 	author, err := s.userRepo.FindByID(authorID)
 	if err != nil {
@@ -64,14 +107,16 @@ func (s *MessageService) SendMessage(authorID uuid.UUID,
 		Text:     text,
 	}
 
+	if imageURL != nil && len(*imageURL) > 0 {
+		message.ImageURL = *imageURL
+	}
+
 	err = s.messageRepo.CreateMessage(message)
 
 	if err != nil {
-		logger.Log.Error("Ошибка при сохранении сообщения")
+		logger.Log.Error("Ошибка при сохранении сообщения: ", err)
 		return err
 	}
-
-	// TODO: добавить отправку сообщения по web-socket
 
 	return nil
 }

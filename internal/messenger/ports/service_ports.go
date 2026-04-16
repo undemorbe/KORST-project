@@ -2,6 +2,7 @@
 package ports
 
 import (
+	"io"
 	"korst-backend/internal/messenger/dto/requests"
 	"korst-backend/internal/messenger/dto/responses"
 
@@ -26,6 +27,11 @@ type MessageService interface {
 	// SendMessage сохраняет сообщение в определенном чате
 	// и отправляет его к другому пользователю
 	SendMessage(authorID uuid.UUID, chatID uuid.UUID, text string) error
+
+	// SendImage сохраняет изображение для определенного
+	// чата и отправляет сообщение с ним другому пользователю
+	SendImage(authorID uuid.UUID, chatID uuid.UUID,
+		text string, file io.Reader, fileName string) error
 
 	// ChangeMessage изменяет текст определенного сообщения в чате
 	ChangeMessage(authorID uuid.UUID, messageID uuid.UUID, text string) error

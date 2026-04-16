@@ -3,6 +3,7 @@
 package mocks
 
 import (
+	"io"
 	"korst-backend/internal/messenger/dto/requests"
 	"korst-backend/internal/messenger/dto/responses"
 
@@ -39,6 +40,13 @@ type MockMessageService struct{ mock.Mock }
 // SendMessage задает фиктивную реализацию отправки сообщения пользователю
 func (m *MockMessageService) SendMessage(authorID uuid.UUID, chatID uuid.UUID, text string) error {
 	args := m.Called(authorID, chatID, text)
+	return args.Error(0)
+}
+
+// SendImage задает фиктивную реализацию отправки изображения пользователю
+func (m *MockMessageService) SendImage(authorID uuid.UUID, chatID uuid.UUID,
+	text string, file io.Reader, fileName string) error {
+	args := m.Called(authorID, chatID, text, file, fileName)
 	return args.Error(0)
 }
 
