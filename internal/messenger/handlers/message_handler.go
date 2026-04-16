@@ -12,6 +12,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // MessageHandler - объект, содержащий методы для обработки
@@ -59,6 +60,46 @@ func (h *MessageHandler) SendMessage(c *gin.Context) {
 
 	logger.Log.Info("Отправка сообщения успешно выполнена")
 	c.JSON(http.StatusOK, responses.GenericResponse{})
+}
+
+// SendImage обрабатывает запрос на отправку
+// сообщения c изображением в определенном чате
+func (h *MessageHandler) SendImage(c *gin.Context) {
+
+	rawChatID := c.PostForm("chat-id")
+	text := c.PostForm("text")
+
+	chatID, err := uuid.Parse(rawChatID)
+	if err != nil {
+		logger.Log.Warn("Ошибка при парсинге uuid: ", err)
+		c.Error(errors.ErrorInvalidInput)
+		return
+	}
+
+	fileHeader, err := c.FormFile("image")
+	if err != nil {
+		logger.Log.Warn("Ошибка при получении файла: ", err)
+		c.Error(errors.ErrorInvalidInput)
+		return
+	}
+
+	file, err := fileHeader.Open()
+	if err != nil {
+		logger.Log.Warn("Ошибка при открытии полученного файла: ", err)
+		c.Error(errors.ErrorInvalidInput)
+		return
+	}
+	defer file.Close()
+
+	accessToken := c.GetHeader("Authorization")
+
+	authorID, err := h.tokenService.DecodeAccessToken(accessToken)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	err = h.messageService.SendImage(authorID, chatID, text, file, fileHeader.Filename)
 }
 
 // ChangeMessage обрабатывает запрос на

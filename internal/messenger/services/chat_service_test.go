@@ -141,6 +141,7 @@ func TestGetMessages(t *testing.T) {
 
 	require.NoError(t, err)
 	mockChatRepo.AssertExpectations(t)
+	mockMessageRepo.AssertExpectations(t)
 
 	require.Equal(t, message2ID, response.Messages[0].ID)
 	require.Equal(t, anotherUserID, response.Messages[0].AuthorID)

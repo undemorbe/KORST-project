@@ -129,6 +129,7 @@ func main() {
 		messenger.POST("/create-chat", chatHandler.CreateChat)
 
 		messenger.POST("/send-message", messageHandler.SendMessage)
+		messenger.POST("/send-image", messageHandler.SendImage)
 		messenger.PUT("/change-message", messageHandler.ChangeMessage)
 		messenger.DELETE("/delete-message", messageHandler.DeleteMessage)
 	}

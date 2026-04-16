@@ -36,7 +36,7 @@ type Message struct {
 	ID        uuid.UUID `json:"id"`
 	AuthorID  uuid.UUID `json:"author-id"`
 	Text      string    `json:"text"`
-	ImageURL  string    `json:"image_url"`
+	ImageURL  string    `json:"image_url,omitempty"`
 	IsSeen    bool      `json:"is_seen"`
 	CreatedAt time.Time `json:"created"`
 }
