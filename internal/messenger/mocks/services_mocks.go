@@ -28,8 +28,8 @@ func (m *MockChatService) CreateChat(authorID uuid.UUID, req requests.CreateChat
 }
 
 // GetMessages задает фиктивную реализацию получения всех сообщения из чата
-func (m *MockChatService) GetMessages(chatID uuid.UUID) (responses.GetMessagesReponse, error) {
-	args := m.Called(chatID)
+func (m *MockChatService) GetMessages(chatID uuid.UUID, userID uuid.UUID) (responses.GetMessagesReponse, error) {
+	args := m.Called(chatID, userID)
 	return args.Get(0).(responses.GetMessagesReponse), args.Error(1)
 }
 

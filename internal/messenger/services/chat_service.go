@@ -11,6 +11,7 @@ import (
 	messengerPorts "korst-backend/internal/messenger/ports"
 	ports "korst-backend/internal/ports"
 	"slices"
+	"sync"
 
 	"github.com/google/uuid"
 )
@@ -18,19 +19,22 @@ import (
 // ChatService - объект, содержащий методы для работы
 // с чатами и просмотра сообщений в них
 type ChatService struct {
-	userRepo ports.UserRepository
-	cardRepo ports.CardRepository
-	chatRepo messengerPorts.ChatRepository
+	userRepo    ports.UserRepository
+	cardRepo    ports.CardRepository
+	chatRepo    messengerPorts.ChatRepository
+	messageRepo messengerPorts.MessageRepository
 }
 
 // NewChatService создает и возвращает новый объект ChatService
 func NewChatService(userRepo ports.UserRepository,
 	cardRepo ports.CardRepository,
-	chatRepo messengerPorts.ChatRepository) messengerPorts.ChatService {
+	chatRepo messengerPorts.ChatRepository,
+	messageRepo messengerPorts.MessageRepository) messengerPorts.ChatService {
 	return &ChatService{
-		userRepo: userRepo,
-		cardRepo: cardRepo,
-		chatRepo: chatRepo,
+		userRepo:    userRepo,
+		cardRepo:    cardRepo,
+		chatRepo:    chatRepo,
+		messageRepo: messageRepo,
 	}
 }
 
@@ -57,46 +61,74 @@ func (s *ChatService) GetChats(userID uuid.UUID) (
 	}
 
 	customerChats := user.CustomerChats
-
-	// Сортировка customerChats по времени обновления
-	slices.SortFunc(customerChats,
-		func(a, b messengerEntities.Chat) int {
-			return b.UpdatedAt.Compare(a.UpdatedAt)
-		})
-
 	merchantChats := user.MerchantChats
 
-	// Сортировка merchantChats по времени обновления
-	slices.SortFunc(merchantChats,
-		func(a, b messengerEntities.Chat) int {
-			return b.UpdatedAt.Compare(a.UpdatedAt)
-		})
+	var (
+		customerResult []responses.ChatInfo
+		merchantResult []responses.ChatInfo
+	)
 
-	// Преобразование элементов customerChats к нужному формату
-	for i := range customerChats {
+	var wg sync.WaitGroup
+	wg.Add(2)
 
-		chat, err := s.convertChat(userID, &customerChats[i])
+	go func() {
+		defer wg.Done()
 
-		if err != nil {
-			logger.Log.Warn("Ошибка при обработке чата: ", err)
-			continue
+		// Сортировка customerChats по времени обновления
+		slices.SortFunc(customerChats,
+			func(a, b messengerEntities.Chat) int {
+				return b.UpdatedAt.Compare(a.UpdatedAt)
+			})
+
+		var convertedChats []responses.ChatInfo
+
+		// Преобразование элементов customerChats к нужному формату
+		for i := range customerChats {
+
+			chat, err := s.convertChat(userID, &customerChats[i])
+
+			if err != nil {
+				logger.Log.Warn("Ошибка при обработке чата: ", err)
+				continue
+			}
+
+			convertedChats = append(convertedChats, chat)
 		}
 
-		response.CustomerChats = append(response.CustomerChats, chat)
-	}
+		customerResult = convertedChats
+	}()
 
-	// Преобразование элементов merchantChats к нужному формату
-	for i := range merchantChats {
+	go func() {
+		defer wg.Done()
 
-		chat, err := s.convertChat(userID, &merchantChats[i])
+		// Сортировка merchantChats по времени обновления
+		slices.SortFunc(merchantChats,
+			func(a, b messengerEntities.Chat) int {
+				return b.UpdatedAt.Compare(a.UpdatedAt)
+			})
 
-		if err != nil {
-			logger.Log.Warn("Ошибка при обработке чата: ", err)
-			continue
+		var convertedChats []responses.ChatInfo
+
+		// Преобразование элементов merchantChats к нужному формату
+		for i := range merchantChats {
+
+			chat, err := s.convertChat(userID, &merchantChats[i])
+
+			if err != nil {
+				logger.Log.Warn("Ошибка при обработке чата: ", err)
+				continue
+			}
+
+			convertedChats = append(convertedChats, chat)
 		}
 
-		response.MerchantChats = append(response.MerchantChats, chat)
-	}
+		merchantResult = convertedChats
+	}()
+
+	wg.Wait()
+
+	response.CustomerChats = customerResult
+	response.MerchantChats = merchantResult
 
 	return response, nil
 }
@@ -160,7 +192,7 @@ func (s *ChatService) CreateChat(authorID uuid.UUID,
 }
 
 // GetMessages получает все сообщения в определенном чате
-func (s *ChatService) GetMessages(chatID uuid.UUID) (
+func (s *ChatService) GetMessages(chatID uuid.UUID, userID uuid.UUID) (
 	responses.GetMessagesReponse, error) {
 
 	response := responses.GetMessagesReponse{
@@ -187,8 +219,20 @@ func (s *ChatService) GetMessages(chatID uuid.UUID) (
 		})
 
 	for i := range messages {
-		message := s.convertMessage(&messages[i])
-		response.Messages = append(response.Messages, message)
+		message := &messages[i]
+
+		if !message.IsSeen && message.AuthorID != userID {
+			message.IsSeen = true
+
+			err = s.messageRepo.UpdateMessage(message)
+			if err != nil {
+				logger.Log.Error("Ошибка при обновлении сообщения: ", err)
+				continue
+			}
+		}
+
+		convertedMessage := s.convertMessage(message)
+		response.Messages = append(response.Messages, convertedMessage)
 	}
 
 	return response, nil
@@ -267,9 +311,13 @@ func (s *ChatService) convertMessage(
 	message *messengerEntities.Message) responses.Message {
 
 	convertedMessage := responses.Message{
-		ID:        message.ID,
-		AuthorID:  message.AuthorID,
-		Text:      message.Text,
+		ID:       message.ID,
+		AuthorID: message.AuthorID,
+
+		Text:     message.Text,
+		ImageURL: message.ImageURL,
+
+		IsSeen:    message.IsSeen,
 		CreatedAt: message.CreatedAt,
 	}
 

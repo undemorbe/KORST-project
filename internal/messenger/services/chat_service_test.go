@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -23,8 +24,10 @@ func TestGetChats(t *testing.T) {
 	mockUserRepo := &mockRepositories.MockUserRepo{}
 	mockCardRepo := &mockRepositories.MockCardRepo{}
 	mockChatRepo := &messengerMocks.MockChatRepo{}
+	mockMessageRepo := &messengerMocks.MockMessageRepo{}
 
-	ChatService := NewChatService(mockUserRepo, mockCardRepo, mockChatRepo)
+	ChatService := NewChatService(mockUserRepo,
+		mockCardRepo, mockChatRepo, mockMessageRepo)
 
 	chatID := uuid.New()
 	cardID := uuid.New()
@@ -92,25 +95,31 @@ func TestGetMessages(t *testing.T) {
 	mockUserRepo := &mockRepositories.MockUserRepo{}
 	mockCardRepo := &mockRepositories.MockCardRepo{}
 	mockChatRepo := &messengerMocks.MockChatRepo{}
+	mockMessageRepo := &messengerMocks.MockMessageRepo{}
 
-	ChatService := NewChatService(mockUserRepo, mockCardRepo, mockChatRepo)
+	ChatService := NewChatService(mockUserRepo,
+		mockCardRepo, mockChatRepo, mockMessageRepo)
 
 	chatID := uuid.New()
+	userID := uuid.New()
+	anotherUserID := uuid.New()
 
 	message1ID := uuid.New()
 	message2ID := uuid.New()
-	messageText := "Привет"
-	authorID := uuid.New()
+	messageText1 := "Привет"
+	messageText2 := "Здарова"
 
 	message1 := messengerEntities.Message{
 		ID:        message1ID,
-		Text:      messageText,
+		AuthorID:  userID,
+		Text:      messageText1,
 		CreatedAt: time.Now().UTC(),
 	}
 
 	message2 := messengerEntities.Message{
 		ID:        message2ID,
-		AuthorID:  authorID,
+		AuthorID:  anotherUserID,
+		Text:      messageText2,
 		CreatedAt: time.Now().UTC().Add(2 * time.Minute),
 	}
 
@@ -124,16 +133,24 @@ func TestGetMessages(t *testing.T) {
 
 	mockChatRepo.On("FindByID", chatID).Return(chat, nil)
 
-	response, err := ChatService.GetMessages(chatID)
+	mockMessageRepo.
+		On("UpdateMessage", mock.AnythingOfType("*entities.Message")).
+		Return(nil)
+
+	response, err := ChatService.GetMessages(chatID, userID)
 
 	require.NoError(t, err)
 	mockChatRepo.AssertExpectations(t)
 
 	require.Equal(t, message2ID, response.Messages[0].ID)
-	require.Equal(t, authorID, response.Messages[0].AuthorID)
+	require.Equal(t, anotherUserID, response.Messages[0].AuthorID)
+	require.Equal(t, messageText2, response.Messages[0].Text)
+	require.Equal(t, true, response.Messages[0].IsSeen)
 
 	require.Equal(t, message1ID, response.Messages[1].ID)
-	require.Equal(t, messageText, response.Messages[1].Text)
+	require.Equal(t, messageText1, response.Messages[1].Text)
+	require.Equal(t, userID, response.Messages[1].AuthorID)
+	require.Equal(t, false, response.Messages[1].IsSeen)
 }
 
 // CreateChat тестирует создание нового чата
@@ -141,8 +158,10 @@ func TestCreateChat(t *testing.T) {
 	mockUserRepo := &mockRepositories.MockUserRepo{}
 	mockCardRepo := &mockRepositories.MockCardRepo{}
 	mockChatRepo := &messengerMocks.MockChatRepo{}
+	mockMessageRepo := &messengerMocks.MockMessageRepo{}
 
-	ChatService := NewChatService(mockUserRepo, mockCardRepo, mockChatRepo)
+	ChatService := NewChatService(mockUserRepo,
+		mockCardRepo, mockChatRepo, mockMessageRepo)
 
 	authorID := uuid.New()
 	userID := uuid.New()

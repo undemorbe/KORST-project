@@ -19,7 +19,7 @@ type ChatService interface {
 	CreateChat(authorID uuid.UUID, req requests.CreateChatRequest) error
 
 	// GetMessages получает все сообщения в определенном чате
-	GetMessages(chatID uuid.UUID) (responses.GetMessagesReponse, error)
+	GetMessages(chatID uuid.UUID, userID uuid.UUID) (responses.GetMessagesReponse, error)
 }
 
 // MessageService содержит порты для методов работы с сообщениями
