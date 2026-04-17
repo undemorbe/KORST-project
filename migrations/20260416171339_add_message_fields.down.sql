@@ -1,5 +1,5 @@
 ALTER TABLE messages
-ADD COLUMN image_url TEXT;
+DROP COLUMN image_url;
 
 ALTER TABLE messages
-ADD COLUMN is_seen BOOL;
+DROP COLUMN is_seen;
