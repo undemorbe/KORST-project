@@ -100,6 +100,14 @@ func (h *MessageHandler) SendImage(c *gin.Context) {
 	}
 
 	err = h.messageService.SendImage(authorID, chatID, text, file, fileHeader.Filename)
+
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	logger.Log.Info("Отправка сообщения с изображением успешно выполнена")
+	c.JSON(http.StatusOK, responses.GenericResponse{})
 }
 
 // ChangeMessage обрабатывает запрос на

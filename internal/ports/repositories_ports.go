@@ -106,3 +106,10 @@ type ReviewRepository interface {
 	// UpdateReview изменяет содержимое отзыва на пользователя в БД
 	UpdateReview(review *entities.Review) error
 }
+
+// ReplyRepository содержит порты для взаимодействия с
+// откликами на объявление в БД
+type ReplyRepository interface {
+	// Createreply создает новый объект отклика в БД
+	CreateReply(reply *entities.Reply) error
+}

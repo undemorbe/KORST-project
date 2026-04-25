@@ -10,6 +10,16 @@ import (
 	"gorm.io/gorm"
 )
 
+// CardStatus обозначает текущий статус карточки
+type CardStatus string
+
+const (
+	CardStatusActive     CardStatus = "active"
+	CardStatusInProgress CardStatus = "in-progress"
+	CardStatusCompleted  CardStatus = "completed"
+	CardStatusClosed     CardStatus = "closed"
+)
+
 // Card - структура сущности карточки объявления.
 // Содержит описание услуги (или товара)
 // и информацию об авторе объявления
@@ -27,6 +37,8 @@ type Card struct {
 	Tags     pq.StringArray `gorm:"type:text[]"`
 
 	RelatedChats []messenger.Chat `gorm:"foreignKey:CardID;constraint:OnDelete:CASCADE"`
+
+	Replies []Reply `gorm:"foreignKey:CardID;constraint:OnDelete:CASCADE"`
 
 	CreatedAt time.Time `gorm:"not null"`
 	UpdatedAt time.Time `gorm:"not null"`

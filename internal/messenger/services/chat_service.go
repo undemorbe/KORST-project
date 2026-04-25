@@ -10,6 +10,7 @@ import (
 	messengerEntities "korst-backend/internal/messenger/entities"
 	messengerPorts "korst-backend/internal/messenger/ports"
 	ports "korst-backend/internal/ports"
+	"os"
 	"slices"
 	"sync"
 
@@ -231,7 +232,9 @@ func (s *ChatService) GetMessages(chatID uuid.UUID, userID uuid.UUID) (
 			}
 		}
 
-		convertedMessage := s.convertMessage(message)
+		baseURL := os.Getenv("BASE_URL")
+
+		convertedMessage := s.convertMessage(message, baseURL)
 		response.Messages = append(response.Messages, convertedMessage)
 	}
 
@@ -297,8 +300,10 @@ func (s *ChatService) convertChat(userID uuid.UUID,
 			return b.CreatedAt.Compare(a.CreatedAt)
 		})
 
+	baseURL := os.Getenv("BASE_URL")
+
 	if len(messages) > 0 {
-		lastMessage := s.convertMessage(&messages[0])
+		lastMessage := s.convertMessage(&messages[0], baseURL)
 		convertedChat.LastMessage = &lastMessage
 	}
 
@@ -307,18 +312,22 @@ func (s *ChatService) convertChat(userID uuid.UUID,
 
 // convertMessage преобразовывает сущность
 // сообщения к формату, нужному для response
-func (s *ChatService) convertMessage(
-	message *messengerEntities.Message) responses.Message {
+func (s *ChatService) convertMessage(message *messengerEntities.Message,
+	baseURL string) responses.Message {
 
 	convertedMessage := responses.Message{
 		ID:       message.ID,
 		AuthorID: message.AuthorID,
 
-		Text:     message.Text,
-		ImageURL: message.ImageURL,
+		Text: message.Text,
 
 		IsSeen:    message.IsSeen,
 		CreatedAt: message.CreatedAt,
+	}
+
+	if len(message.ImageURL) > 0 {
+		url := baseURL + message.ImageURL
+		convertedMessage.ImageURL = url
 	}
 
 	return convertedMessage

@@ -72,7 +72,7 @@ func (s *UserService) UpdateUserInfo(
 		profile.Description = *req.Description
 	}
 
-	user.Status = "user"
+	user.Status = entities.UserStatusActive
 
 	if req.Contacts != nil {
 		contacts := req.Contacts

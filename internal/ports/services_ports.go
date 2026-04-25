@@ -118,3 +118,8 @@ type FileService interface {
 	SaveMessageImage(file io.Reader,
 		fileName string, messageID uuid.UUID) (string, error)
 }
+
+// ReplyService содержит порты для метод для
+// работы с откликами на карточки объявлений
+type ReplyService interface {
+}
