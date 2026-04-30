@@ -110,6 +110,14 @@ type ReviewRepository interface {
 // ReplyRepository содержит порты для взаимодействия с
 // откликами на объявление в БД
 type ReplyRepository interface {
+	// FindByAuthorAndCard находит отклик на объявление по
+	// его автору и карточке, на которую был оставлен отклик
+	FindByAuthorAndCard(authorID uuid.UUID,
+		cardID uuid.UUID) (*entities.Reply, error)
+
 	// Createreply создает новый объект отклика в БД
 	CreateReply(reply *entities.Reply) error
+
+	// UpdateReply изменяет статус отклика на объявление в БД
+	UpdateReply(reply *entities.Reply) error
 }

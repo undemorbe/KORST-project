@@ -13,9 +13,15 @@ const (
 	StatusReopenWithGoodResult = "reopen-with-good-result"
 )
 
-// ApproveExecutorRequest - структура для запроса
-// на подтверждение исполнителя карточки
-type ApproveExecutorRequest struct {
+// CreateReply - структура для запроса
+// на создание нового отклика на объявление
+type CreateReply struct {
+	CardID uuid.UUID `json:"card-id" binding:"required"`
+}
+
+// ChangeExecutorRequest - структура для запроса
+// на подтверждение/отклонение исполнителя карточки
+type ChangeExecutorRequest struct {
 	CardID     uuid.UUID `json:"card-id" binding:"required"`
 	ExecutorID uuid.UUID `json:"executor-id" binding:"required"`
 }

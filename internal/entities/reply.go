@@ -12,9 +12,11 @@ import (
 type ReplyStatus string
 
 const (
-	ReplyStatusPending  ReplyStatus = "pending"
-	ReplyStatusAccepted ReplyStatus = "accepted"
-	ReplyStatusRejected ReplyStatus = "rejected"
+	ReplyStatusPending   ReplyStatus = "pending"
+	ReplyStatusAccepted  ReplyStatus = "accepted"
+	ReplyStatusRejected  ReplyStatus = "rejected"
+	ReplyStatusCompleted ReplyStatus = "completed"
+	ReplyStatusFailed    ReplyStatus = "failed"
 )
 
 // Reply - структура сущности отклика на объявление.

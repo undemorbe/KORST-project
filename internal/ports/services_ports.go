@@ -122,4 +122,19 @@ type FileService interface {
 // ReplyService содержит порты для метод для
 // работы с откликами на карточки объявлений
 type ReplyService interface {
+	// CreateReply создает отклик на определенной объявление
+	CreateReply(authorID uuid.UUID, cardID uuid.UUID) error
+
+	// ApproveExecutor yтверждает исполнителя для определенной
+	// карточки (меняет статус отклика и карточки)
+	ApproveExecutor(authorID uuid.UUID,
+		cardID uuid.UUID, executorID uuid.UUID) error
+
+	// RejectExecutor отклоняет отклик исполнителя на объявление
+	// (меняет статус отклика на объявление)
+	RejectExecutor(authorID uuid.UUID,
+		cardID uuid.UUID, executorID uuid.UUID) error
+
+	// CloseCard закрывает (или открывает карточку заново) с определенным статусом
+	CloseCard(authorID uuid.UUID, cardID uuid.UUID, status string) error
 }
