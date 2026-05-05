@@ -42,17 +42,42 @@ class ServiceEntity {
   String get id => uid;
 
   factory ServiceEntity.fromJson(Map<String, dynamic> json) {
+    double? toDouble(dynamic v) {
+      if (v is num) return v.toDouble();
+      if (v is String) return double.tryParse(v);
+      return null;
+    }
+
+    int? toInt(dynamic v) {
+      if (v is int) return v;
+      if (v is num) return v.toInt();
+      if (v is String) return int.tryParse(v);
+      return null;
+    }
+
+    DateTime parseDate(dynamic v) {
+      if (v is DateTime) return v;
+      if (v is String) return DateTime.tryParse(v) ?? DateTime.now();
+      return DateTime.now();
+    }
+
+    String normalizeImageUrl(dynamic v) {
+      final raw = v is String ? v.trim() : '';
+      return raw.isEmpty ? 'https://placehold.co/600x400' : raw;
+    }
+
     return ServiceEntity(
       uid: (json['uid'] as String?) ?? (json['id'] as String?) ?? '',
       title: (json['name'] as String?) ?? (json['title'] as String?) ?? '',
       description: json['description'] as String? ?? '',
-      price: (json['price'] as num).toDouble(),
+      price: toDouble(json['price']) ?? 0.0,
       currency: json['currency'] as String? ?? 'RUB',
       type: json['type'] as String? ?? 'service',
-      author: json['author'] != null
-          ? UserEntity.fromJson(json['author'])
-          : null,
-      timesBooked: json['times_booked'] as int? ?? 0,
+      author:
+          json['author'] is Map<String, dynamic>
+              ? UserEntity.fromJson(json['author'] as Map<String, dynamic>)
+              : null,
+      timesBooked: toInt(json['times_booked']) ?? 0,
       rating: (json['rating'] as num?)?.toDouble() ?? 0.0,
       reviews:
           (json['reviews'] as List<dynamic>?)
@@ -60,20 +85,20 @@ class ServiceEntity {
               .toList() ??
           [],
       tags:
-          (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+          (json['tags'] as List<dynamic>?)?.map((e) => e.toString()).toList() ??
           [],
-      created: json['created'] != null
-          ? DateTime.parse(json['created'])
-          : DateTime.now(),
-      updated: json['updated'] != null
-          ? DateTime.parse(json['updated'])
-          : DateTime.now(),
+      created: parseDate(json['created']),
+      updated: parseDate(json['updated']),
       category: json['category'] != null
           ? ServiceCategory.values.firstWhere(
               (e) => e.toString().split('.').last == json['category'],
               orElse: () => ServiceCategory.other)
           : ServiceCategory.other,
-      imageUrl: json['image-url'] as String? ?? json['imageUrl'] as String? ?? 'https://placehold.co/600x400',
+      imageUrl: normalizeImageUrl(
+        (json['image-url'] as String?) ??
+            (json['imageUrl'] as String?) ??
+            (json['image_url'] as String?),
+      ),
     );
   }
 

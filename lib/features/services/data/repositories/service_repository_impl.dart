@@ -1,11 +1,8 @@
-import 'dart:convert';
 import 'package:dio/dio.dart';
 import '../../../../core/api/api_client.dart';
 import '../../../../core/api/api_constants.dart';
 import '../../../../core/api/api_error_codes.dart';
 import '../../../../core/api/api_exception.dart';
-import '../../../../core/storage/local_storage.dart';
-import '../../../../core/di/injection_container.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../domain/entities/cards_page.dart';
 import '../../domain/entities/service_entity.dart';
@@ -46,28 +43,15 @@ class ServiceRepositoryImpl implements ServiceRepository {
       if (rawCards is! List) return CardsPage(cards: const [], nextKey: null);
 
       final cards = rawCards.map((e) => _fromCardsListItem(e)).toList();
-      final nextKey = cards.isNotEmpty
-          ? cards.last.created.toUtc().toIso8601String()
-          : null;
-      final page = CardsPage(cards: cards, nextKey: nextKey);
-      
-      // Cache the first page
-      if (key == null) {
-        try {
-          sl<LocalStorageService>().put('cache_services_page', jsonEncode(page.toJson()));
-        } catch (_) {}
-      }
-      
-      return page;
+      final nextKeyFromApi =
+          _stringOrNull(data['nextKey']) ??
+          _stringOrNull(data['next_key']) ??
+          _stringOrNull(data['next-key']) ??
+          _stringOrNull(data['key']);
+      final nextKey = nextKeyFromApi ??
+          (cards.isNotEmpty ? cards.last.created.toUtc().toIso8601String() : null);
+      return CardsPage(cards: cards, nextKey: nextKey);
     } on DioException catch (e) {
-      if (key == null) {
-        try {
-          final cachedStr = sl<LocalStorageService>().get('cache_services_page') as String?;
-          if (cachedStr != null) {
-            return CardsPage.fromJson(jsonDecode(cachedStr));
-          }
-        } catch (_) {}
-      }
       throw _toApiException(
         e,
         fallbackMessage: 'Failed to load cards',
@@ -104,17 +88,8 @@ class ServiceRepositoryImpl implements ServiceRepository {
       }
 
       final service = _fromCardInfo(data, id);
-      try {
-        sl<LocalStorageService>().put('cache_service_$id', jsonEncode(service.toJson()));
-      } catch (_) {}
       return service;
     } on DioException catch (e) {
-      try {
-        final cachedStr = sl<LocalStorageService>().get('cache_service_$id') as String?;
-        if (cachedStr != null) {
-          return ServiceEntity.fromJson(jsonDecode(cachedStr));
-        }
-      } catch (_) {}
       throw _toApiException(
         e,
         fallbackMessage: 'Failed to load card',
@@ -212,7 +187,7 @@ class ServiceRepositoryImpl implements ServiceRepository {
     final Map<String, dynamic> json = raw is Map
         ? Map<String, dynamic>.from(raw)
         : const {};
-    final id = (json['id'] as String?) ?? '';
+    final id = (json['id'] as String?) ?? (json['uid'] as String?) ?? '';
     final name = (json['name'] as String?) ?? '';
     final price = (json['price'] as num?)?.toDouble() ?? 0.0;
     final currency = (json['currency'] as String?) ?? 'USD';
@@ -220,12 +195,8 @@ class ServiceRepositoryImpl implements ServiceRepository {
     final tags =
         (json['tags'] as List?)?.map((e) => e.toString()).toList() ??
         <String>[];
-    final created = json['created'] is String
-        ? DateTime.parse(json['created'] as String)
-        : DateTime.now();
-    final updated = json['updated'] is String
-        ? DateTime.parse(json['updated'] as String)
-        : created;
+    final created = _parseDateTime(json['created']) ?? DateTime.now();
+    final updated = _parseDateTime(json['updated']) ?? created;
 
     final authorRaw = json['author'];
     UserEntity? author;
@@ -242,8 +213,11 @@ class ServiceRepositoryImpl implements ServiceRepository {
         authorContacts['rating'] = authorRating;
       }
       
-      String? authorPhotoUrl = m['image-url'] as String?;
-      if (authorPhotoUrl != null && authorPhotoUrl.isNotEmpty && !authorPhotoUrl.contains('?v=')) {
+      String? authorPhotoUrl =
+          _stringOrNull(m['image-url']) ?? _stringOrNull(m['imageUrl']);
+      if (authorPhotoUrl != null &&
+          authorPhotoUrl.isNotEmpty &&
+          !authorPhotoUrl.contains('?v=')) {
         authorPhotoUrl = '$authorPhotoUrl?v=${updated.millisecondsSinceEpoch}';
       }
 
@@ -262,8 +236,15 @@ class ServiceRepositoryImpl implements ServiceRepository {
       );
     }
 
-    String imageUrl = (json['image-url'] as String?) ?? 'https://placehold.co/600x400';
-    if (imageUrl != 'https://placehold.co/600x400' && !imageUrl.contains('?v=')) {
+    String imageUrl =
+        _stringOrNull(json['image-url']) ??
+        _stringOrNull(json['imageUrl']) ??
+        'https://placehold.co/600x400';
+    if (imageUrl.isEmpty) {
+      imageUrl = 'https://placehold.co/600x400';
+    }
+    if (imageUrl != 'https://placehold.co/600x400' &&
+        !imageUrl.contains('?v=')) {
       imageUrl = '$imageUrl?v=${updated.millisecondsSinceEpoch}';
     }
 
@@ -290,7 +271,7 @@ class ServiceRepositoryImpl implements ServiceRepository {
       reviews: const [],
       tags: tags,
       created: created,
-      updated: created,
+      updated: updated,
       category: ServiceCategory.other,
       imageUrl: imageUrl,
     );
@@ -307,12 +288,8 @@ class ServiceRepositoryImpl implements ServiceRepository {
         (json['tags'] as List?)?.map((e) => e.toString()).toList() ??
         <String>[];
 
-    final created = json['created'] is String
-        ? DateTime.parse(json['created'] as String)
-        : DateTime.now();
-    final updated = json['updated'] is String
-        ? DateTime.parse(json['updated'] as String)
-        : created;
+    final created = _parseDateTime(json['created']) ?? DateTime.now();
+    final updated = _parseDateTime(json['updated']) ?? created;
 
     UserEntity? author;
     final authorRaw = json['author'];
@@ -327,13 +304,16 @@ class ServiceRepositoryImpl implements ServiceRepository {
         contacts['rating'] = authorRating;
       }
       
-      String? authorPhotoUrl = a['image-url'] as String?;
-      if (authorPhotoUrl != null && authorPhotoUrl.isNotEmpty && !authorPhotoUrl.contains('?v=')) {
+      String? authorPhotoUrl =
+          _stringOrNull(a['image-url']) ?? _stringOrNull(a['imageUrl']);
+      if (authorPhotoUrl != null &&
+          authorPhotoUrl.isNotEmpty &&
+          !authorPhotoUrl.contains('?v=')) {
         authorPhotoUrl = '$authorPhotoUrl?v=${updated.millisecondsSinceEpoch}';
       }
 
       author = UserEntity(
-        uid: (a['id'] as String?) ?? '',
+        uid: (a['id'] as String?) ?? (a['uid'] as String?) ?? '',
         name: (a['name'] as String?) ?? '',
         surname: a['surname'] as String?,
         description: null,
@@ -357,7 +337,13 @@ class ServiceRepositoryImpl implements ServiceRepository {
       rating = authorRating.toDouble();
     }
 
-    String imageUrl = (json['image-url'] as String?) ?? 'https://placehold.co/600x400';
+    String imageUrl =
+        _stringOrNull(json['image-url']) ??
+        _stringOrNull(json['imageUrl']) ??
+        'https://placehold.co/600x400';
+    if (imageUrl.isEmpty) {
+      imageUrl = 'https://placehold.co/600x400';
+    }
     if (imageUrl != 'https://placehold.co/600x400' && !imageUrl.contains('?v=')) {
       imageUrl = '$imageUrl?v=${updated.millisecondsSinceEpoch}';
     }
@@ -393,6 +379,18 @@ class ServiceRepositoryImpl implements ServiceRepository {
       return v is String ? v : null;
     }
     return null;
+  }
+
+  static DateTime? _parseDateTime(dynamic v) {
+    if (v is DateTime) return v;
+    if (v is String) return DateTime.tryParse(v);
+    return null;
+  }
+
+  static String? _stringOrNull(dynamic v) {
+    if (v is! String) return null;
+    final s = v.trim();
+    return s.isEmpty ? null : s;
   }
 
   static ApiException _toApiException(

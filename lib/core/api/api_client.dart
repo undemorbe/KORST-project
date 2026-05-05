@@ -45,13 +45,20 @@ class ApiClient {
       QueuedInterceptorsWrapper(
         onRequest: (options, handler) {
           final accessToken = _tokenStorage.getAccessToken();
+          final isMe = options.path == ApiConstants.userMe ||
+              options.path.endsWith('/${ApiConstants.userMe}');
+          final isUserGetInfo = options.path == ApiConstants.userGetInfo ||
+              options.path.endsWith('/${ApiConstants.userGetInfo}');
           if (accessToken != null && accessToken.isNotEmpty) {
             options.headers[ApiConstants.headerAccessToken] = accessToken;
-            options.headers[ApiConstants.headerAuthorization] = accessToken;
+            options.headers[ApiConstants.headerAuthorization] =
+                _asAuthorization(accessToken);
           }
           final userId = _tokenStorage.getUserId();
-          if (userId != null && userId.isNotEmpty) {
+          if (!isMe && !isUserGetInfo && userId != null && userId.isNotEmpty) {
             options.headers[ApiConstants.headerUserId] = userId;
+          } else {
+            options.headers.remove(ApiConstants.headerUserId);
           }
           handler.next(options);
         },
@@ -253,7 +260,7 @@ class ApiClient {
       headers: {
         ...requestOptions.headers,
         ApiConstants.headerAccessToken: accessToken,
-        ApiConstants.headerAuthorization: accessToken,
+        ApiConstants.headerAuthorization: _asAuthorization(accessToken),
       },
       extra: extra,
       responseType: requestOptions.responseType,
@@ -264,6 +271,13 @@ class ApiClient {
       receiveTimeout: requestOptions.receiveTimeout,
       sendTimeout: requestOptions.sendTimeout,
     );
+    final isMe = requestOptions.path == ApiConstants.userMe ||
+        requestOptions.path.endsWith('/${ApiConstants.userMe}');
+    final isUserGetInfo = requestOptions.path == ApiConstants.userGetInfo ||
+        requestOptions.path.endsWith('/${ApiConstants.userGetInfo}');
+    if (isMe || isUserGetInfo) {
+      options.headers?.remove(ApiConstants.headerUserId);
+    }
 
     return _dio.request<T>(
       requestOptions.path,
@@ -271,5 +285,14 @@ class ApiClient {
       queryParameters: requestOptions.queryParameters,
       options: options,
     );
+  }
+
+  static String _asAuthorization(String token) {
+    final t = token.trim();
+    if (t.isEmpty) return t;
+    if (t.toLowerCase().startsWith('bearer ')) {
+      return t.substring('bearer '.length).trim();
+    }
+    return t;
   }
 }

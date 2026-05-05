@@ -6,7 +6,6 @@ import '../api/api_client.dart';
 import '../api/token_storage.dart';
 import '../logging/app_talker.dart';
 import '../logging/safe_talker_dio_interceptor.dart';
-import '../background/background_task_manager.dart';
 import '../../core/storage/local_storage.dart';
 import '../../features/services/data/repositories/service_repository_impl.dart';
 import '../../features/services/domain/repositories/service_repository.dart';
@@ -80,11 +79,6 @@ Future<void> init() async {
       tokenStorage: sl<TokenStorage>(),
     ),
   );
-
-  // Background Task Manager
-  final backgroundTaskManager = BackgroundTaskManager();
-  await backgroundTaskManager.init();
-  sl.registerSingleton<BackgroundTaskManager>(backgroundTaskManager);
 
   // Features - Auth
   sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(sl(), sl(), sl()));

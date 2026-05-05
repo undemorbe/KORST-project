@@ -12,6 +12,7 @@ import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/favorites/presentation/pages/favorites_page.dart';
 import '../../features/main/presentation/pages/main_shell_page.dart';
 import '../../features/users/presentation/pages/user_profile_page.dart';
+import '../../features/users/presentation/pages/my_reviews_page.dart';
 import '../../features/messenger/presentation/pages/chat_list_page.dart';
 import '../../features/messenger/presentation/pages/chat_page.dart';
 import '../../features/messenger/presentation/store/messenger_store.dart';
@@ -60,6 +61,26 @@ class AppRouter {
         );
       },
     );
+  }
+
+  static ServiceEntity? _serviceFromExtra(Object? extra) {
+    if (extra is ServiceEntity) return extra;
+    if (extra is Map) {
+      final raw = extra['service'];
+      if (raw is ServiceEntity) return raw;
+      if (raw is Map) {
+        return ServiceEntity.fromJson(Map<String, dynamic>.from(raw));
+      }
+    }
+    return null;
+  }
+
+  static String? _heroTagFromExtra(Object? extra) {
+    if (extra is Map) {
+      final v = extra['heroTag'];
+      return v is String && v.trim().isNotEmpty ? v : null;
+    }
+    return null;
   }
 
   static final GoRouter router = GoRouter(
@@ -165,10 +186,17 @@ class AppRouter {
         path: '/service-details',
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) {
-          final service = state.extra as ServiceEntity;
+          final service = _serviceFromExtra(state.extra);
+          if (service == null) {
+            return _buildTransitionPage(
+              state,
+              const Scaffold(body: Center(child: Text('Invalid service data'))),
+            );
+          }
+          final heroTag = _heroTagFromExtra(state.extra);
           return _buildTransitionPage(
             state,
-            ServiceDetailsPage(service: service),
+            ServiceDetailsPage(service: service, heroTag: heroTag),
           );
         },
       ),
@@ -190,7 +218,20 @@ class AppRouter {
         path: '/edit-service',
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) {
-          final service = state.extra as ServiceEntity;
+          final service =
+              state.extra is ServiceEntity
+                  ? state.extra as ServiceEntity
+                  : state.extra is Map
+                  ? ServiceEntity.fromJson(
+                      Map<String, dynamic>.from(state.extra as Map),
+                    )
+                  : null;
+          if (service == null) {
+            return _buildTransitionPage(
+              state,
+              const Scaffold(body: Center(child: Text('Invalid service data'))),
+            );
+          }
           return _buildTransitionPage(
             state,
             ServiceEditorPage(initialService: service),
@@ -202,6 +243,12 @@ class AppRouter {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) =>
             _buildTransitionPage(state, const MyServicesPage()),
+      ),
+      GoRoute(
+        path: '/my-reviews',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _buildTransitionPage(state, const MyReviewsPage()),
       ),
       GoRoute(
         path: '/edit-profile',
@@ -226,7 +273,13 @@ class AppRouter {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) {
           final userId = state.pathParameters['userId'] ?? '';
-          return _buildTransitionPage(state, UserProfilePage(userId: userId));
+          return _buildTransitionPage(
+            state,
+            UserProfilePage(
+              userId: userId,
+              isOwnProfileHint: userId == 'me',
+            ),
+          );
         },
       ),
       GoRoute(

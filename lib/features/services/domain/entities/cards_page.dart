@@ -12,7 +12,11 @@ class CardsPage {
               ?.map((e) => ServiceEntity.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
-      nextKey: json['nextKey'] as String?,
+      nextKey:
+          (json['nextKey'] as String?) ??
+          (json['next_key'] as String?) ??
+          (json['next-key'] as String?) ??
+          (json['key'] as String?),
     );
   }
 

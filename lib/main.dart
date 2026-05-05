@@ -9,7 +9,6 @@ import 'core/router/app_router.dart';
 import 'core/theme/animated_gradient_background.dart';
 import 'core/theme/app_theme.dart';
 import 'core/di/injection_container.dart' as di;
-import 'core/background/background_task_manager.dart';
 import 'features/auth/presentation/store/session_store.dart';
 import 'features/settings/presentation/store/settings_store.dart';
 
@@ -29,7 +28,6 @@ void main() async {
     return false;
   };
 
-  di.sl<BackgroundTaskManager>().startPolling();
   runApp(const MyApp());
 }
 
