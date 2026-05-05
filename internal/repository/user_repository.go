@@ -38,8 +38,27 @@ func (r *userRepo) FindByID(userID uuid.UUID) (*entities.User, error) {
 	return &user, nil
 }
 
-// FindWithCards находит пользователя по его ID вместе с карточками
+// FindWithCards находит пользователя по его ID вместе с АКТИВНЫМИ карточками
 func (r *userRepo) FindWithCards(userID uuid.UUID) (*entities.User, error) {
+	var user entities.User
+
+	err := r.db.
+		Preload("Profile").
+		Preload("Cards", "status = ?", entities.CardStatusActive).
+		First(&user, userID).
+		Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+// FindWithAllCards находит пользователя по его ID со ВСЕМИ карточками
+func (r *userRepo) FindWithAllCards(userID uuid.UUID) (*entities.User, error) {
 	var user entities.User
 
 	err := r.db.

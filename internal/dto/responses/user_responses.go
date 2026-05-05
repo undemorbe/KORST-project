@@ -5,6 +5,12 @@ import (
 	"time"
 )
 
+// GetMyInfoResponse - структура для ответа на запрос для
+// получения расширенной информации о текщем пользователе
+type GetMyInfoResponse struct {
+	GetUserInfoResponse
+}
+
 // GetUserInfoResponse - структура для ответа
 // на запрос для получения информации о пользователе
 type GetUserInfoResponse struct {
