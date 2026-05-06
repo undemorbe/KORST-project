@@ -32,7 +32,7 @@ func (h *BannerHandler) SaveBanner(c *gin.Context) {
 	company := c.PostForm("company")
 	link := c.PostForm("link")
 
-	if company == "" || link == "" {
+	if link == "" {
 		logger.Log.Warn("В запросе отсутствуют необходимые поля")
 		c.Error(errors.ErrorInvalidInput)
 		return
