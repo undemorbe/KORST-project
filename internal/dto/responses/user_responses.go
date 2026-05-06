@@ -9,6 +9,8 @@ import (
 // получения расширенной информации о текщем пользователе
 type GetMyInfoResponse struct {
 	GetUserInfoResponse
+
+	RepliesInfo RepliesInfo `json:"replies-info"`
 }
 
 // GetUserInfoResponse - структура для ответа
@@ -28,4 +30,13 @@ type GetUserInfoResponse struct {
 	CreatedAt time.Time `json:"created"`
 
 	Cards []CompressedCard `json:"cards"`
+}
+
+// RepliesInfo содержит статистику об откликах
+// текущего пользователя на объявления
+type RepliesInfo struct {
+	Total     int `json:"total"`
+	Accepted  int `json:"accepted"`
+	Completed int `json:"completed"`
+	Failed    int `json:"failed"`
 }

@@ -33,3 +33,10 @@ func (m *MockUserService) GetUserInfo(userID uuid.UUID) (responses.GetUserInfoRe
 	args := m.Called(userID)
 	return args.Get(0).(responses.GetUserInfoResponse), args.Error(1)
 }
+
+// GetMyInfo получает расширенную информацию о
+// текущем пользователе для предоставления статистики
+func (m *MockUserService) GetMyInfo(userID uuid.UUID) (responses.GetMyInfoResponse, error) {
+	args := m.Called(userID)
+	return args.Get(0).(responses.GetMyInfoResponse), args.Error(1)
+}

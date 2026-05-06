@@ -35,8 +35,8 @@ func (m *MockUserRepo) FindWithCards(userID uuid.UUID) (*entities.User, error) {
 	return args.Get(0).(*entities.User), args.Error(1)
 }
 
-// FindWithAllCards задает фиктивную реализацию поиска по ID со всеми карточками
-func (m *MockUserRepo) FindWithAllCards(userID uuid.UUID) (*entities.User, error) {
+// FindWithAllCards задает фиктивную реализацию поиска по ID со всеми карточками и откликами
+func (m *MockUserRepo) FindWithReplies(userID uuid.UUID) (*entities.User, error) {
 	args := m.Called(userID)
 
 	if args.Get(0) == nil {

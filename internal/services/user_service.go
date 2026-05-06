@@ -175,7 +175,7 @@ func (s *UserService) GetMyInfo(userID uuid.UUID) (
 
 	var response responses.GetMyInfoResponse
 
-	user, err := s.userRepo.FindWithAllCards(userID)
+	user, err := s.userRepo.FindWithReplies(userID)
 	if err != nil {
 		logger.Log.Error("Ошибка при поиске пользователя: ", err)
 		return responses.GetMyInfoResponse{}, err
@@ -187,6 +187,41 @@ func (s *UserService) GetMyInfo(userID uuid.UUID) (
 	}
 
 	response.GetUserInfoResponse = s.convertUser(user)
+
+	var (
+		total     int
+		accepted  int
+		completed int
+		failed    int
+	)
+
+	for _, reply := range user.Replies {
+
+		switch reply.Status {
+
+		case entities.ReplyStatusAccepted:
+			accepted++
+
+		case entities.ReplyStatusCompleted:
+			accepted++
+			completed++
+
+		case entities.ReplyStatusFailed:
+			accepted++
+			failed++
+		}
+
+		total++
+	}
+
+	repliesInfo := responses.RepliesInfo{
+		Total:     total,
+		Accepted:  accepted,
+		Completed: completed,
+		Failed:    failed,
+	}
+
+	response.RepliesInfo = repliesInfo
 
 	return response, nil
 }

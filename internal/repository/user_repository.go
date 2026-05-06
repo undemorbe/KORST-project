@@ -57,13 +57,14 @@ func (r *userRepo) FindWithCards(userID uuid.UUID) (*entities.User, error) {
 	return &user, nil
 }
 
-// FindWithAllCards находит пользователя по его ID со ВСЕМИ карточками
-func (r *userRepo) FindWithAllCards(userID uuid.UUID) (*entities.User, error) {
+// FindWithReplies находит текущего пользователя по его ID со всеми его карточками и откликами
+func (r *userRepo) FindWithReplies(userID uuid.UUID) (*entities.User, error) {
 	var user entities.User
 
 	err := r.db.
 		Preload("Profile").
 		Preload("Cards").
+		Preload("Replies").
 		First(&user, userID).
 		Error
 

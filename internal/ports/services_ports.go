@@ -85,6 +85,11 @@ type UserService interface {
 	// о каком-то конкретном пользователе
 	GetUserInfo(userID uuid.UUID) (
 		responses.GetUserInfoResponse, error)
+
+	// GetMyInfo получает расширенную информацию о
+	// текущем пользователе для предоставления статистики
+	GetMyInfo(userID uuid.UUID) (
+		responses.GetMyInfoResponse, error)
 }
 
 // ReviewService содержит порты для методов для
@@ -117,9 +122,14 @@ type FileService interface {
 	// в хранилище и возвращает ссылку на него
 	SaveMessageImage(file io.Reader,
 		fileName string, messageID uuid.UUID) (string, error)
+
+	// SaveBannerImage сохраняет изображение для баннера
+	// в хранилище и возвращает ссылку на него
+	SaveBannerImage(file io.Reader,
+		fileName string, bannerID uuid.UUID) (string, error)
 }
 
-// ReplyService содержит порты для метод для
+// ReplyService содержит порты для методов для
 // работы с откликами на карточки объявлений
 type ReplyService interface {
 	// CreateReply создает отклик на определенной объявление
@@ -137,4 +147,16 @@ type ReplyService interface {
 
 	// CloseCard закрывает (или открывает карточку заново) с определенным статусом
 	CloseCard(authorID uuid.UUID, cardID uuid.UUID, status string) error
+}
+
+// BannerService содержит порты для методов
+// для сохранения и получения рекламных баннеров
+type BannerService interface {
+	// SaveBanner сохраняет изображение баннера в локальное
+	// хранилище и сохраняет объект баннера в БД
+	SaveBanner(company string, link string,
+		file io.Reader, fileName string) error
+
+	// GetBanners получает и обрабатывает count случайных баннеров из БД
+	GetBanners(count *int) (responses.GetBannersResponse, error)
 }

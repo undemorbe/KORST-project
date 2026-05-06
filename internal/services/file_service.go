@@ -113,6 +113,36 @@ func (s *FileService) SaveMessageImage(file io.Reader,
 	return url, nil
 }
 
+// SaveBannerImage сохраняет изображение для баннера
+// в хранилище и возвращает ссылку на него
+func (s *FileService) SaveBannerImage(file io.Reader,
+	fileName string, bannerID uuid.UUID) (string, error) {
+
+	ext := filepath.Ext(fileName)
+	if !s.isValidExtension(ext) {
+		return "", errors.ErrorInvalidInput
+	}
+
+	name := bannerID.String() + ext
+	dirName := os.Getenv("BANNER_IMAGE_DIR")
+	basePath := os.Getenv("BASE_PATH")
+
+	path := filepath.Join(dirName, name)
+
+	err := s.storage.Delete(path)
+	if err != nil {
+		return "", err
+	}
+
+	fullPath, err := s.storage.Save(file, path)
+	if err != nil || fullPath == "" {
+		return "", errors.ErrorInternal
+	}
+
+	url := "/" + basePath + "/" + dirName + "/" + name
+	return url, nil
+}
+
 // isValidExtension проверяет, является ли расширение валидным
 func (s *FileService) isValidExtension(ext string) bool {
 	validExtensions := []string{".pdf", ".png", ".jpg", ".jpeg"}

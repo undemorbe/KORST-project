@@ -16,8 +16,8 @@ type UserRepository interface {
 	// FindWithCards находит пользователя по его ID вместе с АКТИВНЫМИ карточками
 	FindWithCards(userID uuid.UUID) (*entities.User, error)
 
-	// FindWithAllCards находит пользователя по его ID со ВСЕМИ карточками
-	FindWithAllCards(userID uuid.UUID) (*entities.User, error)
+	// FindWithReplies находит текущего пользователя по его ID со всеми его карточками и откликами
+	FindWithReplies(userID uuid.UUID) (*entities.User, error)
 
 	// FindWithReviews находит пользователя по его ID вместе с отзывами на него
 	FindWithRelatedReviews(userID uuid.UUID) (*entities.User, error)
@@ -123,4 +123,14 @@ type ReplyRepository interface {
 
 	// UpdateReply изменяет статус отклика на объявление в БД
 	UpdateReply(reply *entities.Reply) error
+}
+
+// BannerRepository содержит порты для взаимодействия
+// с рекламными баннерами в БД
+type BannerRepository interface {
+	// FindBanners находит count случайных баннеров из всех записей в БД
+	FindBanners(count int) ([]entities.Banner, error)
+
+	// CreateBanner создает новый объект рекламного баннера в БД
+	CreateBanner(banner *entities.Banner) error
 }
