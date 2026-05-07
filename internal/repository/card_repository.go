@@ -25,7 +25,10 @@ func NewCardRepository(db *gorm.DB) ports.CardRepository {
 func (r *cardRepo) FindByID(cardID uuid.UUID) (*entities.Card, error) {
 	var card entities.Card
 
-	err := r.db.First(&card, cardID).Error
+	err := r.db.
+		Preload("ActiveReply").
+		First(&card, cardID).
+		Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil

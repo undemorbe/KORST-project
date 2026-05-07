@@ -61,6 +61,8 @@ func main() {
 	cardRepo := repositories.NewCardRepository(db)
 	profileRepo := repositories.NewProfileRepository(db)
 	reviewRepo := repositories.NewReviewRepository(db)
+	replyRepo := repositories.NewReplyRepository(db)
+	bannerRepo := repositories.NewBannerRepository(db)
 
 	// Подключение общих сервисов
 	tokenService := services.NewTokenService(userRepo, refreshTokenRepo)
@@ -70,6 +72,8 @@ func main() {
 	cardService := services.NewCardService(cardRepo, userRepo, fileService)
 	userService := services.NewUserService(userRepo, profileRepo, fileService)
 	reviewService := services.NewReviewService(userRepo, profileRepo, reviewRepo)
+	replyService := services.NewReplyService(cardRepo, replyRepo)
+	bannerService := services.NewBannerService(bannerRepo, fileService)
 
 	// Подключение общих хэндлеров
 	authHandler := handlers.NewAuthHandler(authService, tokenService)
@@ -77,6 +81,8 @@ func main() {
 	cardHandler := handlers.NewCardHandler(cardService, tokenService)
 	userHandler := handlers.NewUserHandler(userService, tokenService)
 	reviewHandler := handlers.NewReviewHandler(reviewService, tokenService)
+	replyHandler := handlers.NewReplyHandler(replyService, tokenService)
+	bannerHandler := handlers.NewBannerHandler(bannerService)
 
 	// Подключение модулей мессенджера
 	chatRepo := messengerRepositories.NewChatRepository(db)
@@ -132,6 +138,20 @@ func main() {
 		messenger.POST("/send-image", messageHandler.SendImage)
 		messenger.PUT("/change-message", messageHandler.ChangeMessage)
 		messenger.DELETE("/delete-message", messageHandler.DeleteMessage)
+	}
+
+	replies := api.Group("/replies")
+	{
+		replies.POST("/create-reply", replyHandler.CreateReply)
+		replies.POST("/approve-executor", replyHandler.ApproveExecutor)
+		replies.POST("/reject-executor", replyHandler.RejectExecutor)
+		replies.POST("/close", replyHandler.CloseCard)
+	}
+
+	banners := api.Group("/banners")
+	{
+		banners.POST("/save-banner", bannerHandler.SaveBanner)
+		banners.GET("/get-banners", bannerHandler.GetBanners)
 	}
 
 	// Маршруты для получения изображений
