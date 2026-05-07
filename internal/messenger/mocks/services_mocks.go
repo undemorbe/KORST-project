@@ -61,3 +61,12 @@ func (m *MockMessageService) DeleteMessage(authorID uuid.UUID, messageID uuid.UU
 	args := m.Called(authorID, messageID)
 	return args.Error(0)
 }
+
+// MockHub - структура для передачи
+// фиктивной реализации Hub в тестах
+type MockHub struct{ mock.Mock }
+
+// SendToUser задает фиктивную реализацию отправки сообщения по WebSocket
+func (m *MockHub) SendToUser(userID uuid.UUID, msg []byte) {
+	m.Called(userID, msg)
+}

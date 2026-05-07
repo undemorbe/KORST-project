@@ -39,3 +39,9 @@ type MessageService interface {
 	// DeleteMessage удаляет определенное сообщение из чата
 	DeleteMessage(authorID uuid.UUID, messageID uuid.UUID) error
 }
+
+// Hub содержит порты для методов работы с WebSocket
+type Hub interface {
+	// SendToUser отправляет сообщение определенному пклиенту по WebSocket
+	SendToUser(userID uuid.UUID, msg []byte)
+}

@@ -33,8 +33,10 @@ type ChatInfo struct {
 // Message - структура сообщения для ответов на запросы
 // получения чатов и сообщений в них
 type Message struct {
-	ID        uuid.UUID `json:"id"`
-	AuthorID  uuid.UUID `json:"author-id"`
+	ID       uuid.UUID `json:"id"`
+	ChatID   uuid.UUID `json:"chat-id,omitempty"`
+	AuthorID uuid.UUID `json:"author-id"`
+
 	Text      string    `json:"text,omitempty"`
 	ImageURL  string    `json:"image_url,omitempty"`
 	IsSeen    bool      `json:"is_seen"`

@@ -14,3 +14,10 @@ type Storage interface {
 	// Delete удаляет изображение в хранилище по заданному пути
 	Delete(path string) error
 }
+
+// Connection содержит порты для объекта websocket.Conn
+type Connection interface {
+	ReadMessage() (int, []byte, error)
+	WriteMessage(messageType int, data []byte) error
+	Close() error
+}
