@@ -9,9 +9,11 @@ import (
 	messengerMocks "korst-backend/internal/messenger/mocks"
 	mockRepositories "korst-backend/internal/mocks/repositories"
 	mockServices "korst-backend/internal/mocks/services"
+	"os"
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -23,28 +25,34 @@ func TestSendMessage(t *testing.T) {
 	mockChatRepo := &messengerMocks.MockChatRepo{}
 	mockMessageRepo := &messengerMocks.MockMessageRepo{}
 	mockFileService := &mockServices.MockFileService{}
+	mockHub := &messengerMocks.MockHub{}
 
-	MessageService := NewMessageService(mockUserRepo,
-		mockChatRepo, mockMessageRepo, mockFileService)
+	MessageService := NewMessageService(mockUserRepo, mockChatRepo,
+		mockMessageRepo, mockFileService, mockHub)
 
 	authorID := uuid.New()
+	anotherUserID := uuid.New()
 	chatID := uuid.New()
 	text := "Привет"
 
 	author := &entities.User{ID: authorID}
-	chat := &messengerEntities.Chat{ID: chatID}
-
-	requiredMessage := &messengerEntities.Message{
-		ChatID:   chatID,
-		AuthorID: authorID,
-		Text:     text,
+	chat := &messengerEntities.Chat{
+		ID:         chatID,
+		CustomerID: authorID,
+		MerchantID: anotherUserID,
 	}
+
+	_ = os.Setenv("BASE_URL", "base-url")
 
 	mockUserRepo.On("FindByID", authorID).Return(author, nil)
 
+	mockMessageRepo.
+		On("CreateMessage", mock.AnythingOfType("*entities.Message")).
+		Return(nil)
+
 	mockChatRepo.On("FindByID", chatID).Return(chat, nil)
 
-	mockMessageRepo.On("CreateMessage", requiredMessage).Return(nil)
+	mockHub.On("SendToUser", anotherUserID, mock.AnythingOfType("[]uint8"))
 
 	err := MessageService.SendMessage(authorID, chatID, text)
 
@@ -52,6 +60,7 @@ func TestSendMessage(t *testing.T) {
 	mockUserRepo.AssertExpectations(t)
 	mockChatRepo.AssertExpectations(t)
 	mockMessageRepo.AssertExpectations(t)
+	mockHub.AssertExpectations(t)
 }
 
 // TestChangeMessage тестирует изменение существующего сообщения
@@ -60,9 +69,10 @@ func TestChangeMessage(t *testing.T) {
 	mockChatRepo := &messengerMocks.MockChatRepo{}
 	mockMessageRepo := &messengerMocks.MockMessageRepo{}
 	mockFileService := &mockServices.MockFileService{}
+	mockHub := &messengerMocks.MockHub{}
 
-	MessageService := NewMessageService(mockUserRepo,
-		mockChatRepo, mockMessageRepo, mockFileService)
+	MessageService := NewMessageService(mockUserRepo, mockChatRepo,
+		mockMessageRepo, mockFileService, mockHub)
 
 	authorID := uuid.New()
 	messageID := uuid.New()
@@ -97,9 +107,10 @@ func TestDeleteMessage(t *testing.T) {
 	mockChatRepo := &messengerMocks.MockChatRepo{}
 	mockMessageRepo := &messengerMocks.MockMessageRepo{}
 	mockFileService := &mockServices.MockFileService{}
+	mockHub := &messengerMocks.MockHub{}
 
-	MessageService := NewMessageService(mockUserRepo,
-		mockChatRepo, mockMessageRepo, mockFileService)
+	MessageService := NewMessageService(mockUserRepo, mockChatRepo,
+		mockMessageRepo, mockFileService, mockHub)
 
 	authorID := uuid.New()
 	messageID := uuid.New()

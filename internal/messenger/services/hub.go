@@ -3,6 +3,8 @@
 package services
 
 import (
+	"sync"
+
 	"github.com/google/uuid"
 )
 
@@ -13,14 +15,16 @@ type Hub struct {
 
 	Register   chan *Client
 	Unregister chan *Client
+
+	mu sync.RWMutex
 }
 
 // NewHub создает и возвращает новый объект Hub
 func NewHub() *Hub {
 	return &Hub{
-		Clients:    make(map[uuid.UUID]*Client),
-		Register:   make(chan *Client),
-		Unregister: make(chan *Client),
+		Clients:    make(map[uuid.UUID]*Client, 100),
+		Register:   make(chan *Client, 100),
+		Unregister: make(chan *Client, 100),
 	}
 }
 
@@ -31,20 +35,33 @@ func (h *Hub) Run() {
 		select {
 
 		case client := <-h.Register:
+			h.mu.Lock()
 			h.Clients[client.UserID] = client
+			h.mu.Unlock()
 
 		case client := <-h.Unregister:
+			h.mu.Lock()
 			delete(h.Clients, client.UserID)
+			h.mu.Unlock()
+
+			close(client.Send)
 		}
 	}
 }
 
 // SendToUser отправляет сообщение определенному пклиенту по WebSocket
 func (h *Hub) SendToUser(userID uuid.UUID, msg []byte) {
+
+	h.mu.RLock()
 	client, ok := h.Clients[userID]
+	h.mu.RUnlock()
+
 	if !ok {
 		return
 	}
 
-	client.Send <- msg
+	select {
+	case client.Send <- msg:
+	default:
+	}
 }

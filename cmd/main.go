@@ -51,6 +51,12 @@ func main() {
 	}
 	logger.Log.Info("Миграции успешно применены")
 
+	// Подключение Hub для работы WebSocket
+	hub := messengerServices.NewHub()
+
+	// Запуск Hub для WebSocket
+	go hub.Run()
+
 	// Подключение хранилища
 	storage := storage.NewLocalStorage(os.Getenv("BASE_PATH"))
 
@@ -89,10 +95,11 @@ func main() {
 	messageRepo := messengerRepositories.NewMessageRepository(db)
 
 	chatService := messengerServices.NewChatService(userRepo, cardRepo, chatRepo, messageRepo)
-	messageService := messengerServices.NewMessageService(userRepo, chatRepo, messageRepo, fileService)
+	messageService := messengerServices.NewMessageService(userRepo, chatRepo, messageRepo, fileService, hub)
 
 	chatHandler := messengerHandlers.NewChatHandler(chatService, tokenService)
 	messageHandler := messengerHandlers.NewMessageHandler(messageService, tokenService)
+	wsHandler := messengerHandlers.NewWSHandler(hub, tokenService)
 
 	// Регистрация маршрутов
 	api := r.Group("/api")
@@ -153,6 +160,8 @@ func main() {
 		banners.POST("/save-banner", bannerHandler.SaveBanner)
 		banners.GET("/get-banners", bannerHandler.GetBanners)
 	}
+
+	api.GET("/websocket", wsHandler.Handle)
 
 	// Маршруты для получения изображений
 	uploads := r.Group("/uploads")

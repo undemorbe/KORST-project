@@ -19,10 +19,12 @@ type Client struct {
 
 // WritePump непрерывно отправляет
 // поступающие сообщения на WebSocket клиента
-func (c *Client) WritePump() {
+func (c *Client) WritePump(h *Hub) {
 
 	defer func() {
+		h.Unregister <- c
 		c.Conn.Close()
+		close(c.Send)
 	}()
 
 	for msg := range c.Send {

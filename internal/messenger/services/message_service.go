@@ -31,12 +31,14 @@ type MessageService struct {
 func NewMessageService(userRepo ports.UserRepository,
 	chatRepo messengerPorts.ChatRepository,
 	messageRepo messengerPorts.MessageRepository,
-	fileService ports.FileService) messengerPorts.MessageService {
+	fileService ports.FileService,
+	hub messengerPorts.Hub) messengerPorts.MessageService {
 	return &MessageService{
 		userRepo:    userRepo,
 		chatRepo:    chatRepo,
 		messageRepo: messageRepo,
 		fileService: fileService,
+		hub:         hub,
 	}
 }
 

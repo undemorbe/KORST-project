@@ -48,10 +48,10 @@ func (h *WSHandler) Handle(c *gin.Context) {
 	client := &services.Client{
 		UserID: userID,
 		Conn:   conn,
-		Send:   make(chan []byte),
+		Send:   make(chan []byte, 50),
 	}
 
 	h.hub.Register <- client
 
-	go client.WritePump()
+	go client.WritePump(h.hub)
 }
