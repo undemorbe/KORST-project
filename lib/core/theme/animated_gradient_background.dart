@@ -4,10 +4,7 @@ import 'package:flutter/material.dart';
 class AnimatedGradientBackground extends StatefulWidget {
   final Widget child;
 
-  const AnimatedGradientBackground({
-    super.key,
-    required this.child,
-  });
+  const AnimatedGradientBackground({super.key, required this.child});
 
   @override
   State<AnimatedGradientBackground> createState() =>
@@ -39,17 +36,12 @@ class _AnimatedGradientBackgroundState extends State<AnimatedGradientBackground>
       begin: Alignment(-1.0 + drift, -1.0),
       end: Alignment(1.0 - drift, 1.0),
       colors: const [
-        Color(0xFFF8FAFC),
-        Color(0xFFEEF2FF),
-        Color(0xFFE0E7FF),
-        Color(0xFFF3E8FF),
+        Color(0xFFF6F7F4),
+        Color(0xFFEAF4EF),
+        Color(0xFFDCEBE6),
+        Color(0xFFF9EFE6),
       ],
-      stops: [
-        0.0,
-        0.35 + drift * 0.2,
-        0.72 + drift * 0.08,
-        1.0,
-      ],
+      stops: [0.0, 0.35 + drift * 0.2, 0.72 + drift * 0.08, 1.0],
     );
   }
 
@@ -59,17 +51,12 @@ class _AnimatedGradientBackgroundState extends State<AnimatedGradientBackground>
       begin: Alignment(-1.0, -0.9 + drift),
       end: Alignment(1.0, 0.9 - drift),
       colors: const [
-        Color(0xFF020617), // Slate 950
-        Color(0xFF0F172A), // Slate 900
-        Color(0xFF1E1B4B), // Indigo 950
-        Color(0xFF020617), // Slate 950
+        Color(0xFF0B0F0D),
+        Color(0xFF101412),
+        Color(0xFF18231F),
+        Color(0xFF0B0F0D),
       ],
-      stops: [
-        0.0,
-        0.4 + drift * 0.1,
-        0.7 + drift * 0.05,
-        1.0,
-      ],
+      stops: [0.0, 0.4 + drift * 0.1, 0.7 + drift * 0.05, 1.0],
     );
   }
 

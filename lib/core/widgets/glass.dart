@@ -24,11 +24,13 @@ class Glass extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final base = color ??
+    final base =
+        color ??
         (isDark
             ? Colors.black.withValues(alpha: opacity)
             : Colors.white.withValues(alpha: opacity));
-    final border = borderColor ??
+    final border =
+        borderColor ??
         (isDark
             ? Colors.white.withValues(alpha: 0.14)
             : Colors.black.withValues(alpha: 0.06));
@@ -72,27 +74,32 @@ class GlassCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeColor = Theme.of(context).colorScheme.surface.withValues(alpha: 0.85);
-    final borderColor = Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3);
+    final themeColor = Theme.of(
+      context,
+    ).colorScheme.surface.withValues(alpha: 0.85);
+    final borderColor = Theme.of(
+      context,
+    ).colorScheme.outlineVariant.withValues(alpha: 0.3);
 
     Widget content = child ?? const SizedBox.shrink();
 
     if (clipBehavior != Clip.none) {
       content = ClipRRect(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(8),
         child: content,
       );
     }
 
     return Padding(
-      padding: margin ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding:
+          margin ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Glass(
-        blurSigma: 24,
-        opacity: 0.85,
+        blurSigma: 14,
+        opacity: 0.92,
         color: color ?? themeColor,
         borderColor: borderColor,
         borderWidth: 1,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(8),
         child: content,
       ),
     );
@@ -144,5 +151,6 @@ class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   @override
-  Size get preferredSize => Size.fromHeight(kToolbarHeight + (bottom?.preferredSize.height ?? 0.0));
+  Size get preferredSize =>
+      Size.fromHeight(kToolbarHeight + (bottom?.preferredSize.height ?? 0.0));
 }

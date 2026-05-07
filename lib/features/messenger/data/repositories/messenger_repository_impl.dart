@@ -50,15 +50,19 @@ class MessengerRepositoryImpl implements MessengerRepository {
         merchantChats: merchantChats,
         customerChats: customerChats,
       );
-      
+
       try {
-        sl<LocalStorageService>().put('cache_chats', jsonEncode(response.toJson()));
+        sl<LocalStorageService>().put(
+          'cache_chats',
+          jsonEncode(response.toJson()),
+        );
       } catch (_) {}
-      
+
       return response;
     } on DioException catch (e) {
       try {
-        final cachedStr = sl<LocalStorageService>().get('cache_chats') as String?;
+        final cachedStr =
+            sl<LocalStorageService>().get('cache_chats') as String?;
         if (cachedStr != null) {
           return ChatsResponse.fromJson(jsonDecode(cachedStr));
         }
@@ -97,25 +101,26 @@ class MessengerRepositoryImpl implements MessengerRepository {
           .map((e) => _mapMessage(e))
           .whereType<MessageEntity>()
           .toList();
-          
+
       try {
         final messagesJson = messages.map((m) => m.toJson()).toList();
-        sl<LocalStorageService>().put('cache_messages_$chatId', jsonEncode(messagesJson));
+        sl<LocalStorageService>().put(
+          'cache_messages_$chatId',
+          jsonEncode(messagesJson),
+        );
       } catch (_) {}
-      
+
       return messages;
     } on DioException catch (e) {
       try {
-        final cachedStr = sl<LocalStorageService>().get('cache_messages_$chatId') as String?;
+        final cachedStr =
+            sl<LocalStorageService>().get('cache_messages_$chatId') as String?;
         if (cachedStr != null) {
           final List<dynamic> decoded = jsonDecode(cachedStr);
           return decoded.map((m) => MessageEntity.fromJson(m)).toList();
         }
       } catch (_) {}
-      throw _toApiException(
-        e,
-        fallbackMessage: 'Failed to load messages',
-      );
+      throw _toApiException(e, fallbackMessage: 'Failed to load messages');
     }
   }
 
@@ -145,10 +150,31 @@ class MessengerRepositoryImpl implements MessengerRepository {
         data: {'chat-id': chatId, 'text': text.trim()},
       );
     } on DioException catch (e) {
-      throw _toApiException(
-        e,
-        fallbackMessage: 'Failed to send message',
+      throw _toApiException(e, fallbackMessage: 'Failed to send message');
+    }
+  }
+
+  @override
+  Future<void> sendImage({
+    required String chatId,
+    required String filePath,
+    String? text,
+  }) async {
+    final trimmedText = text?.trim();
+    final fields = <String, dynamic>{'chat-id': chatId};
+    if (trimmedText != null && trimmedText.isNotEmpty) {
+      fields['text'] = trimmedText;
+    }
+
+    try {
+      await _api.uploadFile(
+        ApiConstants.messengerSendImage,
+        filePath: filePath,
+        fileFieldName: 'image',
+        extraFields: fields,
       );
+    } on DioException catch (e) {
+      throw _toApiException(e, fallbackMessage: 'Failed to send image');
     }
   }
 
@@ -163,10 +189,7 @@ class MessengerRepositoryImpl implements MessengerRepository {
         data: {'message-id': messageId, 'text': text.trim()},
       );
     } on DioException catch (e) {
-      throw _toApiException(
-        e,
-        fallbackMessage: 'Failed to edit message',
-      );
+      throw _toApiException(e, fallbackMessage: 'Failed to edit message');
     }
   }
 
@@ -252,6 +275,11 @@ class MessengerRepositoryImpl implements MessengerRepository {
       id: (json['id'] as String?) ?? '',
       authorId: (json['author-id'] as String?) ?? '',
       text: (json['text'] as String?) ?? '',
+      imageUrl:
+          json['imageURL'] as String? ??
+          json['image-url'] as String? ??
+          json['imageUrl'] as String?,
+      isSeen: json['is-seen'] as bool? ?? json['isSeen'] as bool?,
       created: created,
     );
   }

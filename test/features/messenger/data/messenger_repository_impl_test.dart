@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:korst/core/api/api_client.dart';
@@ -66,8 +67,15 @@ void main() {
       dio = Dio();
       refreshDio = Dio();
       tokenStorage = TokenStorage(_FakeLocalStorage());
-      await tokenStorage.saveTokens(accessToken: 'access-1', refreshToken: 'refresh-1');
-      apiClient = ApiClient(dio: dio, refreshDio: refreshDio, tokenStorage: tokenStorage);
+      await tokenStorage.saveTokens(
+        accessToken: 'access-1',
+        refreshToken: 'refresh-1',
+      );
+      apiClient = ApiClient(
+        dio: dio,
+        refreshDio: refreshDio,
+        tokenStorage: tokenStorage,
+      );
       repo = MessengerRepositoryImpl(apiClient);
     });
 
@@ -124,7 +132,9 @@ void main() {
           }
           return _jsonBody(404, {'code': ApiErrorCodes.notFound});
         });
-        refreshDio.httpClientAdapter = _Adapter((options) async => _jsonBody(500, {}));
+        refreshDio.httpClientAdapter = _Adapter(
+          (options) async => _jsonBody(500, {}),
+        );
 
         final response = await repo.getChats();
 
@@ -169,13 +179,46 @@ void main() {
           }
           return _jsonBody(404, {'code': ApiErrorCodes.notFound});
         });
-        refreshDio.httpClientAdapter = _Adapter((options) async => _jsonBody(500, {}));
+        refreshDio.httpClientAdapter = _Adapter(
+          (options) async => _jsonBody(500, {}),
+        );
 
         final messages = await repo.getMessages('chat-123');
 
         expect(messages.length, 3);
-        expect(messages.first.text, 'Последнее сообщение'); // API returns descending order
+        expect(
+          messages.first.text,
+          'Последнее сообщение',
+        ); // API returns descending order
         expect(messages.last.text, 'Первое сообщение');
+      });
+
+      test('parses imageURL and is-seen fields', () async {
+        dio.httpClientAdapter = _Adapter((options) async {
+          if (options.path.endsWith(ApiConstants.messengerMessages)) {
+            return _jsonBody(200, {
+              'messages': [
+                {
+                  'id': 'msg-image',
+                  'author-id': 'me',
+                  'imageURL': 'https://example.com/image.png',
+                  'created': '2026-03-16T16:00:00Z',
+                  'is-seen': true,
+                },
+              ],
+            });
+          }
+          return _jsonBody(404, {'code': ApiErrorCodes.notFound});
+        });
+        refreshDio.httpClientAdapter = _Adapter(
+          (options) async => _jsonBody(500, {}),
+        );
+
+        final messages = await repo.getMessages('chat-123');
+
+        expect(messages.single.imageUrl, 'https://example.com/image.png');
+        expect(messages.single.isSeen, true);
+        expect(messages.single.text, '');
       });
     });
 
@@ -190,7 +233,9 @@ void main() {
           }
           return _jsonBody(404, {'code': ApiErrorCodes.notFound});
         });
-        refreshDio.httpClientAdapter = _Adapter((options) async => _jsonBody(500, {}));
+        refreshDio.httpClientAdapter = _Adapter(
+          (options) async => _jsonBody(500, {}),
+        );
 
         await repo.createChat(userId: 'seller-123', cardId: 'card-456');
 
@@ -211,12 +256,53 @@ void main() {
           }
           return _jsonBody(404, {'code': ApiErrorCodes.notFound});
         });
-        refreshDio.httpClientAdapter = _Adapter((options) async => _jsonBody(500, {}));
+        refreshDio.httpClientAdapter = _Adapter(
+          (options) async => _jsonBody(500, {}),
+        );
 
         await repo.sendMessage(chatId: 'chat-123', text: '  Привет  ');
 
         expect(capturedData!['chat-id'], 'chat-123');
         expect(capturedData!['text'], 'Привет'); // trimmed
+      });
+
+      test('sends image as multipart with optional text', () async {
+        final tempFile = await File(
+          '${Directory.systemTemp.path}/korst_test_image.png',
+        ).writeAsBytes([1, 2, 3]);
+        String? capturedContentType;
+        String? capturedToken;
+        FormData? capturedForm;
+
+        dio.httpClientAdapter = _Adapter((options) async {
+          if (options.path.endsWith(ApiConstants.messengerSendImage)) {
+            capturedContentType = options.contentType;
+            capturedToken = options.headers[ApiConstants.headerAccessToken]
+                ?.toString();
+            capturedForm = options.data as FormData?;
+            return _jsonBody(200, {});
+          }
+          return _jsonBody(404, {'code': ApiErrorCodes.notFound});
+        });
+        refreshDio.httpClientAdapter = _Adapter(
+          (options) async => _jsonBody(500, {}),
+        );
+
+        await repo.sendImage(
+          chatId: 'chat-123',
+          filePath: tempFile.path,
+          text: '  Картинка  ',
+        );
+
+        expect(capturedContentType, contains('multipart'));
+        expect(capturedToken, 'access-1');
+        expect(capturedForm, isNotNull);
+        final fields = Map<String, String>.fromEntries(capturedForm!.fields);
+        expect(fields['chat-id'], 'chat-123');
+        expect(fields['text'], 'Картинка');
+        expect(capturedForm!.files.single.key, 'image');
+
+        await tempFile.delete();
       });
     });
 
@@ -233,7 +319,9 @@ void main() {
           }
           return _jsonBody(404, {'code': ApiErrorCodes.notFound});
         });
-        refreshDio.httpClientAdapter = _Adapter((options) async => _jsonBody(500, {}));
+        refreshDio.httpClientAdapter = _Adapter(
+          (options) async => _jsonBody(500, {}),
+        );
 
         await repo.updateMessage(messageId: 'msg-123', text: 'Новый текст');
 
@@ -256,7 +344,9 @@ void main() {
           }
           return _jsonBody(404, {'code': ApiErrorCodes.notFound});
         });
-        refreshDio.httpClientAdapter = _Adapter((options) async => _jsonBody(500, {}));
+        refreshDio.httpClientAdapter = _Adapter(
+          (options) async => _jsonBody(500, {}),
+        );
 
         await repo.deleteMessage('msg-123');
 

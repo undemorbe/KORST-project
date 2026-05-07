@@ -28,22 +28,22 @@ Future<void> _checkNewMessagesBackground() async {
   } catch (_) {
     // If already initialized
   }
-  
+
   final notificationService = NotificationService();
   await notificationService.init();
 
   final messengerRepo = di.sl<MessengerRepository>();
   final localStorage = di.sl<LocalStorageService>();
-  
+
   try {
     final response = await messengerRepo.getChats();
     final cachedStr = localStorage.get('cache_chats') as String?;
-    
+
     if (cachedStr != null) {
       final cachedResponse = ChatsResponse.fromJson(jsonDecode(cachedStr));
       _compareAndNotify(cachedResponse, response, notificationService);
     }
-    
+
     // Save new cache
     await localStorage.put('cache_chats', jsonEncode(response.toJson()));
   } catch (e) {
@@ -51,18 +51,22 @@ Future<void> _checkNewMessagesBackground() async {
   }
 }
 
-void _compareAndNotify(ChatsResponse oldData, ChatsResponse newData, NotificationService notificationService) {
+void _compareAndNotify(
+  ChatsResponse oldData,
+  ChatsResponse newData,
+  NotificationService notificationService,
+) {
   final allNewChats = [...newData.customerChats, ...newData.merchantChats];
   final allOldChats = [...oldData.customerChats, ...oldData.merchantChats];
-  
+
   for (var newChat in allNewChats) {
     if (newChat.lastMessage == null) continue;
-    
+
     final oldChat = allOldChats.cast<dynamic>().firstWhere(
       (c) => c.id == newChat.id,
       orElse: () => null,
     );
-    
+
     // If it's a new chat or the last message is different, and it's not from us
     if (oldChat == null || oldChat.lastMessage?.id != newChat.lastMessage?.id) {
       // Check if it's from us by comparing authorId with chat user id
@@ -81,49 +85,43 @@ void _compareAndNotify(ChatsResponse oldData, ChatsResponse newData, Notificatio
 
 class BackgroundTaskManager {
   Timer? _foregroundTimer;
+  bool _initialized = false;
+  bool _pollingStarted = false;
 
   Future<void> init() async {
-    Workmanager().initialize(
-      callbackDispatcher,
-    );
-    
+    if (_initialized) return;
+    try {
+      await Workmanager().initialize(callbackDispatcher);
+    } catch (_) {}
+
     await NotificationService().init();
+    _initialized = true;
   }
 
   void startPolling() {
-    // Background polling
-    Workmanager().registerPeriodicTask(
-      "1",
-      fetchChatsTask,
-      frequency: const Duration(minutes: 15),
-      constraints: Constraints(
-        networkType: NetworkType.connected,
-      ),
-    );
+    if (_pollingStarted) return;
+    _pollingStarted = true;
+    try {
+      unawaited(
+        Workmanager().registerPeriodicTask(
+          'fetch_chats_periodic',
+          fetchChatsTask,
+          frequency: const Duration(minutes: 15),
+          constraints: Constraints(networkType: NetworkType.connected),
+        ),
+      );
+    } catch (_) {}
 
-    // Foreground polling
     _foregroundTimer?.cancel();
-    _foregroundTimer = Timer.periodic(const Duration(seconds: 15), (timer) async {
-      final messengerRepo = di.sl<MessengerRepository>();
-      final localStorage = di.sl<LocalStorageService>();
-      final notificationService = NotificationService();
-      
-      try {
-        final cachedStr = localStorage.get('cache_chats') as String?;
-        final response = await messengerRepo.getChats();
-        
-        if (cachedStr != null) {
-          final cachedResponse = ChatsResponse.fromJson(jsonDecode(cachedStr));
-          _compareAndNotify(cachedResponse, response, notificationService);
-        }
-        
-        await localStorage.put('cache_chats', jsonEncode(response.toJson()));
-      } catch (_) {}
-    });
+    _foregroundTimer = null;
   }
 
   void stopPolling() {
-    Workmanager().cancelAll();
+    if (!_pollingStarted) return;
+    _pollingStarted = false;
+    try {
+      unawaited(Workmanager().cancelByUniqueName('fetch_chats_periodic'));
+    } catch (_) {}
     _foregroundTimer?.cancel();
     _foregroundTimer = null;
   }

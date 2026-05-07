@@ -4,6 +4,7 @@ import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
+import '../../../../core/widgets/app_layout.dart';
 import '../store/auth_store.dart';
 import 'package:korst/l10n/generated/app_localizations.dart';
 
@@ -19,7 +20,7 @@ class _PhoneNumberPageState extends State<PhoneNumberPage> {
   final TextEditingController _phoneController = TextEditingController();
 
   final _maskFormatter = MaskTextInputFormatter(
-    mask: '+7 (###) ###-##-##',
+    mask: '(###) ###-##-##',
     filter: {"#": RegExp(r'[0-9]')},
     type: MaskAutoCompletionType.lazy,
   );
@@ -46,7 +47,9 @@ class _PhoneNumberPageState extends State<PhoneNumberPage> {
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.pleaseEnterValidNumber)),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.pleaseEnterValidNumber),
+        ),
       );
     }
   }
@@ -57,7 +60,7 @@ class _PhoneNumberPageState extends State<PhoneNumberPage> {
       appBar: GlassAppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: BackButton(color: Colors.black),
+        leading: BackButton(color: Theme.of(context).colorScheme.onSurface),
       ),
       body: SafeArea(
         child: Padding(
@@ -65,16 +68,14 @@ class _PhoneNumberPageState extends State<PhoneNumberPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                AppLocalizations.of(context)!.yourPhoneNumber,
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              AppPageHeader(
+                title: AppLocalizations.of(context)!.yourPhoneNumber,
+                subtitle: AppLocalizations.of(
+                  context,
+                )!.weWillSendVerificationCode,
+                icon: Icons.phone_iphone,
               ),
-              const SizedBox(height: 8),
-              Text(
-                AppLocalizations.of(context)!.weWillSendVerificationCode,
-                style: TextStyle(color: Colors.grey, fontSize: 16),
-              ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 10),
               TextField(
                 controller: _phoneController,
                 inputFormatters: [_maskFormatter],
@@ -82,7 +83,13 @@ class _PhoneNumberPageState extends State<PhoneNumberPage> {
                 style: const TextStyle(fontSize: 18),
                 decoration: InputDecoration(
                   labelText: AppLocalizations.of(context)!.phoneNumber,
-                  hintText: '+7 (999) 000-00-00',
+                  prefixText: '+7 ',
+                  prefixStyle: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  hintText: '(999) 000-00-00',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),

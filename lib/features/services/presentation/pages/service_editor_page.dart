@@ -1,6 +1,7 @@
 import 'package:korst/core/widgets/glass.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +11,7 @@ import '../../domain/entities/service_category.dart';
 import '../../domain/entities/service_entity.dart';
 import '../store/service_store.dart';
 import '../../../auth/presentation/store/auth_store.dart';
+import '../../../../core/widgets/app_layout.dart';
 import 'package:korst/l10n/generated/app_localizations.dart';
 
 class ServiceEditorPage extends StatefulWidget {
@@ -51,6 +53,7 @@ class _ServiceEditorPageState extends State<ServiceEditorPage> {
       text: service?.tags.join(', ') ?? '',
     );
     _selectedCategory = service?.category ?? ServiceCategory.other;
+    _serviceStore.loadServices();
   }
 
   @override
@@ -82,7 +85,9 @@ class _ServiceEditorPageState extends State<ServiceEditorPage> {
     final user = _authStore.userProfile;
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.errorUserNotFound)),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.errorUserNotFound),
+        ),
       );
       return;
     }
@@ -137,6 +142,38 @@ class _ServiceEditorPageState extends State<ServiceEditorPage> {
     context.pop();
   }
 
+  List<String> get _selectedTags => _tagsController.text
+      .split(',')
+      .map((e) => e.trim())
+      .where((e) => e.isNotEmpty)
+      .toList();
+
+  List<String> get _availableTags {
+    final tags = <String>{};
+    for (final service in _serviceStore.services) {
+      for (final tag in service.tags) {
+        final normalized = tag.trim();
+        if (normalized.isNotEmpty) tags.add(normalized);
+      }
+    }
+    final result = tags.toList()
+      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+    return result.take(18).toList();
+  }
+
+  void _toggleTag(String tag) {
+    final current = _selectedTags;
+    final exists = current.any((e) => e.toLowerCase() == tag.toLowerCase());
+    setState(() {
+      if (exists) {
+        current.removeWhere((e) => e.toLowerCase() == tag.toLowerCase());
+      } else {
+        current.add(tag);
+      }
+      _tagsController.text = current.join(', ');
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final title = widget.isEditing
@@ -146,7 +183,9 @@ class _ServiceEditorPageState extends State<ServiceEditorPage> {
         ? AppLocalizations.of(context)!.updateTask
         : AppLocalizations.of(context)!.createTask;
 
-    return Scaffold(extendBodyBehindAppBar: true, extendBody: true,
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      extendBody: true,
       appBar: GlassAppBar(title: Text(title)),
       body: SingleChildScrollView(
         padding: EdgeInsets.only(
@@ -160,6 +199,11 @@ class _ServiceEditorPageState extends State<ServiceEditorPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              AppPageHeader(
+                title: title,
+                subtitle: AppLocalizations.of(context)!.taskDetails,
+                icon: Icons.edit_note,
+              ),
               GlassCard(
                 clipBehavior: Clip.antiAlias,
                 child: InkWell(
@@ -226,8 +270,10 @@ class _ServiceEditorPageState extends State<ServiceEditorPage> {
                       const SizedBox(height: 12),
                       TextFormField(
                         controller: _titleController,
+                        inputFormatters: [LengthLimitingTextInputFormatter(80)],
+                        maxLength: 80,
                         decoration: InputDecoration(
-                          labelText: AppLocalizations.of(context)!.title,
+                          labelText: '${AppLocalizations.of(context)!.title} *',
                         ),
                         validator: (v) => v == null || v.trim().isEmpty
                             ? AppLocalizations.of(context)!.enterTitle
@@ -236,10 +282,14 @@ class _ServiceEditorPageState extends State<ServiceEditorPage> {
                       const SizedBox(height: 12),
                       TextFormField(
                         controller: _descriptionController,
+                        inputFormatters: [
+                          LengthLimitingTextInputFormatter(700),
+                        ],
                         decoration: InputDecoration(
                           labelText: AppLocalizations.of(context)!.description,
                         ),
                         maxLines: 3,
+                        maxLength: 700,
                       ),
                     ],
                   ),
@@ -253,7 +303,11 @@ class _ServiceEditorPageState extends State<ServiceEditorPage> {
                     children: [
                       TextFormField(
                         controller: _priceController,
-                        decoration: InputDecoration(labelText: AppLocalizations.of(context)!.budget),
+                        inputFormatters: [LengthLimitingTextInputFormatter(10)],
+                        decoration: InputDecoration(
+                          labelText:
+                              '${AppLocalizations.of(context)!.budget} *',
+                        ),
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                         ),
@@ -264,7 +318,9 @@ class _ServiceEditorPageState extends State<ServiceEditorPage> {
                           final parsed = double.tryParse(
                             v.replaceAll(',', '.'),
                           );
-                          if (parsed == null) return AppLocalizations.of(context)!.invalidBudget;
+                          if (parsed == null) {
+                            return AppLocalizations.of(context)!.invalidBudget;
+                          }
                           return null;
                         },
                       ),
@@ -315,10 +371,47 @@ class _ServiceEditorPageState extends State<ServiceEditorPage> {
                       const SizedBox(height: 12),
                       TextFormField(
                         controller: _tagsController,
+                        inputFormatters: [
+                          LengthLimitingTextInputFormatter(160),
+                        ],
+                        maxLength: 160,
                         decoration: InputDecoration(
                           labelText: AppLocalizations.of(context)!.tags,
                           hintText: AppLocalizations.of(context)!.tagsHint,
                         ),
+                      ),
+                      Observer(
+                        builder: (_) {
+                          final tags = _availableTags;
+                          if (tags.isEmpty) return const SizedBox.shrink();
+                          final selected = _selectedTags
+                              .map((e) => e.toLowerCase())
+                              .toSet();
+                          return Align(
+                            alignment: Alignment.centerLeft,
+                            child: Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: tags.map((tag) {
+                                final isSelected = selected.contains(
+                                  tag.toLowerCase(),
+                                );
+                                return FilterChip(
+                                  label: Text(tag),
+                                  selected: isSelected,
+                                  showCheckmark: false,
+                                  onSelected: (_) => _toggleTag(tag),
+                                  backgroundColor: Theme.of(
+                                    context,
+                                  ).colorScheme.surfaceContainerHighest,
+                                  selectedColor: Theme.of(
+                                    context,
+                                  ).colorScheme.outlineVariant,
+                                );
+                              }).toList(),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),

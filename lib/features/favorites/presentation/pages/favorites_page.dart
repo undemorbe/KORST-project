@@ -4,6 +4,7 @@ import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/widgets/app_layout.dart';
 import '../../../services/presentation/store/service_store.dart';
 import '../../../services/presentation/widgets/service_card.dart';
 import '../../../services/presentation/widgets/service_card_shimmer.dart';
@@ -18,8 +19,10 @@ class FavoritesPage extends StatelessWidget {
     final favoritesStore = sl<FavoritesStore>();
     final serviceStore = sl<ServiceStore>();
 
-    return Scaffold(extendBodyBehindAppBar: true, extendBody: true,
-      appBar: GlassAppBar(title: Text(l10n.favoritesTitle)),
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      extendBody: true,
+      appBar: GlassAppBar(title: const SizedBox.shrink()),
       body: Observer(
         builder: (_) {
           if (serviceStore.services.isEmpty && !serviceStore.isLoading) {
@@ -35,16 +38,45 @@ class FavoritesPage extends StatelessWidget {
               .toList();
 
           if (favoriteServices.isEmpty) {
-            return Center(child: Text(l10n.noFavorites));
+            return ListView(
+              padding: EdgeInsets.only(
+                top: MediaQuery.of(context).padding.top + kToolbarHeight + 8,
+                bottom: MediaQuery.of(context).padding.bottom + 100,
+              ),
+              children: [
+                AppPageHeader(
+                  title: l10n.favoritesTitle,
+                  subtitle: l10n.noFavorites,
+                  icon: Icons.favorite_outline,
+                ),
+                AppInfoPanel(
+                  icon: Icons.bookmark_border,
+                  title: l10n.noFavorites,
+                  action: FilledButton.icon(
+                    onPressed: () => context.go('/'),
+                    icon: const Icon(Icons.search),
+                    label: Text(l10n.navHome),
+                  ),
+                ),
+              ],
+            );
           }
 
           return ListView.builder(
             padding: EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top + kToolbarHeight + 16,
+              top: MediaQuery.of(context).padding.top + kToolbarHeight + 8,
               bottom: MediaQuery.of(context).padding.bottom + 100,
             ),
-            itemCount: favoriteServices.length,
+            itemCount: favoriteServices.length + 1,
             itemBuilder: (context, index) {
+              if (index == 0) {
+                return AppPageHeader(
+                  title: l10n.favoritesTitle,
+                  subtitle: '${favoriteServices.length}',
+                  icon: Icons.favorite_outline,
+                );
+              }
+              index -= 1;
               final service = favoriteServices[index];
               final heroTag = 'service-image-${service.id}-fav-$index';
               return ServiceCard(

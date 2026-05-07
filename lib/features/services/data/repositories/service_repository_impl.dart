@@ -17,24 +17,44 @@ class ServiceRepositoryImpl implements ServiceRepository {
 
   @override
   Future<CardsPage> getServices({required String? key}) async {
+    return _loadCards(
+      path: ApiConstants.cardsGetCards,
+      key: key,
+      fallbackMessage: 'Failed to load cards',
+    );
+  }
+
+  @override
+  Future<CardsPage> searchServices({
+    required String query,
+    required String? key,
+  }) async {
+    return _loadCards(
+      path: ApiConstants.cardsGetWithQuery,
+      key: key,
+      query: query,
+      fallbackMessage: 'Failed to search cards',
+    );
+  }
+
+  Future<CardsPage> _loadCards({
+    required String path,
+    required String? key,
+    String? query,
+    required String fallbackMessage,
+  }) async {
     try {
       Response<dynamic> res;
-      // Only include key parameter if it's not null (for pagination)
-      final queryParams = key != null ? {'key': key} : null;
+      final queryParams = <String, dynamic>{'key': ?key, 'query': ?query};
+      final params = queryParams.isEmpty ? null : queryParams;
       try {
-        res = await _api.get(
-          ApiConstants.cardsGetCards,
-          queryParameters: queryParams,
-        );
+        res = await _api.get(path, queryParameters: params);
       } on DioException catch (e) {
         final code = _extractErrorCode(e.response?.data);
         final isInvalidInput =
             code == ApiErrorCodes.invalidInput || e.response?.statusCode == 400;
         if (!isInvalidInput) rethrow;
-        res = await _api.get(
-          ApiConstants.cardsGetCards,
-          data: queryParams,
-        );
+        res = await _api.get(path, data: params);
       }
 
       final data = res.data;
@@ -48,14 +68,14 @@ class ServiceRepositoryImpl implements ServiceRepository {
           _stringOrNull(data['next_key']) ??
           _stringOrNull(data['next-key']) ??
           _stringOrNull(data['key']);
-      final nextKey = nextKeyFromApi ??
-          (cards.isNotEmpty ? cards.last.created.toUtc().toIso8601String() : null);
+      final nextKey =
+          nextKeyFromApi ??
+          (cards.isNotEmpty
+              ? cards.last.created.toUtc().toIso8601String()
+              : null);
       return CardsPage(cards: cards, nextKey: nextKey);
     } on DioException catch (e) {
-      throw _toApiException(
-        e,
-        fallbackMessage: 'Failed to load cards',
-      );
+      throw _toApiException(e, fallbackMessage: fallbackMessage);
     }
   }
 
@@ -73,10 +93,7 @@ class ServiceRepositoryImpl implements ServiceRepository {
         final isInvalidInput =
             code == ApiErrorCodes.invalidInput || e.response?.statusCode == 400;
         if (!isInvalidInput) rethrow;
-        res = await _api.get(
-          ApiConstants.cardsCardInfo,
-          data: {'card-id': id},
-        );
+        res = await _api.get(ApiConstants.cardsCardInfo, data: {'card-id': id});
       }
 
       final data = res.data;
@@ -90,23 +107,20 @@ class ServiceRepositoryImpl implements ServiceRepository {
       final service = _fromCardInfo(data, id);
       return service;
     } on DioException catch (e) {
-      throw _toApiException(
-        e,
-        fallbackMessage: 'Failed to load card',
-      );
+      throw _toApiException(e, fallbackMessage: 'Failed to load card');
     }
   }
 
   @override
   Future<String?> createService(ServiceEntity service) async {
     final payload = {
-        'name': _nullIfEmpty(service.title),
-        'description': _nullIfEmpty(service.description),
-        'price': service.price.toInt(),
-        'currency': _nullIfEmpty(service.currency),
-        'type': _nullIfEmpty(service.type),
-        'tags': service.tags,
-      };
+      'name': _nullIfEmpty(service.title),
+      'description': _nullIfEmpty(service.description),
+      'price': service.price.toInt(),
+      'currency': _nullIfEmpty(service.currency),
+      'type': _nullIfEmpty(service.type),
+      'tags': service.tags,
+    };
 
     try {
       final response = await _api.post(
@@ -127,14 +141,14 @@ class ServiceRepositoryImpl implements ServiceRepository {
   @override
   Future<void> updateService(ServiceEntity service) async {
     final payload = {
-        'card-id': _nullIfEmpty(service.id),
-        'name': _nullIfEmpty(service.title),
-        'description': _nullIfEmpty(service.description),
-        'price': service.price.toInt(),
-        'currency': _nullIfEmpty(service.currency),
-        'type': _nullIfEmpty(service.type),
-        'tags': service.tags,
-      };
+      'card-id': _nullIfEmpty(service.id),
+      'name': _nullIfEmpty(service.title),
+      'description': _nullIfEmpty(service.description),
+      'price': service.price.toInt(),
+      'currency': _nullIfEmpty(service.currency),
+      'type': _nullIfEmpty(service.type),
+      'tags': service.tags,
+    };
 
     try {
       await _api.post(ApiConstants.cardsUpdateCard, data: payload);
@@ -146,6 +160,60 @@ class ServiceRepositoryImpl implements ServiceRepository {
   @override
   Future<void> addReview(String serviceId, ReviewEntity review) async {
     return;
+  }
+
+  @override
+  Future<void> createReply(String cardId) async {
+    try {
+      await _api.post(ApiConstants.cardsCreateReply, data: {'card-id': cardId});
+    } on DioException catch (e) {
+      throw _toApiException(e, fallbackMessage: 'Failed to create reply');
+    }
+  }
+
+  @override
+  Future<void> approveExecutor({
+    required String cardId,
+    required String executorId,
+  }) async {
+    try {
+      await _api.put(
+        ApiConstants.cardsApproveExecutor,
+        data: {'card-id': cardId, 'executor-id': executorId},
+      );
+    } on DioException catch (e) {
+      throw _toApiException(e, fallbackMessage: 'Failed to approve executor');
+    }
+  }
+
+  @override
+  Future<void> rejectExecutor({
+    required String cardId,
+    required String executorId,
+  }) async {
+    try {
+      await _api.put(
+        ApiConstants.cardsRejectExecutor,
+        data: {'card-id': cardId, 'executor-id': executorId},
+      );
+    } on DioException catch (e) {
+      throw _toApiException(e, fallbackMessage: 'Failed to reject executor');
+    }
+  }
+
+  @override
+  Future<void> closeCard({
+    required String cardId,
+    required String status,
+  }) async {
+    try {
+      await _api.put(
+        ApiConstants.cardsClose,
+        data: {'card-id': cardId, 'status': status},
+      );
+    } on DioException catch (e) {
+      throw _toApiException(e, fallbackMessage: 'Failed to close card');
+    }
   }
 
   @override
@@ -176,10 +244,7 @@ class ServiceRepositoryImpl implements ServiceRepository {
 
       return imageUrl;
     } on DioException catch (e) {
-      throw _toApiException(
-        e,
-        fallbackMessage: 'Failed to load card image',
-      );
+      throw _toApiException(e, fallbackMessage: 'Failed to load card image');
     }
   }
 
@@ -212,7 +277,7 @@ class ServiceRepositoryImpl implements ServiceRepository {
       if (authorRating != null) {
         authorContacts['rating'] = authorRating;
       }
-      
+
       String? authorPhotoUrl =
           _stringOrNull(m['image-url']) ?? _stringOrNull(m['imageUrl']);
       if (authorPhotoUrl != null &&
@@ -303,7 +368,7 @@ class ServiceRepositoryImpl implements ServiceRepository {
       if (authorRating != null) {
         contacts['rating'] = authorRating;
       }
-      
+
       String? authorPhotoUrl =
           _stringOrNull(a['image-url']) ?? _stringOrNull(a['imageUrl']);
       if (authorPhotoUrl != null &&
@@ -344,7 +409,8 @@ class ServiceRepositoryImpl implements ServiceRepository {
     if (imageUrl.isEmpty) {
       imageUrl = 'https://placehold.co/600x400';
     }
-    if (imageUrl != 'https://placehold.co/600x400' && !imageUrl.contains('?v=')) {
+    if (imageUrl != 'https://placehold.co/600x400' &&
+        !imageUrl.contains('?v=')) {
       imageUrl = '$imageUrl?v=${updated.millisecondsSinceEpoch}';
     }
 

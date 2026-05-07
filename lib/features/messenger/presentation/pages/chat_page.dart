@@ -1,8 +1,10 @@
 import 'package:korst/core/theme/animated_gradient_background.dart';
 import 'package:korst/core/widgets/glass.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../domain/entities/message_entity.dart';
 import '../store/messenger_store.dart';
@@ -19,6 +21,7 @@ class ChatPage extends StatefulWidget {
 class _ChatPageState extends State<ChatPage> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final ImagePicker _imagePicker = ImagePicker();
 
   MessengerStore get _store => widget.store;
 
@@ -198,6 +201,13 @@ class _ChatPageState extends State<ChatPage> {
                   ),
                 ),
                 const SizedBox(width: 8),
+                IconButton(
+                  icon: Icon(
+                    Icons.image_outlined,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  onPressed: _pickAndSendImage,
+                ),
                 Observer(
                   builder: (_) {
                     final isSending = _store.isSendingMessage;
@@ -258,6 +268,26 @@ class _ChatPageState extends State<ChatPage> {
         );
       }
     });
+  }
+
+  Future<void> _pickAndSendImage() async {
+    final file = await _imagePicker.pickImage(source: ImageSource.gallery);
+    if (file == null) return;
+
+    final text = _messageController.text.trim();
+    _messageController.clear();
+    setState(() {});
+    await _store.sendImage(
+      filePath: file.path,
+      text: text.isEmpty ? null : text,
+    );
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0.0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
   void _showEditDialog(MessageEntity message) {
@@ -341,6 +371,9 @@ class _MessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final imageUrl = message.imageUrl;
+    final hasImage = imageUrl != null && imageUrl.isNotEmpty;
+    final hasText = message.text.trim().isNotEmpty;
 
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
@@ -373,24 +406,55 @@ class _MessageBubble extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                message.text,
-                style: TextStyle(
-                  color: isMe ? colorScheme.onPrimary : colorScheme.onSurface,
-                  fontSize: 15,
+              if (hasImage)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: CachedNetworkImage(
+                    imageUrl: imageUrl,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => const SizedBox(
+                      height: 160,
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                    errorWidget: (context, url, error) => const SizedBox(
+                      height: 160,
+                      child: Center(child: Icon(Icons.broken_image)),
+                    ),
+                  ),
                 ),
-              ),
+              if (hasImage && hasText) const SizedBox(height: 8),
+              if (hasText)
+                Text(
+                  message.text,
+                  style: TextStyle(
+                    color: isMe ? colorScheme.onPrimary : colorScheme.onSurface,
+                    fontSize: 15,
+                  ),
+                ),
               const SizedBox(height: 4),
               Align(
                 alignment: Alignment.centerRight,
-                child: Text(
-                  _formatTime(message.created),
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: isMe
-                        ? colorScheme.onPrimary.withValues(alpha: 0.7)
-                        : colorScheme.onSurfaceVariant,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _formatTime(message.created),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isMe
+                            ? colorScheme.onPrimary.withValues(alpha: 0.7)
+                            : colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    if (isMe && message.isSeen != null) ...[
+                      const SizedBox(width: 4),
+                      Icon(
+                        message.isSeen! ? Icons.done_all : Icons.done,
+                        size: 14,
+                        color: colorScheme.onPrimary.withValues(alpha: 0.75),
+                      ),
+                    ],
+                  ],
                 ),
               ),
             ],

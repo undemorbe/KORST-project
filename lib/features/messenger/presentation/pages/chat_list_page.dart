@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/widgets/app_layout.dart';
 import '../../../../core/widgets/shimmer.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../core/theme/animated_gradient_background.dart';
@@ -41,12 +42,12 @@ class _ChatListPageState extends State<ChatListPage>
       extendBodyBehindAppBar: true,
       extendBody: true,
       appBar: GlassAppBar(
-        title: Text(l10n.messagesTitle),
+        title: const SizedBox.shrink(),
         bottom: TabBar(
           controller: _tabController,
           indicatorSize: TabBarIndicatorSize.tab,
           indicator: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(8),
             color: Theme.of(
               context,
             ).colorScheme.primaryContainer.withValues(alpha: 0.6),
@@ -83,11 +84,28 @@ class _ChatListPageState extends State<ChatListPage>
                 );
               }
 
-              return TabBarView(
-                controller: _tabController,
+              return Column(
                 children: [
-                  _buildChatList(_store.merchantChats, 'customer'),
-                  _buildChatList(_store.customerChats, 'merchant'),
+                  SizedBox(
+                    height:
+                        MediaQuery.of(context).padding.top +
+                        kToolbarHeight +
+                        56,
+                  ),
+                  AppPageHeader(
+                    title: l10n.messagesTitle,
+                    subtitle: l10n.messagesStart,
+                    icon: Icons.forum_outlined,
+                  ),
+                  Expanded(
+                    child: TabBarView(
+                      controller: _tabController,
+                      children: [
+                        _buildChatList(_store.merchantChats, 'customer'),
+                        _buildChatList(_store.customerChats, 'merchant'),
+                      ],
+                    ),
+                  ),
                 ],
               );
             },
@@ -114,9 +132,7 @@ class _ChatListPageState extends State<ChatListPage>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              type == 'customer'
-                  ? Icons.work_outline
-                  : Icons.person_outline,
+              type == 'customer' ? Icons.work_outline : Icons.person_outline,
               size: 64,
               color: Colors.grey,
             ),
@@ -135,7 +151,7 @@ class _ChatListPageState extends State<ChatListPage>
 
     return ListView.builder(
       padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + kToolbarHeight + 48 + 16,
+        top: 0,
         bottom: MediaQuery.of(context).padding.bottom + 100,
       ),
       itemCount: chats.length,
@@ -171,10 +187,10 @@ class _ChatListTile extends StatelessWidget {
         color: colorScheme.surface.withValues(alpha: 0.7),
         borderColor: colorScheme.outlineVariant.withValues(alpha: 0.4),
         borderWidth: 1,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(8),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(8),
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: Row(

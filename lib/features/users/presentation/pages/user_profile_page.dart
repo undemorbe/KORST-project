@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/widgets/app_layout.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../auth/presentation/store/auth_store.dart';
 import '../../domain/entities/user_profile_entity.dart';
@@ -79,9 +80,13 @@ class _UserProfilePageState extends State<UserProfilePage> {
     } catch (e) {
       if (mounted) {
         Navigator.pop(context); // close dialog
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("${AppLocalizations.of(context)!.errorLoadingPhotoPrefix}$e")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              "${AppLocalizations.of(context)!.errorLoadingPhotoPrefix}$e",
+            ),
+          ),
+        );
       }
     }
   }
@@ -109,7 +114,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                         onTapDown: (details) {
                           if (isSubmitting) return;
                           setStateDialog(() {
-                            if (details.localPosition.dx < 20) { // size is 32 + 8 padding total roughly 40, half is 20
+                            if (details.localPosition.dx < 20) {
+                              // size is 32 + 8 padding total roughly 40, half is 20
                               rating = currentFull - 0.5;
                             } else {
                               rating = currentFull.toDouble();
@@ -127,13 +133,16 @@ class _UserProfilePageState extends State<UserProfilePage> {
                           });
                         },
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 8,
+                          ),
                           child: Icon(
                             rating >= currentFull
                                 ? Icons.star
                                 : rating >= currentFull - 0.5
-                                    ? Icons.star_half
-                                    : Icons.star_border,
+                                ? Icons.star_half
+                                : Icons.star_border,
                             color: Colors.amber,
                             size: 32,
                           ),
@@ -222,8 +231,10 @@ class _UserProfilePageState extends State<UserProfilePage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Scaffold(extendBodyBehindAppBar: true, extendBody: true,
-      appBar: GlassAppBar(title: Text(l10n.profileTitle)),
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      extendBody: true,
+      appBar: GlassAppBar(title: const SizedBox.shrink()),
       body: FutureBuilder<UserProfileEntity>(
         future: _futureProfile,
         builder: (context, snapshot) {
@@ -264,6 +275,21 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 bottom: MediaQuery.of(context).padding.bottom + 100,
               ),
               children: [
+                AppPageHeader(
+                  title: l10n.profileTitle,
+                  subtitle: isMe ? l10n.myProfile : l10n.publicProfile,
+                  icon: Icons.person_outline,
+                  trailing: isMe
+                      ? IconButton.filled(
+                          onPressed: () async {
+                            await context.push('/edit-profile');
+                            if (!mounted) return;
+                            _reload();
+                          },
+                          icon: const Icon(Icons.edit),
+                        )
+                      : null,
+                ),
                 GlassCard(
                   clipBehavior: Clip.antiAlias,
                   child: Padding(
@@ -371,18 +397,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                     ),
                                 ],
                               ),
-                              if (isMe) ...[
-                                const SizedBox(height: 8),
-                                OutlinedButton.icon(
-                                  onPressed: () async {
-                                    await context.push('/edit-profile');
-                                    if (!mounted) return;
-                                    _reload();
-                                  },
-                                  icon: const Icon(Icons.edit),
-                                  label: Text(l10n.profileEdit),
-                                ),
-                              ],
                               const SizedBox(height: 8),
                               Row(
                                 children: [
@@ -550,23 +564,24 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                       ),
                                     ),
                                     ...List.generate(5, (starIndex) {
-                                        IconData iconData;
-                                        final double diff = review.rating - starIndex;
-                                        if (diff >= 0.75) {
-                                          iconData = Icons.star;
-                                        } else if (diff >= 0.25) {
-                                          iconData = Icons.star_half;
-                                        } else {
-                                          iconData = Icons.star_border;
-                                        }
-                                        return Icon(
-                                          iconData,
-                                          size: 16,
-                                          color: Colors.amber,
-                                        );
-                                      }),
-                                      const SizedBox(width: 4),
-                                      Text(review.rating.toStringAsFixed(1)),
+                                      IconData iconData;
+                                      final double diff =
+                                          review.rating - starIndex;
+                                      if (diff >= 0.75) {
+                                        iconData = Icons.star;
+                                      } else if (diff >= 0.25) {
+                                        iconData = Icons.star_half;
+                                      } else {
+                                        iconData = Icons.star_border;
+                                      }
+                                      return Icon(
+                                        iconData,
+                                        size: 16,
+                                        color: Colors.amber,
+                                      );
+                                    }),
+                                    const SizedBox(width: 4),
+                                    Text(review.rating.toStringAsFixed(1)),
                                   ],
                                 ),
                                 subtitle: Text(review.comment),

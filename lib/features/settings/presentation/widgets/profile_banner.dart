@@ -22,7 +22,7 @@ class _ProfileBannerState extends State<ProfileBanner> {
     try {
       final remoteProfile = await _repository.getOwnProfile();
       if (!mounted) return;
-      
+
       final current = _authStore.userProfile;
       if (current == null) return;
 
@@ -75,64 +75,63 @@ class _ProfileBannerState extends State<ProfileBanner> {
 
         Widget avatar = CircleAvatar(
           radius: 36,
-          backgroundColor: colors.surfaceContainerHighest.withValues(alpha: 0.5),
+          backgroundColor: colors.surfaceContainerHighest.withValues(
+            alpha: 0.5,
+          ),
           backgroundImage: photoUrl != null && photoUrl.isNotEmpty
               ? CachedNetworkImageProvider(photoUrl)
               : null,
           child: photoUrl == null || photoUrl.isEmpty
-              ? Icon(
-                  Icons.person,
-                  size: 36,
-                  color: colors.onSurfaceVariant,
-                )
+              ? Icon(Icons.person, size: 36, color: colors.onSurfaceVariant)
               : null,
         );
 
         return GlassCard(
           margin: EdgeInsets.zero,
           child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
+            padding: const EdgeInsets.all(18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: colors.primary.withValues(alpha: 0.5),
-                      width: 2,
+                Row(
+                  children: [
+                    Container(
+                      width: 74,
+                      height: 74,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: colors.primary.withValues(alpha: 0.5),
+                          width: 2,
+                        ),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: avatar,
+                    ),
+                    const Spacer(),
+                    Icon(Icons.arrow_forward, color: colors.onSurfaceVariant),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  displayName.isNotEmpty
+                      ? displayName
+                      : AppLocalizations.of(context)!.user,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: colors.onSurface,
+                  ),
+                ),
+                if (phone.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    phone,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: colors.onSurfaceVariant,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                  child: avatar,
-                ),
-                const SizedBox(width: 20),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        displayName.isNotEmpty ? displayName : AppLocalizations.of(context)!.user,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: colors.onSurface,
-                            ),
-                      ),
-                      if (phone.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 6),
-                          child: Text(
-                            phone,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
-                                ?.copyWith(
-                                  color: colors.onSurfaceVariant,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
+                ],
               ],
             ),
           ),

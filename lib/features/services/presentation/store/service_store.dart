@@ -56,15 +56,24 @@ abstract class _ServiceStore with Store {
   @computed
   List<ServiceEntity> get filteredServices {
     var result = services.where((service) {
-      final matchesSearch = service.title.toLowerCase().contains(
-        searchQuery.toLowerCase(),
-      );
+      final normalizedQuery = searchQuery.toLowerCase();
+      final matchesSearch =
+          service.title.toLowerCase().contains(normalizedQuery) ||
+          service.description.toLowerCase().contains(normalizedQuery) ||
+          service.tags.any(
+            (tag) => tag.toLowerCase().contains(normalizedQuery),
+          );
       final matchesCategory =
           selectedCategory == null || service.category == selectedCategory;
       final matchesMinPrice = minPrice == null || service.price >= minPrice!;
       final matchesMaxPrice = maxPrice == null || service.price <= maxPrice!;
-      final matchesMinRating = minRating == null || service.rating >= minRating!;
-      return matchesSearch && matchesCategory && matchesMinPrice && matchesMaxPrice && matchesMinRating;
+      final matchesMinRating =
+          minRating == null || service.rating >= minRating!;
+      return matchesSearch &&
+          matchesCategory &&
+          matchesMinPrice &&
+          matchesMaxPrice &&
+          matchesMinRating;
     }).toList();
 
     switch (sortBy) {
@@ -90,7 +99,10 @@ abstract class _ServiceStore with Store {
     isLoading = true;
     errorMessage = null;
     try {
-      final CardsPage page = await _serviceRepository.getServices(key: null);
+      final query = searchQuery.trim();
+      final CardsPage page = query.isEmpty
+          ? await _serviceRepository.getServices(key: null)
+          : await _serviceRepository.searchServices(query: query, key: null);
       services = ObservableList.of(page.cards);
       nextKey = page.nextKey;
       hasMore = page.nextKey != null && page.cards.isNotEmpty;
@@ -107,7 +119,10 @@ abstract class _ServiceStore with Store {
     isLoadingMore = true;
     errorMessage = null;
     try {
-      final CardsPage page = await _serviceRepository.getServices(key: nextKey);
+      final query = searchQuery.trim();
+      final CardsPage page = query.isEmpty
+          ? await _serviceRepository.getServices(key: nextKey)
+          : await _serviceRepository.searchServices(query: query, key: nextKey);
       final existingIds = services.map((e) => e.id).toSet();
       final newItems = page.cards
           .where((c) => !existingIds.contains(c.id))
@@ -134,11 +149,7 @@ abstract class _ServiceStore with Store {
 
       // Try to find the newly created service if the backend didn't return an ID
       final matchingServices = services
-          .where(
-            (s) =>
-                s.title == service.title &&
-                s.price == service.price,
-          )
+          .where((s) => s.title == service.title && s.price == service.price)
           .toList();
 
       if (matchingServices.isNotEmpty) {
@@ -200,6 +211,71 @@ abstract class _ServiceStore with Store {
   }
 
   @action
+  Future<void> createReply(String cardId) async {
+    isLoading = true;
+    errorMessage = null;
+    try {
+      await _serviceRepository.createReply(cardId);
+    } catch (e) {
+      errorMessage = e.toString();
+      rethrow;
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  @action
+  Future<void> approveExecutor({
+    required String cardId,
+    required String executorId,
+  }) async {
+    errorMessage = null;
+    try {
+      await _serviceRepository.approveExecutor(
+        cardId: cardId,
+        executorId: executorId,
+      );
+      await loadServiceDetails(cardId);
+    } catch (e) {
+      errorMessage = e.toString();
+      rethrow;
+    }
+  }
+
+  @action
+  Future<void> rejectExecutor({
+    required String cardId,
+    required String executorId,
+  }) async {
+    errorMessage = null;
+    try {
+      await _serviceRepository.rejectExecutor(
+        cardId: cardId,
+        executorId: executorId,
+      );
+      await loadServiceDetails(cardId);
+    } catch (e) {
+      errorMessage = e.toString();
+      rethrow;
+    }
+  }
+
+  @action
+  Future<void> closeCard({
+    required String cardId,
+    required String status,
+  }) async {
+    errorMessage = null;
+    try {
+      await _serviceRepository.closeCard(cardId: cardId, status: status);
+      await loadServiceDetails(cardId);
+    } catch (e) {
+      errorMessage = e.toString();
+      rethrow;
+    }
+  }
+
+  @action
   Future<void> loadServiceDetails(String id) async {
     if (isLoading) return; // Prevent multiple simultaneous requests
     isLoading = true;
@@ -222,6 +298,7 @@ abstract class _ServiceStore with Store {
   @action
   void setSearchQuery(String query) {
     searchQuery = query;
+    loadServices();
   }
 
   @action

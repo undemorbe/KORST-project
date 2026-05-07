@@ -12,45 +12,80 @@ class OnboardingPage extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Spacer(),
-              const Icon(
-                Icons.spa_rounded,
-                size: 100,
-                color: Colors.deepPurple,
+              const Spacer(flex: 2),
+              Container(
+                width: double.infinity,
+                height: 220,
+                decoration: BoxDecoration(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.surface.withValues(alpha: 0.88),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                  ),
+                ),
+                child: Stack(
+                  children: [
+                    Positioned(
+                      left: 24,
+                      top: 24,
+                      child: Icon(
+                        Icons.spa_rounded,
+                        size: 72,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                    Positioned(
+                      right: 18,
+                      bottom: 18,
+                      child: Icon(
+                        Icons.view_agenda_outlined,
+                        size: 112,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.16),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 28),
               Text(
                 AppLocalizations.of(context)!.welcomeToKorst,
-                textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w900,
+                  height: 1.05,
                 ),
               ),
               const SizedBox(height: 16),
               Text(
                 AppLocalizations.of(context)!.findServicesNearby,
-                textAlign: TextAlign.center,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyLarge?.copyWith(color: Colors.grey),
-              ),
-              const Spacer(),
-              ElevatedButton(
-                onPressed: () {
-                  context.push('/auth/phone');
-                },
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  height: 1.35,
                 ),
-                child: Text(
-                  AppLocalizations.of(context)!.start,
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const Spacer(flex: 3),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () {
+                    context.push('/auth/phone');
+                  },
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  icon: const Icon(Icons.arrow_forward),
+                  label: Text(
+                    AppLocalizations.of(context)!.start,
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
               const SizedBox(height: 32),

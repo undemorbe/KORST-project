@@ -1,12 +1,14 @@
 import 'dart:io';
 import 'package:korst/core/widgets/glass.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/widgets/app_layout.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../../users/domain/repositories/user_profile_repository.dart';
 import '../store/auth_store.dart';
@@ -78,7 +80,7 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
 
     final phone = _authStore.phoneNumber ?? _authStore.userProfile?.phone ?? '';
     final base = _authStore.userProfile ?? UserEntity.empty(phone: phone);
-    
+
     final updated = base.copyWith(
       name: _nameController.text.trim(),
       surname: _surnameController.text.trim().isEmpty
@@ -115,19 +117,23 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
       try {
         final uploadedPhotoUrl = await _uploadProfileImage();
         if (uploadedPhotoUrl != null && mounted) {
-           // Опционально можно еще раз дернуть updateProfile чтобы сохранить урл, 
-           // но обычно бэкенд сам привязывает загруженное фото к юзеру. 
-           // На всякий случай обновим локальный стейт
-           final withPhoto = (_authStore.userProfile ?? updated).copyWith(
-             photoUrl: uploadedPhotoUrl,
-             updated: DateTime.now(),
-           );
-           await _authStore.updateProfile(withPhoto);
+          // Опционально можно еще раз дернуть updateProfile чтобы сохранить урл,
+          // но обычно бэкенд сам привязывает загруженное фото к юзеру.
+          // На всякий случай обновим локальный стейт
+          final withPhoto = (_authStore.userProfile ?? updated).copyWith(
+            photoUrl: uploadedPhotoUrl,
+            updated: DateTime.now(),
+          );
+          await _authStore.updateProfile(withPhoto);
         }
       } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("${AppLocalizations.of(context)!.profileCreatedButPhotoFailed}$e")),
+          SnackBar(
+            content: Text(
+              "${AppLocalizations.of(context)!.profileCreatedButPhotoFailed}$e",
+            ),
+          ),
         );
       }
     }
@@ -177,7 +183,8 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
                 _surnameController.text = profile?.surname ?? '';
                 _descriptionController.text = profile?.description ?? '';
                 _emailController.text = contacts['email']?.toString() ?? '';
-                _telegramController.text = contacts['telegram']?.toString() ?? '';
+                _telegramController.text =
+                    contacts['telegram']?.toString() ?? '';
                 _contactsController.text = otherContact;
               });
             }
@@ -185,161 +192,198 @@ class _ProfileFormPageState extends State<ProfileFormPage> {
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(16),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                GlassCard(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        GestureDetector(
-                          onTap: _isUploadingImage ? null : _pickImage,
-                          child: Stack(
-                            alignment: Alignment.bottomRight,
-                            children: [
-                              CircleAvatar(
-                                radius: 36,
-                                backgroundColor: Colors.grey.shade200,
-                                backgroundImage: _pickedImagePath != null
-                                    ? FileImage(File(_pickedImagePath!))
-                                    : hasPhoto
-                                        ? CachedNetworkImageProvider(photoUrl)
-                                    : null,
-                                child: _pickedImagePath == null
-                                        ? (hasPhoto
-                                              ? null
-                                              : Icon(
-                                                  Icons.person,
-                                                  size: 36,
-                                                  color: Colors.grey.shade700,
-                                                ))
-                                    : null,
-                              ),
-                              if (_isUploadingImage)
-                                Container(
-                                  padding: const EdgeInsets.all(2),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                  ),
-                                )
-                              else
-                                Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context).colorScheme.primary,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.camera_alt,
-                                    size: 16,
-                                    color: Colors.white,
-                                  ),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  AppPageHeader(
+                    title: title,
+                    subtitle: AppLocalizations.of(context)!.basicData,
+                    icon: Icons.badge_outlined,
+                  ),
+                  GlassCard(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          GestureDetector(
+                            onTap: _isUploadingImage ? null : _pickImage,
+                            child: Stack(
+                              alignment: Alignment.bottomRight,
+                              children: [
+                                CircleAvatar(
+                                  radius: 36,
+                                  backgroundColor: Colors.grey.shade200,
+                                  backgroundImage: _pickedImagePath != null
+                                      ? FileImage(File(_pickedImagePath!))
+                                      : hasPhoto
+                                      ? CachedNetworkImageProvider(photoUrl)
+                                      : null,
+                                  child: _pickedImagePath == null
+                                      ? (hasPhoto
+                                            ? null
+                                            : Icon(
+                                                Icons.person,
+                                                size: 36,
+                                                color: Colors.grey.shade700,
+                                              ))
+                                      : null,
                                 ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          AppLocalizations.of(context)!.basicData,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                GlassCard(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        TextFormField(
-                          controller: _nameController,
-                          decoration: InputDecoration(labelText: AppLocalizations.of(context)!.firstName),
-                          validator: (v) => v == null || v.trim().isEmpty
-                              ? AppLocalizations.of(context)!.enterFirstName
-                              : null,
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _surnameController,
-                          decoration: InputDecoration(
-                            labelText: AppLocalizations.of(context)!.lastName,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _descriptionController,
-                          maxLines: 3,
-                          decoration: InputDecoration(
-                            labelText: AppLocalizations.of(context)!.aboutMe,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                GlassCard(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        TextFormField(
-                          controller: _emailController,
-                          decoration: const InputDecoration(labelText: 'Email'),
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _telegramController,
-                          decoration: const InputDecoration(
-                            labelText: 'Telegram',
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _contactsController,
-                          decoration: InputDecoration(
-                            labelText: AppLocalizations.of(context)!.additionalContact,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Observer(
-                  builder: (_) => ElevatedButton(
-                    onPressed: (_authStore.isLoading || _isUploadingImage) ? null : _onSave,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: (_authStore.isLoading || _isUploadingImage)
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
+                                if (_isUploadingImage)
+                                  Container(
+                                    padding: const EdgeInsets.all(2),
+                                    decoration: const BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
+                                  )
+                                else
+                                  Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.camera_alt,
+                                      size: 16,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                              ],
                             ),
-                          )
-                        : Text(buttonText),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            AppLocalizations.of(context)!.basicData,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 12),
+                  GlassCard(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          TextFormField(
+                            controller: _nameController,
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(60),
+                            ],
+                            decoration: InputDecoration(
+                              labelText:
+                                  '${AppLocalizations.of(context)!.firstName} *',
+                            ),
+                            validator: (v) => v == null || v.trim().isEmpty
+                                ? AppLocalizations.of(context)!.enterFirstName
+                                : null,
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _surnameController,
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(60),
+                            ],
+                            decoration: InputDecoration(
+                              labelText: AppLocalizations.of(context)!.lastName,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _descriptionController,
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(300),
+                            ],
+                            maxLines: 3,
+                            maxLength: 300,
+                            decoration: InputDecoration(
+                              labelText: AppLocalizations.of(context)!.aboutMe,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  GlassCard(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          TextFormField(
+                            controller: _emailController,
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(120),
+                            ],
+                            decoration: const InputDecoration(
+                              labelText: 'Email',
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _telegramController,
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(64),
+                            ],
+                            decoration: const InputDecoration(
+                              labelText: 'Telegram',
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _contactsController,
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(180),
+                            ],
+                            decoration: InputDecoration(
+                              labelText: AppLocalizations.of(
+                                context,
+                              )!.additionalContact,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Observer(
+                    builder: (_) => ElevatedButton(
+                      onPressed: (_authStore.isLoading || _isUploadingImage)
+                          ? null
+                          : _onSave,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: (_authStore.isLoading || _isUploadingImage)
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(buttonText),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
-      ),
       ),
     );
   }

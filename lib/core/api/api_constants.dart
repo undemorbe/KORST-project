@@ -24,12 +24,19 @@ class ApiConstants {
   static String get cardsUpdateCard => EnvConfig.cardsUpdateCard;
   static String get cardsCardInfo => EnvConfig.cardsCardInfo;
   static String get cardsGetCards => EnvConfig.cardsGetCards;
+  static String get cardsGetWithQuery => EnvConfig.cardsGetWithQuery;
   static String get cardsSaveImage => EnvConfig.cardsSaveImage;
+  static String get cardsCreateReply => EnvConfig.cardsCreateReply;
+  static String get cardsApproveExecutor => EnvConfig.cardsApproveExecutor;
+  static String get cardsRejectExecutor => EnvConfig.cardsRejectExecutor;
+  static String get cardsClose => EnvConfig.cardsClose;
 
   static String get messengerChats => EnvConfig.messengerChats;
   static String get messengerMessages => EnvConfig.messengerMessages;
   static String get messengerCreateChat => EnvConfig.messengerCreateChat;
   static String get messengerSendMessage => EnvConfig.messengerSendMessage;
+  static String get messengerSendImage => EnvConfig.messengerSendImage;
   static String get messengerChangeMessage => EnvConfig.messengerChangeMessage;
   static String get messengerDeleteMessage => EnvConfig.messengerDeleteMessage;
+  static String get messengerSocketUrl => EnvConfig.messengerSocketUrl;
 }

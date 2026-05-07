@@ -67,8 +67,15 @@ void main() {
       dio = Dio();
       refreshDio = Dio();
       tokenStorage = TokenStorage(_FakeLocalStorage());
-      await tokenStorage.saveTokens(accessToken: 'access-1', refreshToken: 'refresh-1');
-      apiClient = ApiClient(dio: dio, refreshDio: refreshDio, tokenStorage: tokenStorage);
+      await tokenStorage.saveTokens(
+        accessToken: 'access-1',
+        refreshToken: 'refresh-1',
+      );
+      apiClient = ApiClient(
+        dio: dio,
+        refreshDio: refreshDio,
+        tokenStorage: tokenStorage,
+      );
       repo = ServiceRepositoryImpl(apiClient);
     });
 
@@ -89,11 +96,13 @@ void main() {
               'author': {'name': 'Oleg', 'surname': 'Olegovich', 'rating': 4.5},
               'tags': ['tag1', 'tag2'],
               'created': '2026-03-16T14:32:10Z',
-            }
-          ]
+            },
+          ],
         });
       });
-      refreshDio.httpClientAdapter = _Adapter((options) async => _jsonBody(500, {}));
+      refreshDio.httpClientAdapter = _Adapter(
+        (options) async => _jsonBody(500, {}),
+      );
 
       final page = await repo.getServices(key: null);
       expect(page.cards, hasLength(1));
@@ -103,6 +112,42 @@ void main() {
       expect(page.cards.first.price, 100);
       expect(page.cards.first.currency, 'USD');
       expect(page.cards.first.type, 'задание');
+    });
+
+    test('searchServices calls get-with-query with pagination key', () async {
+      dio.httpClientAdapter = _Adapter((options) async {
+        expect(options.path, ApiConstants.cardsGetWithQuery);
+        expect(options.queryParameters['query'], 'repair');
+        expect(options.queryParameters['key'], '2026-03-16T14:32:10Z');
+        expect(options.headers[ApiConstants.headerAuthorization], 'access-1');
+        expect(options.headers[ApiConstants.headerAccessToken], 'access-1');
+
+        return _jsonBody(200, {
+          'cards': [
+            {
+              'id': 'c2',
+              'name': 'Repair B',
+              'price': 200,
+              'currency': 'USD',
+              'type': 'услуга',
+              'author': {'name': 'Oleg'},
+              'tags': ['repair'],
+              'created': '2026-03-16T15:32:10Z',
+            },
+          ],
+        });
+      });
+      refreshDio.httpClientAdapter = _Adapter(
+        (options) async => _jsonBody(500, {}),
+      );
+
+      final page = await repo.searchServices(
+        query: 'repair',
+        key: '2026-03-16T14:32:10Z',
+      );
+
+      expect(page.cards, hasLength(1));
+      expect(page.cards.first.id, 'c2');
     });
 
     test('getService parses card-info', () async {
@@ -127,14 +172,16 @@ void main() {
               'telegram': '@merchant',
               'others': {'facebook': 'merchant'},
               'rating': 4.5,
-            }
+            },
           },
           'tags': ['tag1', 'tag2'],
           'created': '2023-01-01',
           'updated': '2023-01-01',
         });
       });
-      refreshDio.httpClientAdapter = _Adapter((options) async => _jsonBody(500, {}));
+      refreshDio.httpClientAdapter = _Adapter(
+        (options) async => _jsonBody(500, {}),
+      );
 
       final ServiceEntity s = await repo.getService('c1');
       expect(s.id, 'c1');
@@ -164,7 +211,9 @@ void main() {
         expect(m['tags'], ['t1', 't2']);
         return _jsonBody(200, {});
       });
-      refreshDio.httpClientAdapter = _Adapter((options) async => _jsonBody(500, {}));
+      refreshDio.httpClientAdapter = _Adapter(
+        (options) async => _jsonBody(500, {}),
+      );
 
       received = ServiceEntity(
         uid: 'tmp',
@@ -202,7 +251,9 @@ void main() {
 
         return _jsonBody(200, {});
       });
-      refreshDio.httpClientAdapter = _Adapter((options) async => _jsonBody(500, {}));
+      refreshDio.httpClientAdapter = _Adapter(
+        (options) async => _jsonBody(500, {}),
+      );
 
       final service = ServiceEntity(
         uid: 'card-123',
@@ -224,6 +275,52 @@ void main() {
       await repo.updateService(service);
     });
 
+    test('createReply sends create-reply payload', () async {
+      dio.httpClientAdapter = _Adapter((options) async {
+        expect(options.path, ApiConstants.cardsCreateReply);
+        expect(options.method, 'POST');
+        expect(options.headers[ApiConstants.headerAccessToken], 'access-1');
+        expect(options.data, {'card-id': 'card-123'});
+        return _jsonBody(200, {});
+      });
+      refreshDio.httpClientAdapter = _Adapter(
+        (options) async => _jsonBody(500, {}),
+      );
+
+      await repo.createReply('card-123');
+    });
+
+    test('executor lifecycle calls documented card endpoints', () async {
+      final calls = <String, Map<String, dynamic>>{};
+
+      dio.httpClientAdapter = _Adapter((options) async {
+        calls[options.path] = Map<String, dynamic>.from(options.data as Map);
+        expect(options.method, 'PUT');
+        expect(options.headers[ApiConstants.headerAccessToken], 'access-1');
+        return _jsonBody(200, {});
+      });
+      refreshDio.httpClientAdapter = _Adapter(
+        (options) async => _jsonBody(500, {}),
+      );
+
+      await repo.approveExecutor(cardId: 'card-1', executorId: 'user-1');
+      await repo.rejectExecutor(cardId: 'card-2', executorId: 'user-2');
+      await repo.closeCard(cardId: 'card-3', status: 'completed');
+
+      expect(calls[ApiConstants.cardsApproveExecutor], {
+        'card-id': 'card-1',
+        'executor-id': 'user-1',
+      });
+      expect(calls[ApiConstants.cardsRejectExecutor], {
+        'card-id': 'card-2',
+        'executor-id': 'user-2',
+      });
+      expect(calls[ApiConstants.cardsClose], {
+        'card-id': 'card-3',
+        'status': 'completed',
+      });
+    });
+
     test('getServices parses image-url from API response', () async {
       dio.httpClientAdapter = _Adapter((options) async {
         return _jsonBody(200, {
@@ -238,16 +335,21 @@ void main() {
               'author': {'name': 'Oleg', 'surname': 'Olegovich', 'rating': 4.5},
               'tags': ['tag1'],
               'created': '2026-03-16T14:32:10Z',
-            }
-          ]
+            },
+          ],
         });
       });
-      refreshDio.httpClientAdapter = _Adapter((options) async => _jsonBody(500, {}));
+      refreshDio.httpClientAdapter = _Adapter(
+        (options) async => _jsonBody(500, {}),
+      );
 
       final page = await repo.getServices(key: null);
 
       // Image URL should include cache-busting query parameter
-      expect(page.cards.first.imageUrl, startsWith('http://example.com/service1.jpg?v='));
+      expect(
+        page.cards.first.imageUrl,
+        startsWith('http://example.com/service1.jpg?v='),
+      );
     });
 
     test('getService parses image-url from card-info response', () async {
@@ -259,17 +361,15 @@ void main() {
           'price': 100,
           'currency': 'USD',
           'type': 'услуга',
-          'author': {
-            'id': 'u1',
-            'name': 'Oleg',
-            'surname': 'Olegovich',
-          },
+          'author': {'id': 'u1', 'name': 'Oleg', 'surname': 'Olegovich'},
           'tags': [],
           'created': '2023-01-01',
           'updated': '2023-01-01',
         });
       });
-      refreshDio.httpClientAdapter = _Adapter((options) async => _jsonBody(500, {}));
+      refreshDio.httpClientAdapter = _Adapter(
+        (options) async => _jsonBody(500, {}),
+      );
 
       final service = await repo.getService('c1');
 

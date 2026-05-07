@@ -9,8 +9,10 @@ part of 'settings_store.dart';
 // ignore_for_file: non_constant_identifier_names, unnecessary_brace_in_string_interps, unnecessary_lambdas, prefer_expression_function_bodies, lines_longer_than_80_chars, avoid_as, avoid_annotating_with_dynamic, no_leading_underscores_for_local_identifiers
 
 mixin _$SettingsStore on _SettingsStore, Store {
-  late final _$themeModeAtom =
-      Atom(name: '_SettingsStore.themeMode', context: context);
+  late final _$themeModeAtom = Atom(
+    name: '_SettingsStore.themeMode',
+    context: context,
+  );
 
   @override
   ThemeMode get themeMode {
@@ -25,8 +27,10 @@ mixin _$SettingsStore on _SettingsStore, Store {
     });
   }
 
-  late final _$localeAtom =
-      Atom(name: '_SettingsStore.locale', context: context);
+  late final _$localeAtom = Atom(
+    name: '_SettingsStore.locale',
+    context: context,
+  );
 
   @override
   Locale get locale {
@@ -41,13 +45,34 @@ mixin _$SettingsStore on _SettingsStore, Store {
     });
   }
 
-  late final _$_SettingsStoreActionController =
-      ActionController(name: '_SettingsStore', context: context);
+  late final _$useSystemLocaleAtom = Atom(
+    name: '_SettingsStore.useSystemLocale',
+    context: context,
+  );
+
+  @override
+  bool get useSystemLocale {
+    _$useSystemLocaleAtom.reportRead();
+    return super.useSystemLocale;
+  }
+
+  @override
+  set useSystemLocale(bool value) {
+    _$useSystemLocaleAtom.reportWrite(value, super.useSystemLocale, () {
+      super.useSystemLocale = value;
+    });
+  }
+
+  late final _$_SettingsStoreActionController = ActionController(
+    name: '_SettingsStore',
+    context: context,
+  );
 
   @override
   void setThemeMode(ThemeMode mode) {
     final _$actionInfo = _$_SettingsStoreActionController.startAction(
-        name: '_SettingsStore.setThemeMode');
+      name: '_SettingsStore.setThemeMode',
+    );
     try {
       return super.setThemeMode(mode);
     } finally {
@@ -58,9 +83,22 @@ mixin _$SettingsStore on _SettingsStore, Store {
   @override
   void setLocale(Locale newLocale) {
     final _$actionInfo = _$_SettingsStoreActionController.startAction(
-        name: '_SettingsStore.setLocale');
+      name: '_SettingsStore.setLocale',
+    );
     try {
       return super.setLocale(newLocale);
+    } finally {
+      _$_SettingsStoreActionController.endAction(_$actionInfo);
+    }
+  }
+
+  @override
+  void setSystemLocale() {
+    final _$actionInfo = _$_SettingsStoreActionController.startAction(
+      name: '_SettingsStore.setSystemLocale',
+    );
+    try {
+      return super.setSystemLocale();
     } finally {
       _$_SettingsStoreActionController.endAction(_$actionInfo);
     }
@@ -70,7 +108,8 @@ mixin _$SettingsStore on _SettingsStore, Store {
   String toString() {
     return '''
 themeMode: ${themeMode},
-locale: ${locale}
+locale: ${locale},
+useSystemLocale: ${useSystemLocale}
     ''';
   }
 }

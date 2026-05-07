@@ -52,11 +52,11 @@ class _StatisticsWidgetState extends State<StatisticsWidget> {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    
+
     final cardsCount = _profile?.cards.length ?? 0;
     final rating = _profile?.rating ?? 0.0;
     final reviewsCount = _profile?.reviews.length ?? 0;
-    
+
     // Выдуманный заработок (примерная формула: средняя цена * выдуманное количество заказов)
     double earnedMoney = 0;
     if (_profile != null && _profile!.cards.isNotEmpty) {
@@ -72,11 +72,11 @@ class _StatisticsWidgetState extends State<StatisticsWidget> {
     // + 5% за каждую услугу (макс 25%)
     // + 5% за каждую звезду рейтинга (макс 25%)
     // + 2% за каждый отзыв (макс 20%)
-    double trustFactor = 0.3; 
+    double trustFactor = 0.3;
     trustFactor += (cardsCount * 0.05).clamp(0.0, 0.25);
     trustFactor += (rating * 0.05).clamp(0.0, 0.25);
     trustFactor += (reviewsCount * 0.02).clamp(0.0, 0.20);
-    
+
     // Ограничиваем от 0 до 1
     trustFactor = trustFactor.clamp(0.0, 1.0);
 
@@ -126,39 +126,35 @@ class _StatisticsWidgetState extends State<StatisticsWidget> {
               ],
             ),
             const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.start,
+            GridView.count(
+              crossAxisCount: 3,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              mainAxisSpacing: 8,
+              crossAxisSpacing: 8,
+              childAspectRatio: 0.92,
               children: [
-                Expanded(
+                _buildStatItem(
+                  context,
+                  icon: Icons.task_alt,
+                  value: '$cardsCount',
+                  label: AppLocalizations.of(context)!.services,
+                ),
+                _buildStatItem(
+                  context,
+                  icon: Icons.account_balance_wallet,
+                  value: '${earnedMoney.toStringAsFixed(0)} ₽',
+                  label: AppLocalizations.of(context)!.earned,
+                ),
+                GestureDetector(
+                  onTap: () => context.push('/user-profile/me'),
+                  behavior: HitTestBehavior.opaque,
                   child: _buildStatItem(
                     context,
-                    icon: Icons.task_alt,
-                    value: '$cardsCount',
-                    label: AppLocalizations.of(context)!.services,
-                  ),
-                ),
-                Expanded(
-                  child: _buildStatItem(
-                    context,
-                    icon: Icons.account_balance_wallet,
-                    value: '${earnedMoney.toStringAsFixed(0)} ₽',
-                    label: AppLocalizations.of(context)!.earned,
-                  ),
-                ),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () {
-                      context.push('/user-profile/me');
-                    },
-                    behavior: HitTestBehavior.opaque,
-                    child: _buildStatItem(
-                      context,
-                      icon: Icons.star,
-                      value: rating > 0 ? rating.toStringAsFixed(1) : '—',
-                      label: AppLocalizations.of(context)!.rating,
-                      isClickable: true,
-                    ),
+                    icon: Icons.star,
+                    value: rating > 0 ? rating.toStringAsFixed(1) : '—',
+                    label: AppLocalizations.of(context)!.rating,
+                    isClickable: true,
                   ),
                 ),
               ],
@@ -174,11 +170,16 @@ class _StatisticsWidgetState extends State<StatisticsWidget> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: trustColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: trustColor.withValues(alpha: 0.5)),
+                    border: Border.all(
+                      color: trustColor.withValues(alpha: 0.5),
+                    ),
                   ),
                   child: Text(
                     trustLevel,
@@ -204,9 +205,9 @@ class _StatisticsWidgetState extends State<StatisticsWidget> {
             const SizedBox(height: 8),
             Text(
               AppLocalizations.of(context)!.trustFactorDesc,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: colors.onSurfaceVariant,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
             ),
           ],
         ),
@@ -223,36 +224,21 @@ class _StatisticsWidgetState extends State<StatisticsWidget> {
   }) {
     final colors = Theme.of(context).colorScheme;
     return Container(
-      color: Colors.transparent, // Для корректной работы GestureDetector
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: colors.surfaceContainerHighest.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isClickable
+              ? colors.primary.withValues(alpha: 0.45)
+              : colors.outlineVariant,
+        ),
+      ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isClickable 
-                  ? colors.primary.withValues(alpha: 0.1) 
-                  : colors.primaryContainer.withValues(alpha: 0.5),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: isClickable 
-                    ? colors.primary.withValues(alpha: 0.5)
-                    : colors.primary.withValues(alpha: 0.2),
-              ),
-              boxShadow: isClickable ? [
-                BoxShadow(
-                  color: colors.primary.withValues(alpha: 0.1),
-                  blurRadius: 8,
-                  spreadRadius: 2,
-                )
-              ] : null,
-            ),
-            child: Icon(
-              icon, 
-              color: isClickable ? colors.primary : colors.primary, 
-              size: 28,
-            ),
-          ),
-          const SizedBox(height: 12),
+          Icon(icon, color: colors.primary, size: 24),
+          const SizedBox(height: 10),
           Text(
             value,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(

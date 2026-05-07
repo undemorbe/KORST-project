@@ -258,6 +258,43 @@ mixin _$ServiceStore on _ServiceStore, Store {
     return _$addReviewAsyncAction.run(() => super.addReview(serviceId, review));
   }
 
+  late final _$createReplyAsyncAction =
+      AsyncAction('_ServiceStore.createReply', context: context);
+
+  @override
+  Future<void> createReply(String cardId) {
+    return _$createReplyAsyncAction.run(() => super.createReply(cardId));
+  }
+
+  late final _$approveExecutorAsyncAction =
+      AsyncAction('_ServiceStore.approveExecutor', context: context);
+
+  @override
+  Future<void> approveExecutor(
+      {required String cardId, required String executorId}) {
+    return _$approveExecutorAsyncAction.run(
+        () => super.approveExecutor(cardId: cardId, executorId: executorId));
+  }
+
+  late final _$rejectExecutorAsyncAction =
+      AsyncAction('_ServiceStore.rejectExecutor', context: context);
+
+  @override
+  Future<void> rejectExecutor(
+      {required String cardId, required String executorId}) {
+    return _$rejectExecutorAsyncAction.run(
+        () => super.rejectExecutor(cardId: cardId, executorId: executorId));
+  }
+
+  late final _$closeCardAsyncAction =
+      AsyncAction('_ServiceStore.closeCard', context: context);
+
+  @override
+  Future<void> closeCard({required String cardId, required String status}) {
+    return _$closeCardAsyncAction
+        .run(() => super.closeCard(cardId: cardId, status: status));
+  }
+
   late final _$loadServiceDetailsAsyncAction =
       AsyncAction('_ServiceStore.loadServiceDetails', context: context);
 

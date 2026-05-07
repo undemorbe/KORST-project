@@ -13,6 +13,9 @@ abstract class _SettingsStore with Store {
   @observable
   Locale locale = const Locale('en');
 
+  @observable
+  bool useSystemLocale = true;
+
   @action
   void setThemeMode(ThemeMode mode) {
     themeMode = mode;
@@ -21,5 +24,11 @@ abstract class _SettingsStore with Store {
   @action
   void setLocale(Locale newLocale) {
     locale = newLocale;
+    useSystemLocale = false;
+  }
+
+  @action
+  void setSystemLocale() {
+    useSystemLocale = true;
   }
 }

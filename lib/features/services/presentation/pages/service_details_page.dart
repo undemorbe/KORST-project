@@ -32,29 +32,33 @@ class _ServiceDetailsPageState extends State<ServiceDetailsPage> {
     if (author.uid.isNotEmpty && user.uid.isNotEmpty) {
       if (author.uid == user.uid) return true;
     }
-    
+
     final cleanAuthorPhone = author.phone.replaceAll(RegExp(r'\D'), '');
     final cleanUserPhone = user.phone.replaceAll(RegExp(r'\D'), '');
     final cleanUserIdPhone = user.uid.replaceAll(RegExp(r'\D'), '');
-    
+
     if (cleanAuthorPhone.isNotEmpty) {
-      if (cleanUserPhone.isNotEmpty && cleanAuthorPhone == cleanUserPhone) return true;
-      if (cleanUserIdPhone.isNotEmpty && cleanAuthorPhone == cleanUserIdPhone) return true;
-      
+      if (cleanUserPhone.isNotEmpty && cleanAuthorPhone == cleanUserPhone) {
+        return true;
+      }
+      if (cleanUserIdPhone.isNotEmpty && cleanAuthorPhone == cleanUserIdPhone) {
+        return true;
+      }
+
       if (cleanAuthorPhone.length >= 10 && cleanUserPhone.length >= 10) {
-        if (cleanAuthorPhone.substring(cleanAuthorPhone.length - 10) == 
+        if (cleanAuthorPhone.substring(cleanAuthorPhone.length - 10) ==
             cleanUserPhone.substring(cleanUserPhone.length - 10)) {
           return true;
         }
       }
       if (cleanAuthorPhone.length >= 10 && cleanUserIdPhone.length >= 10) {
-        if (cleanAuthorPhone.substring(cleanAuthorPhone.length - 10) == 
+        if (cleanAuthorPhone.substring(cleanAuthorPhone.length - 10) ==
             cleanUserIdPhone.substring(cleanUserIdPhone.length - 10)) {
           return true;
         }
       }
     }
-    
+
     return author.name.trim().toLowerCase() == user.name.trim().toLowerCase();
   }
 
@@ -71,6 +75,8 @@ class _ServiceDetailsPageState extends State<ServiceDetailsPage> {
     );
 
     try {
+      await _serviceStore.createReply(service.id);
+
       // Create the chat
       await messengerStore.createChat(userId: author.uid, cardId: service.id);
 
@@ -94,9 +100,13 @@ class _ServiceDetailsPageState extends State<ServiceDetailsPage> {
     } catch (e) {
       if (!mounted) return;
       Navigator.of(context).pop(); // Close loading
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("${AppLocalizations.of(context)!.failedToCreateChatPrefix}$e")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "${AppLocalizations.of(context)!.failedToCreateChatPrefix}$e",
+          ),
+        ),
+      );
     }
   }
 
@@ -108,7 +118,8 @@ class _ServiceDetailsPageState extends State<ServiceDetailsPage> {
     final price = '${service.price.toStringAsFixed(0)} ${service.currency}';
     await SharePlus.instance.share(
       ShareParams(
-        text: "$title\n$price${AppLocalizations.of(context)!.openInKorstPrefix}$link",
+        text:
+            "$title\n$price${AppLocalizations.of(context)!.openInKorstPrefix}$link",
         subject: title,
       ),
     );
@@ -128,7 +139,7 @@ class _ServiceDetailsPageState extends State<ServiceDetailsPage> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      extendBodyBehindAppBar: true, 
+      extendBodyBehindAppBar: true,
       extendBody: true,
       body: Observer(
         builder: (_) {
@@ -183,42 +194,64 @@ class _ServiceDetailsPageState extends State<ServiceDetailsPage> {
                       ],
                     ),
                   ),
-                  background: currentService.imageUrl.isNotEmpty
-                      ? Hero(
-                          tag: widget.heroTag ?? 'service-image-${currentService.id}',
-                          child: CachedNetworkImage(
-                            imageUrl: currentService.imageUrl,
-                            fit: BoxFit.cover,
-                            placeholder: (context, url) => Container(
-                              color: Colors.grey.shade300,
-                              child: Center(
-                                child: CircularProgressIndicator(
-                                  color: Theme.of(context).colorScheme.primary,
+                  background: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      currentService.imageUrl.isNotEmpty
+                          ? Hero(
+                              tag:
+                                  widget.heroTag ??
+                                  'service-image-${currentService.id}',
+                              child: CachedNetworkImage(
+                                imageUrl: currentService.imageUrl,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => Container(
+                                  color: Colors.grey.shade300,
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                    ),
+                                  ),
+                                ),
+                                errorWidget: (context, url, error) => Container(
+                                  color: Colors.grey.shade300,
+                                  child: const Center(
+                                    child: Icon(
+                                      Icons.broken_image,
+                                      size: 80,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
-                            errorWidget: (context, url, error) => Container(
+                            )
+                          : Container(
                               color: Colors.grey.shade300,
                               child: const Center(
                                 child: Icon(
-                                  Icons.broken_image,
+                                  Icons.image,
                                   size: 80,
                                   color: Colors.grey,
                                 ),
                               ),
                             ),
-                          ),
-                        )
-                      : Container(
-                          color: Colors.grey.shade300,
-                          child: const Center(
-                            child: Icon(
-                              Icons.image,
-                              size: 80,
-                              color: Colors.grey,
-                            ),
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.bottomCenter,
+                            end: Alignment.topCenter,
+                            colors: [
+                              Colors.black.withValues(alpha: 0.78),
+                              Colors.black.withValues(alpha: 0.28),
+                              Colors.transparent,
+                            ],
                           ),
                         ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               SliverToBoxAdapter(
@@ -233,6 +266,7 @@ class _ServiceDetailsPageState extends State<ServiceDetailsPage> {
                           Expanded(
                             child: Text(
                               l10n.serviceDetailsTitle,
+                              textAlign: TextAlign.center,
                               style: Theme.of(context).textTheme.headlineSmall
                                   ?.copyWith(fontWeight: FontWeight.bold),
                             ),
@@ -244,7 +278,7 @@ class _ServiceDetailsPageState extends State<ServiceDetailsPage> {
                             ),
                             decoration: BoxDecoration(
                               color: Theme.of(context).primaryColor,
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
                               '${currentService.price.toStringAsFixed(0)} ${currentService.currency}',
@@ -331,24 +365,19 @@ class _ServiceDetailsPageState extends State<ServiceDetailsPage> {
                           ),
                         ),
 
-                      Row(
-                        children: [
-                          const Icon(Icons.star, color: Colors.amber, size: 20),
-                          const SizedBox(width: 4),
-                          Text(
-                            currentService.rating.toStringAsFixed(1),
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
                       Wrap(
                         spacing: 8,
+                        runSpacing: 8,
                         children: currentService.tags
                             .map(
                               (tag) => Chip(
                                 label: Text(tag),
-                                backgroundColor: Colors.grey.shade200,
+                                backgroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.surfaceContainerHighest,
+                                side: BorderSide(
+                                  color: Theme.of(context).colorScheme.outline,
+                                ),
                               ),
                             )
                             .toList(),
@@ -364,14 +393,16 @@ class _ServiceDetailsPageState extends State<ServiceDetailsPage> {
                           currentService.author != null)
                         SizedBox(
                           width: double.infinity,
-                          child: OutlinedButton.icon(
+                          child: FilledButton.icon(
                             onPressed: () => _startChat(currentService),
                             icon: const Icon(Icons.handshake),
-                            label: Text(AppLocalizations.of(context)!.respondToTask),
-                            style: OutlinedButton.styleFrom(
+                            label: Text(
+                              AppLocalizations.of(context)!.respondToTask,
+                            ),
+                            style: FilledButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(8),
                               ),
                             ),
                           ),

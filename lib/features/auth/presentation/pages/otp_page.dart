@@ -4,6 +4,7 @@ import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pinput/pinput.dart';
+import '../../../../core/widgets/app_layout.dart';
 import '../../domain/entities/auth_user_status.dart';
 import '../store/auth_store.dart';
 import 'package:korst/l10n/generated/app_localizations.dart';
@@ -78,31 +79,28 @@ class _OtpPageState extends State<OtpPage> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldMessenger(
-        key: _scaffoldMessengerKey,
-        child: Scaffold(
-          appBar: GlassAppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            leading: BackButton(color: Colors.black),
-          ),
-          body: SafeArea(
+      key: _scaffoldMessengerKey,
+      child: Scaffold(
+        appBar: GlassAppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: BackButton(color: Theme.of(context).colorScheme.onSurface),
+        ),
+        body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(24.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  AppLocalizations.of(context)!.enterSmsCode,
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 8),
                 Observer(
-                  builder: (_) => Text(
-                    "${AppLocalizations.of(context)!.weSentCodeTo}${_authStore.phoneNumber ?? ''}",
-                    style: const TextStyle(color: Colors.grey, fontSize: 16),
+                  builder: (_) => AppPageHeader(
+                    title: AppLocalizations.of(context)!.enterSmsCode,
+                    subtitle:
+                        "${AppLocalizations.of(context)!.weSentCodeTo}${_authStore.phoneNumber ?? ''}",
+                    icon: Icons.password,
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 12),
                 Center(
                   child: Pinput(
                     length: 6,
@@ -111,27 +109,32 @@ class _OtpPageState extends State<OtpPage> {
                     defaultPinTheme: PinTheme(
                       width: 56,
                       height: 56,
-                      textStyle: const TextStyle(
+                      textStyle: TextStyle(
                         fontSize: 20,
-                        color: Color.fromRGBO(30, 60, 87, 1),
+                        color: Theme.of(context).colorScheme.onSurface,
                         fontWeight: FontWeight.w600,
                       ),
                       decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade300),
-                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.outlineVariant,
+                        ),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                     ),
                     focusedPinTheme: PinTheme(
                       width: 56,
                       height: 56,
-                      textStyle: const TextStyle(
+                      textStyle: TextStyle(
                         fontSize: 20,
-                        color: Colors.black,
+                        color: Theme.of(context).colorScheme.onSurface,
                         fontWeight: FontWeight.w600,
                       ),
                       decoration: BoxDecoration(
-                        border: Border.all(color: Colors.deepPurple, width: 2),
-                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.primary,
+                          width: 2,
+                        ),
+                        borderRadius: BorderRadius.circular(8),
                       ),
                     ),
                     autofocus: true,

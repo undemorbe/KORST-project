@@ -4,6 +4,7 @@ import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/widgets/app_layout.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../domain/entities/service_category.dart';
 import '../store/service_store.dart';
@@ -57,11 +58,19 @@ class _ServicesHomePageState extends State<ServicesHomePage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(extendBodyBehindAppBar: true, extendBody: true,
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      extendBody: true,
       appBar: GlassAppBar(
-        title: Text(l10n.homeTitle),
+        title: const SizedBox.shrink(),
         actions: [
           IconButton(
+            tooltip: l10n.profileTitle,
+            icon: const Icon(Icons.account_circle_outlined),
+            onPressed: () => context.push('/user-profile/me'),
+          ),
+          IconButton(
+            tooltip: l10n.filter,
             icon: const Icon(Icons.tune),
             onPressed: () {
               showModalBottomSheet(
@@ -84,107 +93,145 @@ class _ServicesHomePageState extends State<ServicesHomePage> {
       body: RefreshIndicator(
         onRefresh: _store.loadServices,
         child: CustomScrollView(
-        controller: _scrollController,
-        slivers: [
-          SliverPadding(
-            padding: EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top + kToolbarHeight + 16,
-              left: 16,
-              right: 16,
-              bottom: 16,
-            ),
-            sliver: SliverToBoxAdapter(
-              child: TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  hintText: l10n.searchHint,
-                  prefixIcon: const Icon(Icons.search),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+          controller: _scrollController,
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).padding.top + kToolbarHeight + 8,
+                ),
+                child: AppPageHeader(
+                  title: l10n.homeTitle,
+                  subtitle: l10n.findServicesNearby,
+                  icon: Icons.view_agenda_outlined,
+                  trailing: FilledButton(
+                    onPressed: () => context.push('/create-service'),
+                    child: const Icon(Icons.add),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                 ),
               ),
             ),
-          ),
-          SliverToBoxAdapter(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  _buildCategoryChip(context, l10n.categoryAll, null),
-                  const SizedBox(width: 8),
-                  _buildCategoryChip(
-                    context,
-                    l10n.categoryCleaning,
-                    ServiceCategory.cleaning,
-                  ),
-                  const SizedBox(width: 8),
-                  _buildCategoryChip(
-                    context,
-                    l10n.categoryRepair,
-                    ServiceCategory.repair,
-                  ),
-                  const SizedBox(width: 8),
-                  _buildCategoryChip(
-                    context,
-                    l10n.categoryConsulting,
-                    ServiceCategory.consulting,
-                  ),
-                  const SizedBox(width: 8),
-                  _buildCategoryChip(context, 'Other', ServiceCategory.other),
-                ],
-              ),
-            ),
-          ),
-          const SliverToBoxAdapter(child: SizedBox(height: 16)),
-          SliverPadding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).padding.bottom + 100,
-            ),
-            sliver: Observer(
-              builder: (_) {
-                if (_store.isLoading) {
-                  return const SliverToBoxAdapter(
-                    child: ServiceCardShimmerList(itemCount: 6),
-                  );
-                }
-
-                if (_store.errorMessage != null) {
-                  return SliverToBoxAdapter(
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text('${l10n.errorLoading}: ${_store.errorMessage}'),
-                            const SizedBox(height: 12),
-                            OutlinedButton(
-                              onPressed: _store.loadServices,
-                              child: Text(l10n.retry),
-                            ),
-                          ],
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
+              sliver: SliverToBoxAdapter(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          hintText: l10n.searchHint,
+                          prefixIcon: const Icon(Icons.search),
                         ),
                       ),
                     ),
-                  );
-                }
-
-                if (_store.filteredServices.isEmpty) {
-                  return SliverToBoxAdapter(
-                    child: EmptyState(
-                      icon: Icons.search_off,
-                      title: l10n.emptyList,
-                      subtitle: 'Try adjusting your search',
+                    const SizedBox(width: 10),
+                    SizedBox(
+                      width: 52,
+                      height: 52,
+                      child: FilledButton(
+                        onPressed: () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            useRootNavigator: true,
+                            builder: (_) => const FilterBottomSheet(),
+                          );
+                        },
+                        style: FilledButton.styleFrom(padding: EdgeInsets.zero),
+                        child: const Icon(Icons.tune),
+                      ),
                     ),
-                  );
-                }
+                  ],
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: [
+                    _buildCategoryChip(context, l10n.categoryAll, null),
+                    const SizedBox(width: 8),
+                    _buildCategoryChip(
+                      context,
+                      l10n.categoryCleaning,
+                      ServiceCategory.cleaning,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildCategoryChip(
+                      context,
+                      l10n.categoryRepair,
+                      ServiceCategory.repair,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildCategoryChip(
+                      context,
+                      l10n.categoryConsulting,
+                      ServiceCategory.consulting,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildCategoryChip(context, 'Other', ServiceCategory.other),
+                  ],
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Observer(
+                builder: (_) => AppSectionTitle(
+                  title: l10n.serviceDetailsTitle,
+                  meta: '${_store.filteredServices.length}',
+                ),
+              ),
+            ),
+            SliverPadding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).padding.bottom + 100,
+              ),
+              sliver: Observer(
+                builder: (_) {
+                  if (_store.isLoading) {
+                    return const SliverToBoxAdapter(
+                      child: ServiceCardShimmerList(itemCount: 6),
+                    );
+                  }
 
-                return SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
+                  if (_store.errorMessage != null) {
+                    return SliverToBoxAdapter(
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '${l10n.errorLoading}: ${_store.errorMessage}',
+                              ),
+                              const SizedBox(height: 12),
+                              OutlinedButton(
+                                onPressed: _store.loadServices,
+                                child: Text(l10n.retry),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+
+                  if (_store.filteredServices.isEmpty) {
+                    return SliverToBoxAdapter(
+                      child: EmptyState(
+                        icon: Icons.search_off,
+                        title: l10n.emptyList,
+                        subtitle: 'Try adjusting your search',
+                      ),
+                    );
+                  }
+
+                  return SliverList(
+                    delegate: SliverChildBuilderDelegate((context, index) {
                       if (index == _store.filteredServices.length) {
                         if (_store.isLoadingMore) {
                           return Padding(
@@ -200,7 +247,11 @@ class _ServicesHomePageState extends State<ServicesHomePage> {
                         if (!_store.hasMore) {
                           return Padding(
                             padding: EdgeInsets.symmetric(vertical: 24),
-                            child: Center(child: Text(AppLocalizations.of(context)!.noMoreData)),
+                            child: Center(
+                              child: Text(
+                                AppLocalizations.of(context)!.noMoreData,
+                              ),
+                            ),
                           );
                         }
                         return const SizedBox(height: 24);
@@ -223,15 +274,13 @@ class _ServicesHomePageState extends State<ServicesHomePage> {
                           },
                         ),
                       );
-                    },
-                    childCount: _store.filteredServices.length + 1,
-                  ),
-                );
-              },
+                    }, childCount: _store.filteredServices.length + 1),
+                  );
+                },
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
@@ -253,15 +302,15 @@ class _ServicesHomePageState extends State<ServicesHomePage> {
           backgroundColor: Theme.of(
             context,
           ).colorScheme.surfaceContainerHighest,
-          selectedColor: Theme.of(context).colorScheme.primaryContainer,
-          checkmarkColor: Theme.of(context).colorScheme.onPrimaryContainer,
+          selectedColor: Theme.of(context).colorScheme.outlineVariant,
+          checkmarkColor: Theme.of(context).colorScheme.onSurface,
           labelStyle: TextStyle(
             color: isSelected
-                ? Theme.of(context).colorScheme.onPrimaryContainer
+                ? Theme.of(context).colorScheme.onSurface
                 : Theme.of(context).colorScheme.onSurfaceVariant,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(8),
             side: BorderSide(
               color: isSelected
                   ? Colors.transparent

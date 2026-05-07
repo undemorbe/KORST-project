@@ -19,8 +19,11 @@ import '../../features/auth/presentation/store/session_store.dart';
 import '../../features/users/data/repositories/user_profile_repository_impl.dart';
 import '../../features/users/domain/repositories/user_profile_repository.dart';
 import '../../features/messenger/data/repositories/messenger_repository_impl.dart';
+import '../../features/messenger/data/services/messenger_socket_service.dart';
 import '../../features/messenger/domain/repositories/messenger_repository.dart';
 import '../../features/messenger/presentation/store/messenger_store.dart';
+import '../../features/notifications/notification_service.dart';
+import '../background/background_task_manager.dart';
 
 final sl = GetIt.instance;
 
@@ -32,46 +35,40 @@ Future<void> init() async {
 
   sl.registerLazySingleton<Talker>(() => createAppTalker());
   sl.registerLazySingleton(() => TokenStorage(sl()));
-  sl.registerLazySingleton<Dio>(
-    () {
-      final dio = Dio();
-      dio.interceptors.add(SafeTalkerDioInterceptor(sl<Talker>()));
-      dio.interceptors.add(
-        TalkerDioLogger(
-          talker: sl<Talker>(),
-          settings: const TalkerDioLoggerSettings(
-            printRequestHeaders: false,
-            printResponseHeaders: false,
-            printRequestData: false,
-            printResponseData: false,
-            printResponseMessage: true,
-          ),
+  sl.registerLazySingleton<Dio>(() {
+    final dio = Dio();
+    dio.interceptors.add(SafeTalkerDioInterceptor(sl<Talker>()));
+    dio.interceptors.add(
+      TalkerDioLogger(
+        talker: sl<Talker>(),
+        settings: const TalkerDioLoggerSettings(
+          printRequestHeaders: false,
+          printResponseHeaders: false,
+          printRequestData: false,
+          printResponseData: false,
+          printResponseMessage: true,
         ),
-      );
-      return dio;
-    },
-    instanceName: 'api',
-  );
-  sl.registerLazySingleton<Dio>(
-    () {
-      final dio = Dio();
-      dio.interceptors.add(SafeTalkerDioInterceptor(sl<Talker>()));
-      dio.interceptors.add(
-        TalkerDioLogger(
-          talker: sl<Talker>(),
-          settings: const TalkerDioLoggerSettings(
-            printRequestHeaders: false,
-            printResponseHeaders: false,
-            printRequestData: false,
-            printResponseData: false,
-            printResponseMessage: true,
-          ),
+      ),
+    );
+    return dio;
+  }, instanceName: 'api');
+  sl.registerLazySingleton<Dio>(() {
+    final dio = Dio();
+    dio.interceptors.add(SafeTalkerDioInterceptor(sl<Talker>()));
+    dio.interceptors.add(
+      TalkerDioLogger(
+        talker: sl<Talker>(),
+        settings: const TalkerDioLoggerSettings(
+          printRequestHeaders: false,
+          printResponseHeaders: false,
+          printRequestData: false,
+          printResponseData: false,
+          printResponseMessage: true,
         ),
-      );
-      return dio;
-    },
-    instanceName: 'refresh',
-  );
+      ),
+    );
+    return dio;
+  }, instanceName: 'refresh');
   sl.registerLazySingleton<ApiClient>(
     () => ApiClient(
       dio: sl<Dio>(instanceName: 'api'),
@@ -79,23 +76,40 @@ Future<void> init() async {
       tokenStorage: sl<TokenStorage>(),
     ),
   );
+  sl.registerLazySingleton(() => NotificationService());
+  sl.registerLazySingleton(() => BackgroundTaskManager());
 
   // Features - Auth
-  sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(sl(), sl(), sl()));
+  sl.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(sl(), sl(), sl()),
+  );
   sl.registerLazySingleton(() => AuthStore(sl()));
   sl.registerLazySingleton(() => SessionStore(sl(), sl()));
 
   // Features - Services
-  sl.registerLazySingleton<ServiceRepository>(() => ServiceRepositoryImpl(sl()));
+  sl.registerLazySingleton<ServiceRepository>(
+    () => ServiceRepositoryImpl(sl()),
+  );
   // sl.registerLazySingleton(() => GetServices(sl())); // Removed as we use Repo directly in Store
   sl.registerLazySingleton(() => ServiceStore(sl()));
 
   // Features - Users
-  sl.registerLazySingleton<UserProfileRepository>(() => UserProfileRepositoryImpl(sl()));
+  sl.registerLazySingleton<UserProfileRepository>(
+    () => UserProfileRepositoryImpl(sl()),
+  );
 
   // Features - Messenger
-  sl.registerLazySingleton<MessengerRepository>(() => MessengerRepositoryImpl(sl()));
-  sl.registerLazySingleton(() => MessengerStore(sl()));
+  sl.registerLazySingleton<MessengerRepository>(
+    () => MessengerRepositoryImpl(sl()),
+  );
+  sl.registerLazySingleton(
+    () => MessengerSocketService(
+      tokenStorage: sl<TokenStorage>(),
+      notificationService: sl<NotificationService>(),
+      talker: sl<Talker>(),
+    ),
+  );
+  sl.registerLazySingleton(() => MessengerStore(sl(), sl()));
 
   // Features - Settings
   sl.registerLazySingleton(() => SettingsStore());

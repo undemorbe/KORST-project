@@ -2,6 +2,7 @@ import 'package:korst/core/widgets/glass.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/widgets/app_layout.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../users/domain/entities/user_profile_entity.dart';
 import '../../../users/domain/repositories/user_profile_repository.dart';
@@ -40,7 +41,7 @@ class _MyServicesPageState extends State<MyServicesPage> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       extendBody: true,
-      appBar: GlassAppBar(title: Text(l10n.profileServices)),
+      appBar: GlassAppBar(title: const SizedBox.shrink()),
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'my_services_fab',
         onPressed: () async {
@@ -63,12 +64,11 @@ class _MyServicesPageState extends State<MyServicesPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text("${AppLocalizations.of(context)!.errorLoadingPrefix}${snapshot.error}"),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _refresh,
-                    child: Text(l10n.retry),
+                  Text(
+                    "${AppLocalizations.of(context)!.errorLoadingPrefix}${snapshot.error}",
                   ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(onPressed: _refresh, child: Text(l10n.retry)),
                 ],
               ),
             );
@@ -82,11 +82,25 @@ class _MyServicesPageState extends State<MyServicesPage> {
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
                 children: [
-                  const SizedBox(height: 240),
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Text(l10n.profileNoServices),
+                  SizedBox(
+                    height: MediaQuery.of(context).padding.top + kToolbarHeight,
+                  ),
+                  AppPageHeader(
+                    title: l10n.profileServices,
+                    subtitle: l10n.profileNoServices,
+                    icon: Icons.cases_outlined,
+                  ),
+                  AppInfoPanel(
+                    icon: Icons.add_task,
+                    title: l10n.profileNoServices,
+                    action: FilledButton.icon(
+                      onPressed: () async {
+                        await context.push('/create-service');
+                        if (!mounted) return;
+                        _refresh();
+                      },
+                      icon: const Icon(Icons.add),
+                      label: Text(l10n.profileAddService),
                     ),
                   ),
                 ],
@@ -104,9 +118,17 @@ class _MyServicesPageState extends State<MyServicesPage> {
                 bottom: MediaQuery.of(context).padding.bottom + 100,
               ),
               physics: const AlwaysScrollableScrollPhysics(),
-              itemCount: mine.length,
+              itemCount: mine.length + 1,
               separatorBuilder: (context, index) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
+                if (index == 0) {
+                  return AppPageHeader(
+                    title: l10n.profileServices,
+                    subtitle: '${mine.length}',
+                    icon: Icons.cases_outlined,
+                  );
+                }
+                index -= 1;
                 final service = mine[index];
                 final heroTag = 'service-image-${service.id}-mine-$index';
                 return GlassCard(
@@ -132,7 +154,10 @@ class _MyServicesPageState extends State<MyServicesPage> {
                           width: double.infinity,
                           child: OutlinedButton.icon(
                             onPressed: () async {
-                              await context.push('/edit-service', extra: service);
+                              await context.push(
+                                '/edit-service',
+                                extra: service,
+                              );
                               if (!mounted) return;
                               _refresh();
                             },

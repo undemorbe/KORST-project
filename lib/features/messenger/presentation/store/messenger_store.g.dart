@@ -162,6 +162,15 @@ mixin _$MessengerStore on _MessengerStore, Store {
     return _$sendMessageAsyncAction.run(() => super.sendMessage(text));
   }
 
+  late final _$sendImageAsyncAction =
+      AsyncAction('_MessengerStore.sendImage', context: context);
+
+  @override
+  Future<void> sendImage({required String filePath, String? text}) {
+    return _$sendImageAsyncAction
+        .run(() => super.sendImage(filePath: filePath, text: text));
+  }
+
   late final _$updateMessageAsyncAction =
       AsyncAction('_MessengerStore.updateMessage', context: context);
 

@@ -20,25 +20,20 @@ class MainShellPage extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final colors = Theme.of(context).colorScheme;
 
-    return Scaffold(extendBodyBehindAppBar: true,
+    return Scaffold(
+      extendBodyBehindAppBar: true,
       extendBody: true, // Allow content to flow behind bottom nav
       body: navigationShell,
-      bottomNavigationBar: Glass(
-        borderRadius: BorderRadius.zero,
-        blurSigma: 24,
-        opacity: 0.85,
-        color: colors.surface.withValues(alpha: 0.85),
-        borderWidth: 0,
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(
-                color: colors.outlineVariant.withValues(alpha: 0.3),
-                width: 0.5,
-              ),
-            ),
-          ),
-          child: SafeArea(
+      bottomNavigationBar: SafeArea(
+        minimum: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+        child: Glass(
+          borderRadius: BorderRadius.circular(8),
+          blurSigma: 18,
+          opacity: 0.9,
+          color: colors.surface.withValues(alpha: 0.92),
+          borderColor: colors.outlineVariant,
+          child: SizedBox(
+            height: 68,
             child: NavigationBar(
               selectedIndex: navigationShell.currentIndex,
               onDestinationSelected: _goBranch,
@@ -46,8 +41,10 @@ class MainShellPage extends StatelessWidget {
               elevation: 0,
               indicatorColor: colors.primaryContainer.withValues(alpha: 0.6),
               indicatorShape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(8),
               ),
+              labelBehavior:
+                  NavigationDestinationLabelBehavior.onlyShowSelected,
               destinations: [
                 NavigationDestination(
                   icon: const Icon(Icons.home_outlined, size: 24),

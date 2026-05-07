@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // Modern Indigo/Violet palette
-  static const Color primary = Color(0xFF6366F1);
-  static const Color primaryContainer = Color(0xFFE0E7FF);
-  static const Color onPrimaryContainer = Color(0xFF3730A3);
-  static const Color secondary = Color(0xFF8B5CF6);
-  static const Color secondaryContainer = Color(0xFFF3E8FF);
-  static const Color onSecondaryContainer = Color(0xFF5B21B6);
-  static const Color tertiary = Color(0xFFEC4899);
-  static const Color tertiaryContainer = Color(0xFFFCE7F3);
-  static const Color onTertiaryContainer = Color(0xFF9D174D);
+  // Editorial taskboard palette
+  static const Color primary = Color(0xFF0F766E);
+  static const Color primaryContainer = Color(0xFFCCFBF1);
+  static const Color onPrimaryContainer = Color(0xFF134E4A);
+  static const Color secondary = Color(0xFFDC2626);
+  static const Color secondaryContainer = Color(0xFFFEE2E2);
+  static const Color onSecondaryContainer = Color(0xFF7F1D1D);
+  static const Color tertiary = Color(0xFFCA8A04);
+  static const Color tertiaryContainer = Color(0xFFFEF3C7);
+  static const Color onTertiaryContainer = Color(0xFF713F12);
 
   // Light theme
-  static const Color background = Color(0xFFF8FAFC);
+  static const Color background = Color(0xFFF6F7F4);
   static const Color surface = Colors.white;
-  static const Color surfaceVariant = Color(0xFFF1F5F9);
+  static const Color surfaceVariant = Color(0xFFE9ECE5);
   static const Color error = Color(0xFFEF4444);
   static const Color onPrimary = Colors.white;
   static const Color onSecondary = Colors.white;
@@ -23,22 +23,28 @@ class AppColors {
   static const Color onSurface = Color(0xFF1E293B);
   static const Color onSurfaceVariant = Color(0xFF64748B);
   static const Color onError = Colors.white;
-  static const Color outline = Color(0xFFE2E8F0);
-  static const Color outlineVariant = Color(0xFFCBD5E1);
+  static const Color outline = Color(0xFFD6DBD2);
+  static const Color outlineVariant = Color(0xFFC6CDC1);
 
   // Dark theme
-  static const Color darkBackground = Color(0xFF0F172A); // Very dark slate
-  static const Color darkSurface = Color(0xFF1E293B); // Deep slate for cards
-  static const Color darkSurfaceVariant = Color(0xFF334155); // Lighter slate for inputs
-  static const Color darkOnBackground = Color(0xFFF8FAFC); // Almost white
-  static const Color darkOnSurface = Color(0xFFF1F5F9); // Slightly muted white
-  static const Color darkOnSurfaceVariant = Color(0xFF94A3B8); // Slate gray for secondary text
-  static const Color darkOutline = Color(0xFF475569); // Border color
-  static const Color darkOutlineVariant = Color(0xFF334155); // Muted border
+  static const Color darkBackground = Color(0xFF101412);
+  static const Color darkSurface = Color(0xFF181D1A);
+  static const Color darkSurfaceVariant = Color(0xFF252C28);
+  static const Color darkOnBackground = Color(0xFFF4F7F2);
+  static const Color darkOnSurface = Color(0xFFF4F7F2);
+  static const Color darkOnSurfaceVariant = Color(0xFFBDC8BE);
+  static const Color darkOutline = Color(0xFF46514A);
+  static const Color darkOutlineVariant = Color(0xFF303A34);
 
   // Gradients
-  static const List<Color> primaryGradient = [Color(0xFF6366F1), Color(0xFF8B5CF6)];
-  static const List<Color> secondaryGradient = [Color(0xFF8B5CF6), Color(0xFFEC4899)];
+  static const List<Color> primaryGradient = [
+    Color(0xFF0F766E),
+    Color(0xFF14B8A6),
+  ];
+  static const List<Color> secondaryGradient = [
+    Color(0xFFDC2626),
+    Color(0xFFF59E0B),
+  ];
   static const List<Color> glassLight = [Color(0x80FFFFFF), Color(0x40FFFFFF)];
   static const List<Color> glassDark = [Color(0x401E293B), Color(0x200F172A)];
 
