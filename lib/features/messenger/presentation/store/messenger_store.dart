@@ -101,7 +101,7 @@ abstract class _MessengerStore with Store {
         chatId: selectedChat!.id,
         text: text,
       );
-      await loadMessages(selectedChat!.id);
+      unawaited(_silentRefreshMessages(selectedChat!.id));
     } catch (e) {
       errorMessage = e.toString();
     } finally {
@@ -120,12 +120,23 @@ abstract class _MessengerStore with Store {
         filePath: filePath,
         text: text,
       );
-      await loadMessages(selectedChat!.id);
+      unawaited(_silentRefreshMessages(selectedChat!.id));
     } catch (e) {
       errorMessage = e.toString();
     } finally {
       isSendingMessage = false;
     }
+  }
+
+  Future<void> _silentRefreshMessages(String chatId) async {
+    try {
+      final msgs = await _messengerRepository.getMessages(chatId);
+      runInAction(() {
+        if (selectedChat?.id == chatId) {
+          messages = ObservableList.of(msgs);
+        }
+      });
+    } catch (_) {}
   }
 
   @action
@@ -244,6 +255,7 @@ abstract class _MessengerStore with Store {
         authorId: message.authorId,
         text: message.text,
         created: message.created,
+        isSeen: message.isSeen,
       ),
     );
   }

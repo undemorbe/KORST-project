@@ -252,6 +252,7 @@ class MessengerRepositoryImpl implements MessengerRepository {
       authorId: (json['author-id'] as String?) ?? '',
       text: (json['text'] as String?) ?? '',
       created: created,
+      isSeen: json['is-seen'] as bool? ?? json['isSeen'] as bool?,
     );
   }
 

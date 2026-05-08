@@ -97,12 +97,14 @@ class LastMessage {
   final String authorId;
   final String text;
   final DateTime created;
+  final bool? isSeen;
 
   const LastMessage({
     required this.id,
     required this.authorId,
     required this.text,
     required this.created,
+    this.isSeen,
   });
 
   LastMessage copyWith({
@@ -110,12 +112,14 @@ class LastMessage {
     String? authorId,
     String? text,
     DateTime? created,
+    bool? isSeen,
   }) {
     return LastMessage(
       id: id ?? this.id,
       authorId: authorId ?? this.authorId,
       text: text ?? this.text,
       created: created ?? this.created,
+      isSeen: isSeen ?? this.isSeen,
     );
   }
 
@@ -127,6 +131,7 @@ class LastMessage {
       created: json['created'] != null
           ? DateTime.parse(json['created'] as String)
           : DateTime.now(),
+      isSeen: json['is-seen'] as bool? ?? json['isSeen'] as bool?,
     );
   }
 
@@ -136,6 +141,7 @@ class LastMessage {
       'author-id': authorId,
       'text': text,
       'created': created.toIso8601String(),
+      if (isSeen != null) 'is-seen': isSeen,
     };
   }
 }
