@@ -131,6 +131,126 @@ class _ServiceDetailsPageState extends State<ServiceDetailsPage> {
     _serviceStore.loadServiceDetails(widget.service.id);
   }
 
+  void _showCloseCardDialog(BuildContext context, ServiceEntity service) {
+    showModalBottomSheet(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      builder: (_) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Управление заказом',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Выберите действие для заказа',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 20),
+              _closeOption(
+                context: context,
+                service: service,
+                label: 'Завершить успешно',
+                sublabel: 'Работа выполнена',
+                status: 'completed',
+                color: const Color(0xFF6AAA6A),
+              ),
+              const SizedBox(height: 10),
+              _closeOption(
+                context: context,
+                service: service,
+                label: 'Закрыть без результата',
+                sublabel: 'Исполнитель не засчитывается',
+                status: 'closed-with-bad-result',
+                color: const Color(0xFFAA4444),
+              ),
+              const SizedBox(height: 10),
+              _closeOption(
+                context: context,
+                service: service,
+                label: 'Переоткрыть (плохой результат)',
+                sublabel: 'Исполнитель не засчитывается',
+                status: 'reopen-with-bad-result',
+                color: const Color(0xFFCCAA44),
+              ),
+              const SizedBox(height: 10),
+              _closeOption(
+                context: context,
+                service: service,
+                label: 'Переоткрыть (хороший результат)',
+                sublabel: 'Исполнитель засчитывается',
+                status: 'reopen-with-good-result',
+                color: const Color(0xFF6AAA6A),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _closeOption({
+    required BuildContext context,
+    required ServiceEntity service,
+    required String label,
+    required String sublabel,
+    required String status,
+    required Color color,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: () async {
+        Navigator.of(context).pop();
+        final messenger = ScaffoldMessenger.of(context);
+        try {
+          await _serviceStore.closeCard(cardId: service.id, status: status);
+          if (mounted) {
+            messenger.showSnackBar(
+              const SnackBar(content: Text('Статус обновлён')),
+            );
+          }
+        } catch (e) {
+          if (mounted) {
+            messenger.showSnackBar(
+              SnackBar(content: Text('Ошибка: $e')),
+            );
+          }
+        }
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: color.withValues(alpha: 0.4)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label,
+                style: TextStyle(
+                    color: color,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14)),
+            Text(sublabel,
+                style: TextStyle(
+                    color: color.withValues(alpha: 0.7),
+                    fontSize: 12)),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -159,6 +279,13 @@ class _ServiceDetailsPageState extends State<ServiceDetailsPage> {
                       icon: const Icon(Icons.edit),
                       onPressed: () =>
                           context.push('/edit-service', extra: currentService),
+                    ),
+                  if (_canEdit(currentService))
+                    OutlinedButton.icon(
+                      onPressed: () =>
+                          _showCloseCardDialog(context, currentService),
+                      icon: const Icon(Icons.close, size: 18),
+                      label: const Text('Закрыть заказ'),
                     ),
                   IconButton(
                     icon: const Icon(Icons.share),
