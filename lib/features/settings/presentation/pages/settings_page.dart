@@ -1,6 +1,7 @@
 import 'package:korst/core/widgets/glass.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_colors.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:go_router/go_router.dart';
 import 'package:in_app_review/in_app_review.dart';
@@ -92,7 +93,7 @@ class SettingsPage extends StatelessWidget {
                 AppLocalizations.of(context)!.myProfile,
                 style: Theme.of(
                   context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: AppColors.primaryLight),
               ),
               const SizedBox(height: 12),
               GlassCard(
@@ -137,7 +138,7 @@ class SettingsPage extends StatelessWidget {
                 AppLocalizations.of(context)!.appSettings,
                 style: Theme.of(
                   context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: AppColors.primaryLight),
               ),
               const SizedBox(height: 12),
               GlassCard(
@@ -263,7 +264,7 @@ class SettingsPage extends StatelessWidget {
                 AppLocalizations.of(context)!.additional,
                 style: Theme.of(
                   context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: AppColors.primaryLight),
               ),
               const SizedBox(height: 12),
               GlassCard(

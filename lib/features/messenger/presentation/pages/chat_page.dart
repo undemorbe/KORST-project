@@ -1,4 +1,5 @@
 import 'package:korst/core/theme/animated_gradient_background.dart';
+import 'package:korst/core/theme/app_colors.dart';
 import 'package:korst/core/widgets/glass.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -155,59 +156,75 @@ class _ChatPageState extends State<ChatPage> {
 
   Widget _buildInputArea() {
     final l10n = AppLocalizations.of(context)!;
-    final colorScheme = Theme.of(context).colorScheme;
 
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-        child: Glass(
-          blurSigma: 16,
-          opacity: 0.85,
-          color: colorScheme.surface.withValues(alpha: 0.85),
-          borderColor: colorScheme.outlineVariant.withValues(alpha: 0.4),
-          borderWidth: 1,
-          borderRadius: BorderRadius.circular(32),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [AppColors.surfaceCard, Color(0xFF12100A)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.border),
+            boxShadow: const [
+              BoxShadow(color: AppColors.goldGlow, blurRadius: 12),
+            ],
+          ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: TextField(
-                      controller: _messageController,
-                      decoration: InputDecoration(
-                        hintText: l10n.messagesTypeHint,
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: EdgeInsets.zero,
-                        hintStyle: TextStyle(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      style: TextStyle(
-                        color: colorScheme.onSurface,
-                        fontSize: 16,
-                      ),
-                      maxLines: 5,
-                      minLines: 1,
-                      textInputAction: TextInputAction.send,
-                      onSubmitted: (_) => _sendMessage(),
-                      onChanged: (text) {
-                        setState(() {}); // To toggle send button state
-                      },
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
                 IconButton(
-                  icon: Icon(
+                  icon: const Icon(
                     Icons.image_outlined,
-                    color: colorScheme.onSurfaceVariant,
+                    color: AppColors.muted,
+                    size: 22,
                   ),
                   onPressed: _pickAndSendImage,
                 ),
+                Expanded(
+                  child: TextField(
+                    controller: _messageController,
+                    decoration: InputDecoration(
+                      hintText: l10n.messagesTypeHint,
+                      filled: true,
+                      fillColor: AppColors.borderSubtle,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      hintStyle: const TextStyle(color: AppColors.muted),
+                    ),
+                    style: const TextStyle(
+                      color: AppColors.onBackground,
+                      fontSize: 15,
+                    ),
+                    maxLines: 5,
+                    minLines: 1,
+                    textInputAction: TextInputAction.send,
+                    onSubmitted: (_) => _sendMessage(),
+                    onChanged: (text) {
+                      setState(() {}); // To toggle send button state
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
                 Observer(
                   builder: (_) {
                     final isSending = _store.isSendingMessage;
@@ -217,9 +234,7 @@ class _ChatPageState extends State<ChatPage> {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: hasText
-                            ? colorScheme.primary
-                            : colorScheme.surfaceContainerHighest,
+                        color: hasText ? AppColors.primary : AppColors.mutedDark,
                         shape: BoxShape.circle,
                       ),
                       child: IconButton(
@@ -235,10 +250,10 @@ class _ChatPageState extends State<ChatPage> {
                               )
                             : Icon(
                                 Icons.send_rounded,
-                                size: 20,
+                                size: 18,
                                 color: hasText
-                                    ? colorScheme.onPrimary
-                                    : colorScheme.onSurfaceVariant,
+                                    ? const Color(0xFF080604)
+                                    : AppColors.muted,
                               ),
                         onPressed: hasText && !isSending ? _sendMessage : null,
                       ),

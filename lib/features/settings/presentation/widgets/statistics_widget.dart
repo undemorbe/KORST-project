@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/glass.dart';
 import '../../../users/domain/repositories/user_profile_repository.dart';
 import '../../../users/domain/entities/user_profile_entity.dart';
@@ -51,8 +53,6 @@ class _StatisticsWidgetState extends State<StatisticsWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
     final cardsCount = _profile?.cards.length ?? 0;
     final rating = _profile?.rating ?? 0.0;
     final reviewsCount = _profile?.reviews.length ?? 0;
@@ -84,13 +84,13 @@ class _StatisticsWidgetState extends State<StatisticsWidget> {
     Color trustColor;
     if (trustFactor >= 0.8) {
       trustLevel = AppLocalizations.of(context)!.high;
-      trustColor = Colors.green;
+      trustColor = AppColors.success;
     } else if (trustFactor >= 0.5) {
       trustLevel = AppLocalizations.of(context)!.medium;
-      trustColor = Colors.orange;
+      trustColor = AppColors.warning;
     } else {
       trustLevel = AppLocalizations.of(context)!.low;
-      trustColor = Colors.red;
+      trustColor = AppColors.error;
     }
 
     return GlassCard(
@@ -105,20 +105,29 @@ class _StatisticsWidgetState extends State<StatisticsWidget> {
               children: [
                 Text(
                   AppLocalizations.of(context)!.statistics,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: colors.onSurface,
+                  style: GoogleFonts.cinzel(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primaryLight,
+                    letterSpacing: 0.08,
                   ),
                 ),
                 if (_isLoading)
                   const SizedBox(
                     width: 16,
                     height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.primary,
+                    ),
                   )
                 else
                   IconButton(
-                    icon: const Icon(Icons.refresh, size: 20),
+                    icon: const Icon(
+                      Icons.refresh,
+                      size: 20,
+                      color: AppColors.muted,
+                    ),
                     onPressed: _refresh,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
@@ -165,8 +174,10 @@ class _StatisticsWidgetState extends State<StatisticsWidget> {
               children: [
                 Text(
                   AppLocalizations.of(context)!.trustFactor,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
+                    color: AppColors.onSurface,
+                    fontSize: 14,
                   ),
                 ),
                 Container(
@@ -186,7 +197,7 @@ class _StatisticsWidgetState extends State<StatisticsWidget> {
                     style: TextStyle(
                       color: trustColor,
                       fontWeight: FontWeight.bold,
-                      fontSize: 12,
+                      fontSize: 11,
                     ),
                   ),
                 ),
@@ -194,20 +205,36 @@ class _StatisticsWidgetState extends State<StatisticsWidget> {
             ),
             const SizedBox(height: 12),
             ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: LinearProgressIndicator(
-                value: trustFactor,
-                backgroundColor: colors.surfaceContainerHighest,
-                color: trustColor,
-                minHeight: 8,
+              borderRadius: BorderRadius.circular(4),
+              child: SizedBox(
+                height: 8,
+                child: Stack(
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      color: AppColors.borderSubtle,
+                    ),
+                    FractionallySizedBox(
+                      widthFactor: trustFactor,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [AppColors.mutedDark, trustColor],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 8),
             Text(
               AppLocalizations.of(context)!.trustFactorDesc,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+              style: const TextStyle(
+                color: AppColors.muted,
+                fontSize: 11,
+              ),
             ),
           ],
         ),
@@ -222,28 +249,26 @@ class _StatisticsWidgetState extends State<StatisticsWidget> {
     required String label,
     bool isClickable = false,
   }) {
-    final colors = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: colors.surfaceContainerHighest.withValues(alpha: 0.55),
+        color: AppColors.surfaceCard,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: isClickable
-              ? colors.primary.withValues(alpha: 0.45)
-              : colors.outlineVariant,
+          color: isClickable ? AppColors.primary : AppColors.border,
         ),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: colors.primary, size: 24),
+          Icon(icon, color: AppColors.primary, size: 24),
           const SizedBox(height: 10),
           Text(
             value,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            style: const TextStyle(
               fontWeight: FontWeight.bold,
-              color: colors.onSurface,
+              color: AppColors.primaryLight,
+              fontSize: 16,
             ),
             textAlign: TextAlign.center,
           ),
@@ -251,8 +276,9 @@ class _StatisticsWidgetState extends State<StatisticsWidget> {
           Text(
             label,
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: colors.onSurfaceVariant,
+            style: const TextStyle(
+              color: AppColors.muted,
+              fontSize: 11,
               height: 1.3,
             ),
           ),

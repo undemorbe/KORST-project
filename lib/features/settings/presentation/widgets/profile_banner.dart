@@ -4,6 +4,7 @@ import 'package:get_it/get_it.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/widgets/glass.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/store/auth_store.dart';
 import '../../../users/domain/repositories/user_profile_repository.dart';
 import 'package:korst/l10n/generated/app_localizations.dart';
@@ -55,8 +56,6 @@ class _ProfileBannerState extends State<ProfileBanner> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
     return Observer(
       builder: (_) {
         if (!_authStore.isLoggedIn) {
@@ -75,14 +74,12 @@ class _ProfileBannerState extends State<ProfileBanner> {
 
         Widget avatar = CircleAvatar(
           radius: 36,
-          backgroundColor: colors.surfaceContainerHighest.withValues(
-            alpha: 0.5,
-          ),
+          backgroundColor: AppColors.borderSubtle,
           backgroundImage: photoUrl != null && photoUrl.isNotEmpty
               ? CachedNetworkImageProvider(photoUrl)
               : null,
           child: photoUrl == null || photoUrl.isEmpty
-              ? Icon(Icons.person, size: 36, color: colors.onSurfaceVariant)
+              ? Icon(Icons.person, size: 36, color: AppColors.muted)
               : null,
         );
 
@@ -101,15 +98,22 @@ class _ProfileBannerState extends State<ProfileBanner> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: colors.primary.withValues(alpha: 0.5),
+                          color: AppColors.primary,
                           width: 2,
                         ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.goldGlow,
+                            blurRadius: 10,
+                            spreadRadius: 1,
+                          ),
+                        ],
                       ),
                       clipBehavior: Clip.antiAlias,
                       child: avatar,
                     ),
                     const Spacer(),
-                    Icon(Icons.arrow_forward, color: colors.onSurfaceVariant),
+                    Icon(Icons.chevron_right, color: AppColors.muted, size: 20),
                   ],
                 ),
                 const SizedBox(height: 18),
@@ -118,8 +122,8 @@ class _ProfileBannerState extends State<ProfileBanner> {
                       ? displayName
                       : AppLocalizations.of(context)!.user,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    color: colors.onSurface,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.onBackground,
                   ),
                 ),
                 if (phone.isNotEmpty) ...[
@@ -127,7 +131,7 @@ class _ProfileBannerState extends State<ProfileBanner> {
                   Text(
                     phone,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: colors.onSurfaceVariant,
+                      color: AppColors.muted,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
