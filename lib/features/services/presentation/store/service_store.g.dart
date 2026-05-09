@@ -81,6 +81,22 @@ mixin _$ServiceStore on _ServiceStore, Store {
     });
   }
 
+  late final _$replyErrorAtom =
+      Atom(name: '_ServiceStore.replyError', context: context);
+
+  @override
+  String? get replyError {
+    _$replyErrorAtom.reportRead();
+    return super.replyError;
+  }
+
+  @override
+  set replyError(String? value) {
+    _$replyErrorAtom.reportWrite(value, super.replyError, () {
+      super.replyError = value;
+    });
+  }
+
   late final _$searchQueryAtom =
       Atom(name: '_ServiceStore.searchQuery', context: context);
 
@@ -355,6 +371,7 @@ services: ${services},
 isLoading: ${isLoading},
 isLoadingMore: ${isLoadingMore},
 errorMessage: ${errorMessage},
+replyError: ${replyError},
 searchQuery: ${searchQuery},
 selectedCategory: ${selectedCategory},
 nextKey: ${nextKey},

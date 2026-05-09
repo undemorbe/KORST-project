@@ -45,7 +45,7 @@ class ServiceRepositoryImpl implements ServiceRepository {
   }) async {
     try {
       Response<dynamic> res;
-      final queryParams = <String, dynamic>{'key': ?key, 'query': ?query};
+      final queryParams = <String, dynamic>{'key': key, 'query': query};
       final params = queryParams.isEmpty ? null : queryParams;
       try {
         res = await _api.get(path, queryParameters: params);
@@ -75,7 +75,7 @@ class ServiceRepositoryImpl implements ServiceRepository {
               : null);
       return CardsPage(cards: cards, nextKey: nextKey);
     } on DioException catch (e) {
-      throw _toApiException(e, fallbackMessage: fallbackMessage);
+      throw ApiException.fromDioException(e, fallbackMessage: fallbackMessage);
     }
   }
 
@@ -107,7 +107,7 @@ class ServiceRepositoryImpl implements ServiceRepository {
       final service = _fromCardInfo(data, id);
       return service;
     } on DioException catch (e) {
-      throw _toApiException(e, fallbackMessage: 'Failed to load card');
+      throw ApiException.fromDioException(e, fallbackMessage: 'Failed to load card');
     }
   }
 
@@ -134,7 +134,7 @@ class ServiceRepositoryImpl implements ServiceRepository {
       }
       return null;
     } on DioException catch (e) {
-      throw _toApiException(e, fallbackMessage: 'Failed to create card');
+      throw ApiException.fromDioException(e, fallbackMessage: 'Failed to create card');
     }
   }
 
@@ -153,7 +153,7 @@ class ServiceRepositoryImpl implements ServiceRepository {
     try {
       await _api.post(ApiConstants.cardsUpdateCard, data: payload);
     } on DioException catch (e) {
-      throw _toApiException(e, fallbackMessage: 'Failed to update card');
+      throw ApiException.fromDioException(e, fallbackMessage: 'Failed to update card');
     }
   }
 
@@ -167,7 +167,7 @@ class ServiceRepositoryImpl implements ServiceRepository {
     try {
       await _api.post(ApiConstants.cardsCreateReply, data: {'card-id': cardId});
     } on DioException catch (e) {
-      throw _toApiException(e, fallbackMessage: 'Failed to create reply');
+      throw ApiException.fromDioException(e, fallbackMessage: 'Failed to create reply');
     }
   }
 
@@ -182,7 +182,7 @@ class ServiceRepositoryImpl implements ServiceRepository {
         data: {'card-id': cardId, 'executor-id': executorId},
       );
     } on DioException catch (e) {
-      throw _toApiException(e, fallbackMessage: 'Failed to approve executor');
+      throw ApiException.fromDioException(e, fallbackMessage: 'Failed to approve executor');
     }
   }
 
@@ -197,7 +197,7 @@ class ServiceRepositoryImpl implements ServiceRepository {
         data: {'card-id': cardId, 'executor-id': executorId},
       );
     } on DioException catch (e) {
-      throw _toApiException(e, fallbackMessage: 'Failed to reject executor');
+      throw ApiException.fromDioException(e, fallbackMessage: 'Failed to reject executor');
     }
   }
 
@@ -212,7 +212,7 @@ class ServiceRepositoryImpl implements ServiceRepository {
         data: {'card-id': cardId, 'status': status},
       );
     } on DioException catch (e) {
-      throw _toApiException(e, fallbackMessage: 'Failed to close card');
+      throw ApiException.fromDioException(e, fallbackMessage: 'Failed to close card');
     }
   }
 
@@ -244,7 +244,7 @@ class ServiceRepositoryImpl implements ServiceRepository {
 
       return imageUrl;
     } on DioException catch (e) {
-      throw _toApiException(e, fallbackMessage: 'Failed to load card image');
+      throw ApiException.fromDioException(e, fallbackMessage: 'Failed to load card image');
     }
   }
 
@@ -264,42 +264,9 @@ class ServiceRepositoryImpl implements ServiceRepository {
     final updated = _parseDateTime(json['updated']) ?? created;
 
     final authorRaw = json['author'];
-    UserEntity? author;
-    if (authorRaw is Map) {
-      final m = Map<String, dynamic>.from(authorRaw);
-      final authorId = (m['id'] as String?) ?? (m['uid'] as String?) ?? '';
-      final authorPhone = (m['phone'] as String?) ?? '';
-      final authorRating = (m['rating'] as num?)?.toDouble();
-      final authorContactsRaw = m['contacts'];
-      final authorContacts = authorContactsRaw is Map
-          ? Map<String, dynamic>.from(authorContactsRaw)
-          : <String, dynamic>{};
-      if (authorRating != null) {
-        authorContacts['rating'] = authorRating;
-      }
-
-      String? authorPhotoUrl =
-          _stringOrNull(m['image-url']) ?? _stringOrNull(m['imageUrl']);
-      if (authorPhotoUrl != null &&
-          authorPhotoUrl.isNotEmpty &&
-          !authorPhotoUrl.contains('?v=')) {
-        authorPhotoUrl = '$authorPhotoUrl?v=${updated.millisecondsSinceEpoch}';
-      }
-
-      author = UserEntity(
-        uid: authorId,
-        name: (m['name'] as String?) ?? '',
-        surname: m['surname'] as String?,
-        description: null,
-        phone: authorPhone,
-        photoUrl: authorPhotoUrl,
-        contacts: authorContacts,
-        createdCards: const [],
-        bookings: const {},
-        created: DateTime.now(),
-        updated: DateTime.now(),
-      );
-    }
+    final UserEntity? author = authorRaw is Map
+        ? _parseAuthor(Map<String, dynamic>.from(authorRaw), updated)
+        : null;
 
     String imageUrl =
         _stringOrNull(json['image-url']) ??
@@ -356,41 +323,10 @@ class ServiceRepositoryImpl implements ServiceRepository {
     final created = _parseDateTime(json['created']) ?? DateTime.now();
     final updated = _parseDateTime(json['updated']) ?? created;
 
-    UserEntity? author;
     final authorRaw = json['author'];
-    if (authorRaw is Map) {
-      final a = Map<String, dynamic>.from(authorRaw);
-      final contactsRaw = a['contacts'];
-      final contacts = contactsRaw is Map
-          ? Map<String, dynamic>.from(contactsRaw)
-          : <String, dynamic>{};
-      final authorRating = (a['rating'] as num?)?.toDouble();
-      if (authorRating != null) {
-        contacts['rating'] = authorRating;
-      }
-
-      String? authorPhotoUrl =
-          _stringOrNull(a['image-url']) ?? _stringOrNull(a['imageUrl']);
-      if (authorPhotoUrl != null &&
-          authorPhotoUrl.isNotEmpty &&
-          !authorPhotoUrl.contains('?v=')) {
-        authorPhotoUrl = '$authorPhotoUrl?v=${updated.millisecondsSinceEpoch}';
-      }
-
-      author = UserEntity(
-        uid: (a['id'] as String?) ?? (a['uid'] as String?) ?? '',
-        name: (a['name'] as String?) ?? '',
-        surname: a['surname'] as String?,
-        description: null,
-        phone: (a['phone'] as String?) ?? '',
-        photoUrl: authorPhotoUrl,
-        contacts: contacts,
-        createdCards: const [],
-        bookings: const {},
-        created: DateTime.now(),
-        updated: DateTime.now(),
-      );
-    }
+    final UserEntity? author = authorRaw is Map
+        ? _parseAuthor(Map<String, dynamic>.from(authorRaw), updated)
+        : null;
 
     double rating = 0.0;
     // Try to get rating from multiple possible sources
@@ -459,26 +395,36 @@ class ServiceRepositoryImpl implements ServiceRepository {
     return s.isEmpty ? null : s;
   }
 
-  static ApiException _toApiException(
-    DioException e, {
-    required String fallbackMessage,
-  }) {
-    final res = e.response;
-    final data = res?.data;
-    String? code;
-    String message = fallbackMessage;
-
-    if (data is Map) {
-      final c = data['code'];
-      if (c is String) code = c;
-      final m = data['message'];
-      if (m is String && m.trim().isNotEmpty) message = m;
+  static UserEntity? _parseAuthor(Map a, DateTime updated) {
+    final contactsRaw = a['contacts'];
+    final contacts = contactsRaw is Map
+        ? Map<String, dynamic>.from(contactsRaw)
+        : <String, dynamic>{};
+    final authorRating = (a['rating'] as num?)?.toDouble();
+    if (authorRating != null) {
+      contacts['rating'] = authorRating;
     }
 
-    return ApiException(
-      message: message,
-      code: code,
-      statusCode: res?.statusCode,
+    String? authorPhotoUrl =
+        _stringOrNull(a['image-url']) ?? _stringOrNull(a['imageUrl']);
+    if (authorPhotoUrl != null &&
+        authorPhotoUrl.isNotEmpty &&
+        !authorPhotoUrl.contains('?v=')) {
+      authorPhotoUrl = '$authorPhotoUrl?v=${updated.millisecondsSinceEpoch}';
+    }
+
+    return UserEntity(
+      uid: (a['id'] as String?) ?? (a['uid'] as String?) ?? '',
+      name: (a['name'] as String?) ?? '',
+      surname: a['surname'] as String?,
+      description: null,
+      phone: (a['phone'] as String?) ?? '',
+      photoUrl: authorPhotoUrl,
+      contacts: contacts,
+      createdCards: const [],
+      bookings: const {},
+      created: DateTime.now(),
+      updated: DateTime.now(),
     );
   }
 }

@@ -30,6 +30,9 @@ abstract class _ServiceStore with Store {
   String? errorMessage;
 
   @observable
+  String? replyError;
+
+  @observable
   String searchQuery = '';
 
   @observable
@@ -212,15 +215,11 @@ abstract class _ServiceStore with Store {
 
   @action
   Future<void> createReply(String cardId) async {
-    isLoading = true;
-    errorMessage = null;
+    replyError = null;
     try {
       await _serviceRepository.createReply(cardId);
     } catch (e) {
-      errorMessage = e.toString();
-      rethrow;
-    } finally {
-      isLoading = false;
+      replyError = e.toString();
     }
   }
 
