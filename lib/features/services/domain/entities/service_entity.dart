@@ -19,6 +19,7 @@ class ServiceEntity {
   final DateTime updated;
   final ServiceCategory category; // Keeping existing field for compatibility
   final String imageUrl; // Keeping existing field for compatibility
+  final String? status; // active | in-progress | completed | closed — from /user/me only
 
   ServiceEntity({
     required this.uid,
@@ -36,6 +37,7 @@ class ServiceEntity {
     required this.updated,
     required this.category,
     required this.imageUrl,
+    this.status,
   });
 
   // Alias for id to maintain compatibility
@@ -99,6 +101,7 @@ class ServiceEntity {
             (json['imageUrl'] as String?) ??
             (json['image_url'] as String?),
       ),
+      status: json['status'] as String?,
     );
   }
 
@@ -119,6 +122,7 @@ class ServiceEntity {
       'updated': updated.toIso8601String(),
       'category': category.toString().split('.').last,
       'image-url': imageUrl,
+      'status': status,
     };
   }
 }
