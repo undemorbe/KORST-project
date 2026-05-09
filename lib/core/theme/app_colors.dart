@@ -1,78 +1,50 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // Editorial taskboard palette
-  static const Color primary = Color(0xFF0F766E);
-  static const Color primaryContainer = Color(0xFFCCFBF1);
-  static const Color onPrimaryContainer = Color(0xFF134E4A);
-  static const Color secondary = Color(0xFFDC2626);
-  static const Color secondaryContainer = Color(0xFFFEE2E2);
-  static const Color onSecondaryContainer = Color(0xFF7F1D1D);
-  static const Color tertiary = Color(0xFFCA8A04);
-  static const Color tertiaryContainer = Color(0xFFFEF3C7);
-  static const Color onTertiaryContainer = Color(0xFF713F12);
+  // Plague & Gold — dark foundation
+  static const Color background    = Color(0xFF080604);
+  static const Color surface       = Color(0xFF12100A);
+  static const Color surfaceCard   = Color(0xFF1C1810); // gradient start
+  static const Color surfaceCardEnd= Color(0xFF12100A); // gradient end
 
-  // Light theme
-  static const Color background = Color(0xFFF6F7F4);
-  static const Color surface = Colors.white;
-  static const Color surfaceVariant = Color(0xFFE9ECE5);
-  static const Color error = Color(0xFFEF4444);
-  static const Color onPrimary = Colors.white;
-  static const Color onSecondary = Colors.white;
-  static const Color onBackground = Color(0xFF0F172A);
-  static const Color onSurface = Color(0xFF1E293B);
-  static const Color onSurfaceVariant = Color(0xFF64748B);
-  static const Color onError = Colors.white;
-  static const Color outline = Color(0xFFD6DBD2);
-  static const Color outlineVariant = Color(0xFFC6CDC1);
+  // Borders & dividers
+  static const Color border        = Color(0xFF5A4820);
+  static const Color borderSubtle  = Color(0xFF3A2E18);
+  static const Color insetHighlight= Color(0xFF6A5028); // top-edge shimmer
 
-  // Dark theme
-  static const Color darkBackground = Color(0xFF101412);
-  static const Color darkSurface = Color(0xFF181D1A);
-  static const Color darkSurfaceVariant = Color(0xFF252C28);
-  static const Color darkOnBackground = Color(0xFFF4F7F2);
-  static const Color darkOnSurface = Color(0xFFF4F7F2);
-  static const Color darkOnSurfaceVariant = Color(0xFFBDC8BE);
-  static const Color darkOutline = Color(0xFF46514A);
-  static const Color darkOutlineVariant = Color(0xFF303A34);
+  // Gold accent
+  static const Color primary       = Color(0xFFC49A22);
+  static const Color primaryLight  = Color(0xFFD4AA55);
+  static const Color onPrimary     = Color(0xFF080604);
 
-  // Gradients
-  static const List<Color> primaryGradient = [
-    Color(0xFF0F766E),
-    Color(0xFF14B8A6),
-  ];
-  static const List<Color> secondaryGradient = [
-    Color(0xFFDC2626),
-    Color(0xFFF59E0B),
-  ];
-  static const List<Color> glassLight = [Color(0x80FFFFFF), Color(0x40FFFFFF)];
-  static const List<Color> glassDark = [Color(0x401E293B), Color(0x200F172A)];
+  // Text
+  static const Color onBackground  = Color(0xFFE8D4A0); // parchment
+  static const Color onSurface     = Color(0xFFC8B890);
+  static const Color muted         = Color(0xFF7A6A3A);
+  static const Color mutedDark     = Color(0xFF5A4A28);
 
-  // Extended success/info/warning colors
-  static const Color success = Color(0xFF22C55E);
-  static const Color onSuccess = Colors.white;
-  static const Color successContainer = Color(0xFFDCFCE7);
-  static const Color onSuccessContainer = Color(0xFF166534);
+  // Semantic
+  static const Color error         = Color(0xFFAA4444);
+  static const Color onError       = Color(0xFFFFFFFF);
+  static const Color success       = Color(0xFF6AAA6A);
+  static const Color onSuccess     = Color(0xFF080604);
+  static const Color warning       = Color(0xFFCCAA44);
 
-  static const Color info = Color(0xFF3B82F6);
-  static const Color onInfo = Colors.white;
-  static const Color infoContainer = Color(0xFFDBEAFE);
-  static const Color onInfoContainer = Color(0xFF1E40AF);
+  // Glow
+  static const Color goldGlow      = Color(0x12C49A22); // box-shadow
+  static const Color goldGlowText  = Color(0x50C49A22); // text-shadow equivalent
 
-  static const Color warning = Color(0xFFF59E0B);
-  static const Color onWarning = Colors.white;
-  static const Color warningContainer = Color(0xFFFEF3C7);
-  static const Color onWarningContainer = Color(0xFF92400E);
+  // Rating
+  static const Color ratingStar    = Color(0xFFC49A22);
 
-  // Shadow colors
-  static const Color shadowLight = Color(0x1F000000);
-  static const Color shadowDark = Color(0x3F000000);
-
-  // Rating colors
-  static const Color ratingStar = Color(0xFFF59E0B);
-  static const Color ratingStarEmpty = Color(0xFFE5E7EB);
-
-  // Divider
-  static const Color dividerLight = Color(0xFFE5E7EB);
-  static const Color dividerDark = Color(0xFF374151);
+  // Legacy aliases used by existing code — kept for compatibility
+  static const Color darkBackground      = background;
+  static const Color darkSurface         = surface;
+  static const Color darkSurfaceVariant  = Color(0xFF1E1A09);
+  static const Color darkOnBackground    = onBackground;
+  static const Color darkOnSurface       = onSurface;
+  static const Color darkOnSurfaceVariant= muted;
+  static const Color darkOutline         = border;
+  static const Color darkOutlineVariant  = borderSubtle;
+  static const Color dividerDark         = borderSubtle;
 }
