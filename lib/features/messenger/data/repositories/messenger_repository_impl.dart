@@ -5,7 +5,6 @@ import '../../../../core/api/api_constants.dart';
 import '../../../../core/api/api_error_codes.dart';
 import '../../../../core/api/api_exception.dart';
 import '../../../../core/storage/local_storage.dart';
-import '../../../../core/di/injection_container.dart';
 import '../../domain/entities/chat_entity.dart';
 import '../../domain/entities/chats_response.dart';
 import '../../domain/entities/message_entity.dart';
@@ -13,8 +12,9 @@ import '../../domain/repositories/messenger_repository.dart';
 
 class MessengerRepositoryImpl implements MessengerRepository {
   final ApiClient _api;
+  final LocalStorageService _localStorage;
 
-  MessengerRepositoryImpl(this._api);
+  MessengerRepositoryImpl(this._api, this._localStorage);
 
   @override
   Future<ChatsResponse> getChats() async {
@@ -52,7 +52,7 @@ class MessengerRepositoryImpl implements MessengerRepository {
       );
 
       try {
-        sl<LocalStorageService>().put(
+        _localStorage.put(
           'cache_chats',
           jsonEncode(response.toJson()),
         );
@@ -62,12 +62,12 @@ class MessengerRepositoryImpl implements MessengerRepository {
     } on DioException catch (e) {
       try {
         final cachedStr =
-            sl<LocalStorageService>().get('cache_chats') as String?;
+            _localStorage.get('cache_chats') as String?;
         if (cachedStr != null) {
           return ChatsResponse.fromJson(jsonDecode(cachedStr));
         }
       } catch (_) {}
-      throw _toApiException(e, fallbackMessage: 'Failed to load chats');
+      throw ApiException.fromDioException(e, fallbackMessage: 'Failed to load chats');
     }
   }
 
@@ -104,7 +104,7 @@ class MessengerRepositoryImpl implements MessengerRepository {
 
       try {
         final messagesJson = messages.map((m) => m.toJson()).toList();
-        sl<LocalStorageService>().put(
+        _localStorage.put(
           'cache_messages_$chatId',
           jsonEncode(messagesJson),
         );
@@ -114,13 +114,13 @@ class MessengerRepositoryImpl implements MessengerRepository {
     } on DioException catch (e) {
       try {
         final cachedStr =
-            sl<LocalStorageService>().get('cache_messages_$chatId') as String?;
+            _localStorage.get('cache_messages_$chatId') as String?;
         if (cachedStr != null) {
           final List<dynamic> decoded = jsonDecode(cachedStr);
           return decoded.map((m) => MessageEntity.fromJson(m)).toList();
         }
       } catch (_) {}
-      throw _toApiException(e, fallbackMessage: 'Failed to load messages');
+      throw ApiException.fromDioException(e, fallbackMessage: 'Failed to load messages');
     }
   }
 
@@ -135,7 +135,7 @@ class MessengerRepositoryImpl implements MessengerRepository {
         data: {'user-id': userId, 'card-id': cardId},
       );
     } on DioException catch (e) {
-      throw _toApiException(e, fallbackMessage: 'Failed to create chat');
+      throw ApiException.fromDioException(e, fallbackMessage: 'Failed to create chat');
     }
   }
 
@@ -150,7 +150,7 @@ class MessengerRepositoryImpl implements MessengerRepository {
         data: {'chat-id': chatId, 'text': text.trim()},
       );
     } on DioException catch (e) {
-      throw _toApiException(e, fallbackMessage: 'Failed to send message');
+      throw ApiException.fromDioException(e, fallbackMessage: 'Failed to send message');
     }
   }
 
@@ -174,7 +174,7 @@ class MessengerRepositoryImpl implements MessengerRepository {
         extraFields: fields,
       );
     } on DioException catch (e) {
-      throw _toApiException(e, fallbackMessage: 'Failed to send image');
+      throw ApiException.fromDioException(e, fallbackMessage: 'Failed to send image');
     }
   }
 
@@ -189,7 +189,7 @@ class MessengerRepositoryImpl implements MessengerRepository {
         data: {'message-id': messageId, 'text': text.trim()},
       );
     } on DioException catch (e) {
-      throw _toApiException(e, fallbackMessage: 'Failed to edit message');
+      throw ApiException.fromDioException(e, fallbackMessage: 'Failed to edit message');
     }
   }
 
@@ -201,7 +201,7 @@ class MessengerRepositoryImpl implements MessengerRepository {
         data: {'message-id': messageId},
       );
     } on DioException catch (e) {
-      throw _toApiException(e, fallbackMessage: 'Failed to delete message');
+      throw ApiException.fromDioException(e, fallbackMessage: 'Failed to delete message');
     }
   }
 
@@ -291,28 +291,5 @@ class MessengerRepositoryImpl implements MessengerRepository {
       return v is String ? v : null;
     }
     return null;
-  }
-
-  static ApiException _toApiException(
-    DioException e, {
-    required String fallbackMessage,
-  }) {
-    final res = e.response;
-    final data = res?.data;
-    String? code;
-    String message = fallbackMessage;
-
-    if (data is Map) {
-      final c = data['code'];
-      if (c is String) code = c;
-      final m = data['message'];
-      if (m is String && m.trim().isNotEmpty) message = m;
-    }
-
-    return ApiException(
-      message: message,
-      code: code,
-      statusCode: res?.statusCode,
-    );
   }
 }

@@ -19,6 +19,7 @@ import '../../features/auth/presentation/store/session_store.dart';
 import '../../features/users/data/repositories/user_profile_repository_impl.dart';
 import '../../features/users/domain/repositories/user_profile_repository.dart';
 import '../../features/messenger/data/repositories/messenger_repository_impl.dart';
+import '../../features/messenger/data/services/messenger_service_interface.dart';
 import '../../features/messenger/data/services/messenger_socket_service.dart';
 import '../../features/messenger/domain/repositories/messenger_repository.dart';
 import '../../features/messenger/presentation/store/messenger_store.dart';
@@ -95,14 +96,14 @@ Future<void> init() async {
 
   // Features - Users
   sl.registerLazySingleton<UserProfileRepository>(
-    () => UserProfileRepositoryImpl(sl()),
+    () => UserProfileRepositoryImpl(sl(), sl()),
   );
 
   // Features - Messenger
   sl.registerLazySingleton<MessengerRepository>(
-    () => MessengerRepositoryImpl(sl()),
+    () => MessengerRepositoryImpl(sl(), sl()),
   );
-  sl.registerLazySingleton(
+  sl.registerLazySingleton<MessengerServiceInterface>(
     () => MessengerSocketService(
       tokenStorage: sl<TokenStorage>(),
       notificationService: sl<NotificationService>(),

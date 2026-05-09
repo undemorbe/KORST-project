@@ -3,6 +3,7 @@ import '../../domain/entities/cards_page.dart';
 import '../../domain/entities/service_entity.dart';
 import '../../domain/entities/service_category.dart';
 import '../../domain/entities/review_entity.dart';
+import '../../domain/entities/executor_entity.dart';
 import '../../domain/repositories/service_repository.dart';
 
 part 'service_store.g.dart';
@@ -31,6 +32,15 @@ abstract class _ServiceStore with Store {
 
   @observable
   String? replyError;
+
+  @observable
+  ObservableList<ExecutorEntity> executors = ObservableList<ExecutorEntity>();
+
+  @observable
+  bool isLoadingExecutors = false;
+
+  @observable
+  String? executorsError;
 
   @observable
   String searchQuery = '';
@@ -291,6 +301,20 @@ abstract class _ServiceStore with Store {
       errorMessage = e.toString();
     } finally {
       isLoading = false;
+    }
+  }
+
+  @action
+  Future<void> loadExecutors(String cardId) async {
+    isLoadingExecutors = true;
+    executorsError = null;
+    try {
+      final list = await _serviceRepository.getExecutors(cardId);
+      executors = ObservableList.of(list);
+    } catch (e) {
+      executorsError = e.toString();
+    } finally {
+      isLoadingExecutors = false;
     }
   }
 

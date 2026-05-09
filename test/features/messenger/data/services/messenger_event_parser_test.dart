@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:korst/features/messenger/data/services/messenger_event_parser.dart';
+import 'package:korst/features/messenger/data/services/messenger_service_interface.dart';
 import 'package:korst/features/messenger/data/services/messenger_socket_service.dart';
 import 'package:korst/features/messenger/domain/entities/chat_entity.dart';
 import 'package:korst/features/messenger/domain/entities/message_entity.dart';

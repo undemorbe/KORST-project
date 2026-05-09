@@ -10,12 +10,38 @@ import '../../domain/entities/user_review_entity.dart';
 import '../../domain/repositories/user_profile_repository.dart';
 
 import '../../../../core/api/token_storage.dart';
-import '../../../../core/di/injection_container.dart';
 
 class UserProfileRepositoryImpl implements UserProfileRepository {
   final ApiClient _api;
+  final TokenStorage _tokenStorage;
 
-  UserProfileRepositoryImpl(this._api);
+  UserProfileRepositoryImpl(this._api, this._tokenStorage);
+
+  Future<List<UserReviewEntity>> _fetchReviews(String userId) async {
+    Response<dynamic>? reviewsRes;
+    try {
+      reviewsRes = await _api.get(
+        ApiConstants.userReviews,
+        queryParameters: {'user-id': userId},
+      );
+    } on DioException catch (_) {
+      try {
+        reviewsRes = await _api.get(
+          ApiConstants.userReviews,
+          data: {'user-id': userId},
+        );
+      } catch (_) {}
+    } catch (_) {}
+
+    final reviewsData = reviewsRes?.data;
+    final reviewsRaw = reviewsData is Map ? reviewsData['reviews'] : null;
+    return reviewsRaw is List
+        ? reviewsRaw
+              .map((e) => _mapReview(e))
+              .whereType<UserReviewEntity>()
+              .toList()
+        : <UserReviewEntity>[];
+  }
 
   @override
   Future<UserProfileEntity> getUserProfile(String userId) async {
@@ -24,7 +50,7 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
       try {
         infoRes = await _api.get(
           ApiConstants.userGetInfo,
-          data: {'user-id': userId},
+          queryParameters: {'user-id': userId},
         );
       } on DioException catch (e) {
         if (e.response?.statusCode == 400 ||
@@ -32,7 +58,7 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
                 e.response?.data['code'] == 'INVALID_INPUT')) {
           infoRes = await _api.get(
             ApiConstants.userGetInfo,
-            queryParameters: {'user-id': userId},
+            data: {'user-id': userId},
           );
         } else {
           rethrow;
@@ -49,33 +75,8 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
       }
       final info = Map<String, dynamic>.from(infoData);
 
-      Response<dynamic>? reviewsRes;
-      try {
-        reviewsRes = await _api.get(
-          ApiConstants.userReviews,
-          data: {'user-id': userId},
-        );
-      } on DioException catch (_) {
-        try {
-          reviewsRes = await _api.get(
-            ApiConstants.userReviews,
-            queryParameters: {'user-id': userId},
-          );
-        } catch (_) {
-          // Игнорируем ошибку, если отзывы не найдены или user-id некорректен
-        }
-      } catch (_) {
-        // Игнорируем
-      }
-
-      final reviewsData = reviewsRes?.data;
-      final reviewsRaw = reviewsData is Map ? reviewsData['reviews'] : null;
-      final reviews = reviewsRaw is List
-          ? reviewsRaw
-                .map((e) => _mapReview(e))
-                .whereType<UserReviewEntity>()
-                .toList()
-          : <UserReviewEntity>[];
+      final reviewsFuture = _fetchReviews(userId);
+      final reviews = await reviewsFuture;
 
       final cardsRaw = info['cards'];
       final cards = cardsRaw is List
@@ -116,7 +117,7 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
         reviews: reviews,
       );
     } on DioException catch (e) {
-      throw _toApiException(e, fallbackMessage: 'Failed to load user profile');
+      throw ApiException.fromDioException(e, fallbackMessage: 'Failed to load user profile');
     }
   }
 
@@ -132,7 +133,7 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
         data: {'user-id': userId, 'rating': rating, 'comment': comment.trim()},
       );
     } on DioException catch (e) {
-      throw _toApiException(e, fallbackMessage: 'Failed to send review');
+      throw ApiException.fromDioException(e, fallbackMessage: 'Failed to send review');
     }
   }
 
@@ -225,36 +226,14 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
           (_api.userId == null || _api.userId!.startsWith('+'))) {
         try {
           // If we finally found our real UUID, save it to avoid future issues
-          final ts = sl<TokenStorage>();
-          await ts.saveUserId(parsedUserId);
+          await _tokenStorage.saveUserId(parsedUserId);
         } catch (_) {}
       }
 
       final userId = parsedUserId;
 
-      Response<dynamic>? reviewsRes;
-      try {
-        reviewsRes = await _api.get(
-          ApiConstants.userReviews,
-          data: {'user-id': userId},
-        );
-      } on DioException catch (_) {
-        try {
-          reviewsRes = await _api.get(
-            ApiConstants.userReviews,
-            queryParameters: {'user-id': userId},
-          );
-        } catch (_) {}
-      } catch (_) {}
-
-      final reviewsData = reviewsRes?.data;
-      final reviewsRaw = reviewsData is Map ? reviewsData['reviews'] : null;
-      final reviews = reviewsRaw is List
-          ? reviewsRaw
-                .map((e) => _mapReview(e))
-                .whereType<UserReviewEntity>()
-                .toList()
-          : <UserReviewEntity>[];
+      final reviewsFuture = _fetchReviews(userId);
+      final reviews = await reviewsFuture;
 
       final cardsRaw = info['cards'];
       final cards = cardsRaw is List
@@ -303,7 +282,7 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
         reviews: reviews,
       );
     } on DioException catch (e) {
-      throw _toApiException(e, fallbackMessage: 'Failed to load profile');
+      throw ApiException.fromDioException(e, fallbackMessage: 'Failed to load profile');
     }
   }
 
@@ -334,7 +313,7 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
 
       return imageUrl;
     } on DioException catch (e) {
-      throw _toApiException(e, fallbackMessage: 'Failed to load image');
+      throw ApiException.fromDioException(e, fallbackMessage: 'Failed to load image');
     }
   }
 
@@ -407,29 +386,6 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
       updated: updated,
       category: ServiceCategory.other,
       imageUrl: imageUrl,
-    );
-  }
-
-  static ApiException _toApiException(
-    DioException e, {
-    required String fallbackMessage,
-  }) {
-    final res = e.response;
-    final data = res?.data;
-    String? code;
-    String message = fallbackMessage;
-
-    if (data is Map) {
-      final c = data['code'];
-      if (c is String) code = c;
-      final m = data['message'];
-      if (m is String && m.trim().isNotEmpty) message = m;
-    }
-
-    return ApiException(
-      message: message,
-      code: code,
-      statusCode: res?.statusCode,
     );
   }
 }

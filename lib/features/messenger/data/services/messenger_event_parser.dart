@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import '../../domain/entities/chat_entity.dart';
 import '../../domain/entities/message_entity.dart';
-import 'messenger_socket_service.dart';
+import 'messenger_service_interface.dart';
 
 class MessengerEventParser {
   const MessengerEventParser._();
@@ -101,12 +101,10 @@ class MessengerEventParser {
   static MessageEntity? _parseMessage(dynamic raw) {
     final map = _asMap(raw);
     if (map == null || !_looksLikeMessage(map)) return null;
-
     final normalized = Map<String, dynamic>.from(map);
     normalized['id'] ??= normalized['message-id'] ?? normalized['messageId'];
-    normalized['author-id'] ??= normalized['authorId'];
+    normalized['authorId'] ??= normalized['author-id'] ?? normalized['authorId'];
     normalized['created'] ??= DateTime.now().toIso8601String();
-
     try {
       return MessageEntity.fromJson(normalized);
     } catch (_) {
@@ -117,7 +115,6 @@ class MessengerEventParser {
   static ChatEntity? _parseChat(dynamic raw) {
     final map = _asMap(raw);
     if (map == null || !_looksLikeChat(map)) return null;
-
     try {
       return ChatEntity.fromJson(map);
     } catch (_) {

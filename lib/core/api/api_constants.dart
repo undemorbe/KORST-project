@@ -30,6 +30,7 @@ class ApiConstants {
   static String get cardsApproveExecutor => EnvConfig.cardsApproveExecutor;
   static String get cardsRejectExecutor => EnvConfig.cardsRejectExecutor;
   static String get cardsClose => EnvConfig.cardsClose;
+  static String get repliesGetExecutors => EnvConfig.repliesGetExecutors;
 
   static String get messengerChats => EnvConfig.messengerChats;
   static String get messengerMessages => EnvConfig.messengerMessages;

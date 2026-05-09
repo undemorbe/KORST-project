@@ -68,15 +68,14 @@ void main() {
       tokenStorage = TokenStorage(_FakeLocalStorage());
       await tokenStorage.saveTokens(accessToken: 'access-1', refreshToken: 'refresh-1');
       apiClient = ApiClient(dio: dio, refreshDio: refreshDio, tokenStorage: tokenStorage);
-      repo = UserProfileRepositoryImpl(apiClient);
+      repo = UserProfileRepositoryImpl(apiClient, tokenStorage);
     });
 
     group('getUserProfile', () {
       test('parses user profile with cards and reviews', () async {
         dio.httpClientAdapter = _Adapter((options) async {
           if (options.path.endsWith(ApiConstants.userGetInfo)) {
-            final data = options.data as Map<String, dynamic>?;
-            expect(data?['user-id'], 'user-123');
+            expect(options.queryParameters?['user-id'], 'user-123');
 
             return _jsonBody(200, {
               'name': 'Денис',

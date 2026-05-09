@@ -1,0 +1,72 @@
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=IM+Fell+English:ital@0;1&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+
+<h2>Типографика заголовков</h2>
+<p class="subtitle">Body-текст везде остаётся читаемым (Inter / Crimson Text). Вопрос — заголовки страниц и карточек.</p>
+
+<style>
+  .typo-preview {
+    background: #0F0C09;
+    border: 1px solid #3A2E18;
+    border-radius: 10px;
+    padding: 20px 22px;
+    margin-bottom: 4px;
+    color: #E8D4A0;
+  }
+  .typo-preview .big { font-size: 26px; color: #D4AA55; margin-bottom: 6px; line-height: 1.2; }
+  .typo-preview .medium { font-size: 17px; margin-bottom: 4px; }
+  .typo-preview .small { font-size: 13px; color: #8A7A5A; }
+  .typo-preview .price { color: #C49A22; font-weight: 700; font-size: 16px; margin-top: 8px; }
+  .tag { display: inline-block; background: #1E1A09; border: 1px solid #4A3C12; color: #9A8040; font-size: 10px; padding: 2px 8px; border-radius: 20px; margin-right: 4px; }
+</style>
+
+<div class="cards">
+
+  <div class="card" data-choice="cinzel" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="typo-preview">
+        <div class="big" style="font-family: 'Cinzel', serif; font-weight: 700; letter-spacing: 0.08em;">Охотник за головами</div>
+        <div class="medium" style="font-family: 'Inter', sans-serif; font-weight: 500; color: #C8B890;">Виктор Черный</div>
+        <div class="small" style="font-family: 'Inter', sans-serif;">★ 4.9 · Самозанятый · Москва</div>
+        <div><span class="tag">охота</span><span class="tag">слежка</span></div>
+        <div class="price" style="font-family: 'Cinzel', serif;">4 500 ₽</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Cinzel</h3>
+      <p>Древнеримские капители. Официально, торжественно, монументально. Буквы как выбитые в камне. Самый «игровой» выбор — точная цитата эпохи.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="im-fell" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="typo-preview">
+        <div class="big" style="font-family: 'IM Fell English', serif; font-weight: 400; letter-spacing: 0.02em;">Охотник за головами</div>
+        <div class="medium" style="font-family: 'Inter', sans-serif; font-weight: 500; color: #C8B890;">Виктор Черный</div>
+        <div class="small" style="font-family: 'Inter', sans-serif;">★ 4.9 · Самозанятый · Москва</div>
+        <div><span class="tag">охота</span><span class="tag">слежка</span></div>
+        <div class="price" style="font-family: 'IM Fell English', serif; font-style: italic;">4 500 ₽</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — IM Fell English</h3>
+      <p>Старопечатная гравюра XVII века. Органично, ручная работа, чуть неровно — как книга с рецептами чумного доктора. Мягче и человечнее Cinzel.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="cinzel-crimson" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="typo-preview">
+        <div class="big" style="font-family: 'Cinzel', serif; font-weight: 700; letter-spacing: 0.06em;">Охотник за головами</div>
+        <div class="medium" style="font-family: 'Crimson Text', serif; font-weight: 600; color: #C8B890; font-size: 15px;">Виктор Черный</div>
+        <div class="small" style="font-family: 'Crimson Text', serif; font-size: 14px;">★ 4.9 · Самозанятый · Москва</div>
+        <div><span class="tag">охота</span><span class="tag">слежка</span></div>
+        <div class="price" style="font-family: 'Crimson Text', serif; font-size: 17px;">4 500 ₽</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Cinzel + Crimson Text</h3>
+      <p>Пара: Cinzel в заголовках страниц, Crimson Text в теле карточек. Crimson — мягкая книжная засечка, хорошо читается мелким. Максимальная атмосфера при хорошей читабельности.</p>
+    </div>
+  </div>
+
+</div>

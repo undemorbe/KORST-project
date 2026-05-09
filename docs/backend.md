@@ -741,7 +741,49 @@ WS …/messenger/ws
             "image-url": "http://..."
         }
     }
+    
 }
+Контракт для получения исполнителей для карточки
+
+
+
+GET …/replies/executors
+
+
+
+Request (Params):
+
+card-id: 848a7em9fk3n8kif93
+
+
+
+Response:
+
+{
+
+    "executors": [
+
+        {
+
+            "id": "kefknbkwnkmnwk",
+
+            "name": "Олег",
+
+             "surname": "Олегов",
+
+            "image-url": "https://...",
+
+            "rating": 4.5
+
+        },
+
+        ...
+
+    ]
+
+}
+
+
 
 !! Поле data — допустимая обёртка. Если payload приходит внутри data, клиент разворачивает его автоматически:
 

@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:mobx/mobx.dart';
-import '../../data/services/messenger_socket_service.dart';
+import '../../data/services/messenger_service_interface.dart';
 import '../../domain/entities/chat_entity.dart';
 import '../../domain/entities/chats_response.dart';
 import '../../domain/entities/message_entity.dart';
@@ -14,7 +14,7 @@ class MessengerStore = _MessengerStore with _$MessengerStore;
 
 abstract class _MessengerStore with Store {
   final MessengerRepository _messengerRepository;
-  final MessengerSocketService _messengerSocketService;
+  final MessengerServiceInterface _messengerSocketService;
   StreamSubscription<MessengerSocketEvent>? _socketSubscription;
 
   _MessengerStore(this._messengerRepository, this._messengerSocketService);

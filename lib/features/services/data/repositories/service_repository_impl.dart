@@ -8,6 +8,7 @@ import '../../domain/entities/cards_page.dart';
 import '../../domain/entities/service_entity.dart';
 import '../../domain/entities/service_category.dart';
 import '../../domain/entities/review_entity.dart';
+import '../../domain/entities/executor_entity.dart';
 import '../../domain/repositories/service_repository.dart';
 
 class ServiceRepositoryImpl implements ServiceRepository {
@@ -426,5 +427,25 @@ class ServiceRepositoryImpl implements ServiceRepository {
       created: DateTime.now(),
       updated: DateTime.now(),
     );
+  }
+
+  @override
+  Future<List<ExecutorEntity>> getExecutors(String cardId) async {
+    try {
+      final res = await _api.get<Map<String, dynamic>>(
+        ApiConstants.repliesGetExecutors,
+        queryParameters: {'card-id': cardId},
+      );
+      final data = res.data ?? {};
+      final list = data['executors'] as List<dynamic>? ?? [];
+      return list
+          .map((e) => ExecutorEntity.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(
+        e,
+        fallbackMessage: 'Failed to load executors',
+      );
+    }
   }
 }

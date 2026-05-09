@@ -32,7 +32,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       await _api.post(ApiConstants.authorizeSendOtp, data: {'phone': phone});
     } on DioException catch (e) {
-      throw _toApiException(e, fallbackMessage: 'Failed to send OTP');
+      throw ApiException.fromDioException(e, fallbackMessage: 'Failed to send OTP');
     }
   }
 
@@ -66,7 +66,7 @@ class AuthRepositoryImpl implements AuthRepository {
       }
       return AuthUserStatus.notFound;
     } on DioException catch (e) {
-      throw _toApiException(
+      throw ApiException.fromDioException(
         e,
         fallbackMessage: 'Failed to verify user',
       );
@@ -119,7 +119,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
       return status;
     } on DioException catch (e) {
-      throw _toApiException(e, fallbackMessage: 'Failed to confirm OTP');
+      throw ApiException.fromDioException(e, fallbackMessage: 'Failed to confirm OTP');
     }
   }
 
@@ -190,7 +190,7 @@ class AuthRepositoryImpl implements AuthRepository {
       await _api.post(ApiConstants.userUpdate, data: request);
       await _localStorage.put(_userKey, json.encode(user.toJson()));
     } on DioException catch (e) {
-      throw _toApiException(e, fallbackMessage: 'Failed to update profile');
+      throw ApiException.fromDioException(e, fallbackMessage: 'Failed to update profile');
     }
   }
 
@@ -225,29 +225,6 @@ class AuthRepositoryImpl implements AuthRepository {
       phone: phone,
     );
     await _localStorage.put(_userKey, json.encode(updated.toJson()));
-  }
-
-  static ApiException _toApiException(
-    DioException e, {
-    required String fallbackMessage,
-  }) {
-    final res = e.response;
-    final data = res?.data;
-    String? code;
-    String message = fallbackMessage;
-
-    if (data is Map) {
-      final c = data['code'];
-      if (c is String) code = c;
-      final m = data['message'];
-      if (m is String && m.trim().isNotEmpty) message = m;
-    }
-
-    return ApiException(
-      message: message,
-      code: code,
-      statusCode: res?.statusCode,
-    );
   }
 
   static String? _extractErrorCode(dynamic data) {

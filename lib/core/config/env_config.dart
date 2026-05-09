@@ -65,6 +65,8 @@ class EnvConfig {
   static String get cardsRejectExecutor =>
       _get('API_CARDS_REJECT_EXECUTOR', 'cards/reject-executor');
   static String get cardsClose => _get('API_CARDS_CLOSE', 'cards/close');
+  static String get repliesGetExecutors =>
+      _get('API_REPLIES_GET_EXECUTORS', 'replies/executors');
 
   static String get messengerChats =>
       _get('API_MESSENGER_CHATS', 'messenger/chats');
@@ -82,6 +84,11 @@ class EnvConfig {
       _get('API_MESSENGER_DELETE_MESSAGE', 'messenger/delete-message');
 
   static String get messengerSocketUrl {
+    final disabled = _get('WS_MESSENGER_DISABLED', 'false').toLowerCase() == 'true';
+    if (disabled) {
+      return '';
+    }
+
     final configured = _get('WS_MESSENGER_URL', '').trim();
     if (configured.isNotEmpty) return configured;
 
@@ -91,7 +98,11 @@ class EnvConfig {
         ? apiUri.path.substring(0, apiUri.path.length - 1)
         : apiUri.path;
     return apiUri
-        .replace(scheme: wsScheme, path: '$basePath/messenger/ws')
+        .replace(scheme: wsScheme, path: '$basePath/messenger/websocket')
         .toString();
+  }
+
+  static bool get isWebSocketEnabled {
+    return _get('WS_MESSENGER_DISABLED', 'false').toLowerCase() != 'true';
   }
 }

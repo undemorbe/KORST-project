@@ -1,6 +1,7 @@
 import '../entities/service_entity.dart';
 import '../entities/review_entity.dart';
 import '../entities/cards_page.dart';
+import '../entities/executor_entity.dart';
 
 abstract class ServiceRepository {
   Future<CardsPage> getServices({required String? key});
@@ -23,4 +24,5 @@ abstract class ServiceRepository {
     required String executorId,
   });
   Future<void> closeCard({required String cardId, required String status});
+  Future<List<ExecutorEntity>> getExecutors(String cardId);
 }

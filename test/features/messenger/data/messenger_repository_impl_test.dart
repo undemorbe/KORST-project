@@ -76,7 +76,7 @@ void main() {
         refreshDio: refreshDio,
         tokenStorage: tokenStorage,
       );
-      repo = MessengerRepositoryImpl(apiClient);
+      repo = MessengerRepositoryImpl(apiClient, _FakeLocalStorage());
     });
 
     group('getChats', () {

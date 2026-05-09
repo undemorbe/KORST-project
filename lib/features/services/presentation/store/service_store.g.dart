@@ -97,6 +97,54 @@ mixin _$ServiceStore on _ServiceStore, Store {
     });
   }
 
+  late final _$executorsAtom =
+      Atom(name: '_ServiceStore.executors', context: context);
+
+  @override
+  ObservableList<ExecutorEntity> get executors {
+    _$executorsAtom.reportRead();
+    return super.executors;
+  }
+
+  @override
+  set executors(ObservableList<ExecutorEntity> value) {
+    _$executorsAtom.reportWrite(value, super.executors, () {
+      super.executors = value;
+    });
+  }
+
+  late final _$isLoadingExecutorsAtom =
+      Atom(name: '_ServiceStore.isLoadingExecutors', context: context);
+
+  @override
+  bool get isLoadingExecutors {
+    _$isLoadingExecutorsAtom.reportRead();
+    return super.isLoadingExecutors;
+  }
+
+  @override
+  set isLoadingExecutors(bool value) {
+    _$isLoadingExecutorsAtom.reportWrite(value, super.isLoadingExecutors, () {
+      super.isLoadingExecutors = value;
+    });
+  }
+
+  late final _$executorsErrorAtom =
+      Atom(name: '_ServiceStore.executorsError', context: context);
+
+  @override
+  String? get executorsError {
+    _$executorsErrorAtom.reportRead();
+    return super.executorsError;
+  }
+
+  @override
+  set executorsError(String? value) {
+    _$executorsErrorAtom.reportWrite(value, super.executorsError, () {
+      super.executorsError = value;
+    });
+  }
+
   late final _$searchQueryAtom =
       Atom(name: '_ServiceStore.searchQuery', context: context);
 
@@ -320,6 +368,14 @@ mixin _$ServiceStore on _ServiceStore, Store {
         .run(() => super.loadServiceDetails(id));
   }
 
+  late final _$loadExecutorsAsyncAction =
+      AsyncAction('_ServiceStore.loadExecutors', context: context);
+
+  @override
+  Future<void> loadExecutors(String cardId) {
+    return _$loadExecutorsAsyncAction.run(() => super.loadExecutors(cardId));
+  }
+
   late final _$_ServiceStoreActionController =
       ActionController(name: '_ServiceStore', context: context);
 
@@ -372,6 +428,9 @@ isLoading: ${isLoading},
 isLoadingMore: ${isLoadingMore},
 errorMessage: ${errorMessage},
 replyError: ${replyError},
+executors: ${executors},
+isLoadingExecutors: ${isLoadingExecutors},
+executorsError: ${executorsError},
 searchQuery: ${searchQuery},
 selectedCategory: ${selectedCategory},
 nextKey: ${nextKey},

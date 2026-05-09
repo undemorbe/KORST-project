@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/service_entity.dart';
+import '../../domain/entities/executor_entity.dart';
 import '../store/service_store.dart';
 import '../../../favorites/presentation/store/favorites_store.dart';
 
@@ -129,6 +131,9 @@ class _ServiceDetailsPageState extends State<ServiceDetailsPage> {
   void initState() {
     super.initState();
     _serviceStore.loadServiceDetails(widget.service.id);
+    if (_canEdit(widget.service)) {
+      _serviceStore.loadExecutors(widget.service.id);
+    }
   }
 
   void _showCloseCardDialog(BuildContext context, ServiceEntity service) {
@@ -534,6 +539,13 @@ class _ServiceDetailsPageState extends State<ServiceDetailsPage> {
                             ),
                           ),
                         ),
+                      if (_canEdit(currentService)) ...[
+                        const SizedBox(height: 24),
+                        _ExecutorsSection(
+                          store: _serviceStore,
+                          cardId: currentService.id,
+                        ),
+                      ],
                       const SizedBox(height: 32),
                     ],
                   ),
@@ -542,6 +554,221 @@ class _ServiceDetailsPageState extends State<ServiceDetailsPage> {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _ExecutorsSection extends StatelessWidget {
+  final ServiceStore store;
+  final String cardId;
+
+  const _ExecutorsSection({required this.store, required this.cardId});
+
+  @override
+  Widget build(BuildContext context) {
+    return Observer(
+      builder: (_) {
+        if (store.isLoadingExecutors) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (store.executorsError != null) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Text(
+              store.executorsError!,
+              style: const TextStyle(color: AppColors.error, fontSize: 13),
+            ),
+          );
+        }
+
+        if (store.executors.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: Text(
+              'Откликов пока нет',
+              style: TextStyle(color: AppColors.muted, fontSize: 14),
+            ),
+          );
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Отклики',
+              style: TextStyle(
+                color: AppColors.primaryLight,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.04,
+              ),
+            ),
+            const SizedBox(height: 12),
+            ...store.executors.map(
+              (e) => _ExecutorTile(
+                executor: e,
+                cardId: cardId,
+                store: store,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _ExecutorTile extends StatelessWidget {
+  final ExecutorEntity executor;
+  final String cardId;
+  final ServiceStore store;
+
+  const _ExecutorTile({
+    required this.executor,
+    required this.cardId,
+    required this.store,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: AppColors.surfaceCard,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 22,
+                backgroundColor: AppColors.borderSubtle,
+                backgroundImage: executor.imageUrl != null &&
+                        executor.imageUrl!.isNotEmpty
+                    ? NetworkImage(executor.imageUrl!)
+                    : null,
+                child: executor.imageUrl == null || executor.imageUrl!.isEmpty
+                    ? Text(
+                        executor.name.isNotEmpty
+                            ? executor.name[0].toUpperCase()
+                            : '?',
+                        style: const TextStyle(
+                          color: AppColors.primaryLight,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      )
+                    : null,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      executor.displayName,
+                      style: const TextStyle(
+                        color: AppColors.onBackground,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.star_rounded,
+                          size: 14,
+                          color: AppColors.ratingStar,
+                        ),
+                        const SizedBox(width: 3),
+                        Text(
+                          executor.rating.toStringAsFixed(1),
+                          style: const TextStyle(
+                            color: AppColors.muted,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    tooltip: 'Одобрить',
+                    icon: const Icon(
+                      Icons.check_circle_outline,
+                      color: AppColors.success,
+                      size: 26,
+                    ),
+                    onPressed: () async {
+                      final messenger = ScaffoldMessenger.of(context);
+                      try {
+                        await store.approveExecutor(
+                          cardId: cardId,
+                          executorId: executor.id,
+                        );
+                        messenger.showSnackBar(
+                          const SnackBar(
+                            content: Text('Исполнитель одобрен'),
+                          ),
+                        );
+                      } catch (_) {
+                        messenger.showSnackBar(
+                          SnackBar(
+                            content: Text(store.errorMessage ?? 'Ошибка'),
+                            backgroundColor: AppColors.error,
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                  IconButton(
+                    tooltip: 'Отклонить',
+                    icon: const Icon(
+                      Icons.cancel_outlined,
+                      color: AppColors.error,
+                      size: 26,
+                    ),
+                    onPressed: () async {
+                      final messenger = ScaffoldMessenger.of(context);
+                      try {
+                        await store.rejectExecutor(
+                          cardId: cardId,
+                          executorId: executor.id,
+                        );
+                        await store.loadExecutors(cardId);
+                        messenger.showSnackBar(
+                          const SnackBar(
+                            content: Text('Исполнитель отклонён'),
+                          ),
+                        );
+                      } catch (_) {
+                        messenger.showSnackBar(
+                          SnackBar(
+                            content: Text(store.errorMessage ?? 'Ошибка'),
+                            backgroundColor: AppColors.error,
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
