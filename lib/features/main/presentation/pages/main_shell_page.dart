@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../core/widgets/glass.dart';
+import '../../../../core/theme/app_colors.dart';
 
 class MainShellPage extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
@@ -18,20 +19,18 @@ class MainShellPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      extendBody: true, // Allow content to flow behind bottom nav
+      extendBody: true,
       body: navigationShell,
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(14, 0, 14, 12),
         child: Glass(
-          borderRadius: BorderRadius.circular(8),
-          blurSigma: 18,
-          opacity: 0.9,
-          color: colors.surface.withValues(alpha: 0.92),
-          borderColor: colors.outlineVariant,
+          borderRadius: BorderRadius.circular(12),
+          blurSigma: 20,
+          color: AppColors.surface.withValues(alpha: 0.94),
+          borderColor: AppColors.border,
           child: SizedBox(
             height: 68,
             child: NavigationBar(
@@ -39,7 +38,7 @@ class MainShellPage extends StatelessWidget {
               onDestinationSelected: _goBranch,
               backgroundColor: Colors.transparent,
               elevation: 0,
-              indicatorColor: colors.primaryContainer.withValues(alpha: 0.6),
+              indicatorColor: AppColors.primary.withValues(alpha: 0.15),
               indicatorShape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -62,8 +61,8 @@ class MainShellPage extends StatelessWidget {
                   label: l10n.navChats,
                 ),
                 NavigationDestination(
-                  icon: const Icon(Icons.settings_outlined, size: 24),
-                  selectedIcon: const Icon(Icons.settings_rounded, size: 24),
+                  icon: const Icon(Icons.person_outline, size: 24),
+                  selectedIcon: const Icon(Icons.person_rounded, size: 24),
                   label: l10n.navSettings,
                 ),
               ],
