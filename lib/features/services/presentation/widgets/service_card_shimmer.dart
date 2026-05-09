@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/widgets/glass.dart';
+import '../../../../core/theme/app_colors.dart';
 
 class ServiceCardShimmerList extends StatelessWidget {
   final int itemCount;
@@ -13,13 +13,20 @@ class ServiceCardShimmerList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.separated(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
+    return Padding(
       padding: padding,
-      itemCount: itemCount,
-      separatorBuilder: (context, index) => const SizedBox(height: 8),
-      itemBuilder: (context, index) => const ServiceCardShimmer(),
+      child: Column(
+        children: List.generate(
+          itemCount * 2 - 1,
+          (index) {
+            if (index.isEven) {
+              return const ServiceCardShimmer();
+            } else {
+              return const SizedBox(height: 8);
+            }
+          },
+        ),
+      ),
     );
   }
 }
@@ -29,110 +36,85 @@ class ServiceCardShimmer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final surface = Theme.of(
-      context,
-    ).colorScheme.surface.withValues(alpha: 0.7);
-    final radius = BorderRadius.circular(20);
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Glass(
-        blurSigma: 24,
-        opacity: 0.85,
-        color: surface,
-        borderColor: Theme.of(
-          context,
-        ).colorScheme.outlineVariant.withValues(alpha: 0.4),
-        borderWidth: 1,
-        borderRadius: radius,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const _ShimmerBlock(height: 180, width: double.infinity),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const _ShimmerBlock(
-                    height: 20,
-                    width: double.infinity,
-                    borderRadius: 6,
-                  ),
-                  const SizedBox(height: 8),
-                  const _ShimmerBlock(height: 16, width: 200, borderRadius: 6),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .surfaceContainerHighest
-                          .withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Row(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [AppColors.surfaceCard, AppColors.surfaceCardEnd],
+          ),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.border),
+          boxShadow: const [
+            BoxShadow(color: AppColors.goldGlow, blurRadius: 16, spreadRadius: 0),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const _ShimmerBlock(height: 160, width: double.infinity, borderRadius: 0),
+              Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const _ShimmerBlock(height: 18, width: double.infinity, borderRadius: 4),
+                    const SizedBox(height: 8),
+                    const _ShimmerBlock(height: 14, width: 180, borderRadius: 4),
+                    const SizedBox(height: 14),
+                    Row(
                       children: [
                         Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .primaryContainer
-                                .withValues(alpha: 0.7),
+                          width: 28,
+                          height: 28,
+                          decoration: const BoxDecoration(
+                            color: AppColors.borderSubtle,
                             shape: BoxShape.circle,
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        const _ShimmerBlock(
-                          height: 16,
-                          width: 120,
-                          borderRadius: 6,
-                        ),
+                        const SizedBox(width: 10),
+                        const _ShimmerBlock(height: 14, width: 100, borderRadius: 4),
                         const Spacer(),
                         Container(
-                          width: 50,
-                          height: 28,
+                          width: 48,
+                          height: 26,
                           decoration: BoxDecoration(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.surface.withValues(alpha: 0.6),
-                            borderRadius: BorderRadius.circular(999),
+                            color: AppColors.mutedDark,
+                            borderRadius: BorderRadius.circular(4),
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    children: [
-                      _shimmerTag(context),
-                      _shimmerTag(context),
-                      _shimmerTag(context),
-                    ],
-                  ),
-                ],
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 6,
+                      children: [
+                        _shimmerTag(),
+                        _shimmerTag(),
+                        _shimmerTag(),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _shimmerTag(BuildContext context) {
+  Widget _shimmerTag() {
     return Container(
-      width: 70,
-      height: 28,
+      width: 64,
+      height: 24,
       decoration: BoxDecoration(
-        color: Theme.of(
-          context,
-        ).colorScheme.secondaryContainer.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(999),
+        color: AppColors.borderSubtle,
+        borderRadius: BorderRadius.circular(4),
       ),
     );
   }
@@ -174,10 +156,9 @@ class _ShimmerBlockState extends State<_ShimmerBlock>
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final base = isDark ? const Color(0xFF1D2128) : const Color(0xFFE6E9EF);
-    final glowA = isDark ? const Color(0xFF303745) : const Color(0xFFF5F7FC);
-    final glowB = isDark ? const Color(0xFF3B4456) : const Color(0xFFFFFFFF);
+    const base = Color(0xFF1A1608);
+    const glowA = Color(0xFF2A2010);
+    const glowB = Color(0xFF3A3018);
 
     return ClipRRect(
       borderRadius: BorderRadius.all(Radius.circular(widget.borderRadius)),

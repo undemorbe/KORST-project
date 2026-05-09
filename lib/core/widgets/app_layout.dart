@@ -114,7 +114,7 @@ class AppSectionTitle extends StatelessWidget {
               ],
             ),
           ),
-          if (action != null) action,
+          if (action != null) action!,
         ],
       ),
     );

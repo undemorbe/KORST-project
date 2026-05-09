@@ -1,5 +1,6 @@
-import 'package:korst/core/widgets/glass.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/glass.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../l10n/generated/app_localizations.dart';
@@ -146,34 +147,40 @@ class _ServicesHomePageState extends State<ServicesHomePage> {
                 ),
               ),
             ),
-            SliverToBoxAdapter(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  children: [
-                    _buildCategoryChip(context, l10n.categoryAll, null),
-                    const SizedBox(width: 8),
-                    _buildCategoryChip(
-                      context,
-                      l10n.categoryCleaning,
-                      ServiceCategory.cleaning,
+            SliverPersistentHeader(
+              pinned: false,
+              delegate: _CategoryChipsDelegate(
+                child: Container(
+                  color: AppColors.background,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        _buildCategoryChip(context, l10n.categoryAll, null),
+                        const SizedBox(width: 8),
+                        _buildCategoryChip(
+                          context,
+                          l10n.categoryCleaning,
+                          ServiceCategory.cleaning,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildCategoryChip(
+                          context,
+                          l10n.categoryRepair,
+                          ServiceCategory.repair,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildCategoryChip(
+                          context,
+                          l10n.categoryConsulting,
+                          ServiceCategory.consulting,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildCategoryChip(context, 'Other', ServiceCategory.other),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    _buildCategoryChip(
-                      context,
-                      l10n.categoryRepair,
-                      ServiceCategory.repair,
-                    ),
-                    const SizedBox(width: 8),
-                    _buildCategoryChip(
-                      context,
-                      l10n.categoryConsulting,
-                      ServiceCategory.consulting,
-                    ),
-                    const SizedBox(width: 8),
-                    _buildCategoryChip(context, 'Other', ServiceCategory.other),
-                  ],
+                  ),
                 ),
               ),
             ),
@@ -234,13 +241,16 @@ class _ServicesHomePageState extends State<ServicesHomePage> {
                     delegate: SliverChildBuilderDelegate((context, index) {
                       if (index == _store.filteredServices.length) {
                         if (_store.isLoadingMore) {
-                          return Padding(
-                            padding: EdgeInsets.only(top: 4, bottom: 12),
-                            child: Column(
-                              children: [
-                                ServiceCardShimmer(),
-                                ServiceCardShimmer(),
-                              ],
+                          return SliverToBoxAdapter(
+                            child: Padding(
+                              padding: EdgeInsets.only(top: 4, bottom: 12),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  ServiceCardShimmer(),
+                                  ServiceCardShimmer(),
+                                ],
+                              ),
                             ),
                           );
                         }
@@ -293,35 +303,54 @@ class _ServicesHomePageState extends State<ServicesHomePage> {
     return Observer(
       builder: (_) {
         final isSelected = _store.selectedCategory == category;
-        return FilterChip(
-          label: Text(label),
-          selected: isSelected,
-          onSelected: (bool selected) {
-            _store.setCategory(selected ? category : null);
-          },
-          backgroundColor: Theme.of(
-            context,
-          ).colorScheme.surfaceContainerHighest,
-          selectedColor: Theme.of(context).colorScheme.outlineVariant,
-          checkmarkColor: Theme.of(context).colorScheme.onSurface,
-          labelStyle: TextStyle(
-            color: isSelected
-                ? Theme.of(context).colorScheme.onSurface
-                : Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-            side: BorderSide(
+        return GestureDetector(
+          onTap: () => _store.setCategory(isSelected ? null : category),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+            decoration: BoxDecoration(
               color: isSelected
-                  ? Colors.transparent
-                  : Theme.of(
-                      context,
-                    ).colorScheme.outline.withValues(alpha: 0.5),
+                  ? AppColors.primary.withValues(alpha: 0.15)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: isSelected ? AppColors.primary : AppColors.borderSubtle,
+              ),
+            ),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                color: isSelected ? AppColors.primaryLight : AppColors.onSurface,
+                letterSpacing: 0.02,
+              ),
             ),
           ),
-          showCheckmark: false,
         );
       },
     );
+  }
+}
+
+class _CategoryChipsDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+
+  _CategoryChipsDelegate({required this.child});
+
+  @override
+  double get minExtent => 60;
+
+  @override
+  double get maxExtent => 60;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return child;
+  }
+
+  @override
+  bool shouldRebuild(covariant _CategoryChipsDelegate oldDelegate) {
+    return child != oldDelegate.child;
   }
 }
