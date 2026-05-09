@@ -47,4 +47,26 @@ class AppColors {
   static const Color darkOutline         = border;
   static const Color darkOutlineVariant  = borderSubtle;
   static const Color dividerDark         = borderSubtle;
+
+  // Material3 ColorScheme aliases — map to Plague & Gold equivalents
+  // (used by current app_theme.dart; can be removed after theme is replaced)
+  static const Color primaryContainer    = Color(0xFF2A2008);
+  static const Color onPrimaryContainer  = primaryLight;
+  static const Color secondary           = warning;
+  static const Color onSecondary         = onPrimary;
+  static const Color secondaryContainer  = Color(0xFF1E1A09);
+  static const Color onSecondaryContainer= warning;
+  static const Color tertiary            = success;
+  static const Color tertiaryContainer   = Color(0xFF0D1A0E);
+  static const Color onTertiaryContainer = success;
+  static const Color outline             = border;
+  static const Color outlineVariant      = borderSubtle;
+  static const Color onSurfaceVariant    = muted;
+  static const Color surfaceVariant      = Color(0xFF1E1A09);
+  static const Color shadowLight         = Color(0x1F000000);
+  static const Color shadowDark          = Color(0x3F000000);
+
+  // Light theme aliases (point to same dark values — dark-only app)
+  static const Color lightBackground = background;
+  static const Color lightSurface    = surface;
 }
