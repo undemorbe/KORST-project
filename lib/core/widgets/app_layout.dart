@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../theme/app_colors.dart';
 
 class AppPageHeader extends StatelessWidget {
   final String title;
@@ -28,10 +30,11 @@ class AppPageHeader extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: colors.primary,
+                color: AppColors.primary.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.border),
               ),
-              child: Icon(icon, color: colors.onPrimary),
+              child: Icon(icon, color: AppColors.primary),
             ),
             const SizedBox(width: 14),
           ],
@@ -41,8 +44,11 @@ class AppPageHeader extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
+                  style: GoogleFonts.cinzel(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.primaryLight,
+                    letterSpacing: 0.06,
                     height: 1.02,
                   ),
                 ),
