@@ -8,7 +8,7 @@ class SettingsStore = _SettingsStore with _$SettingsStore;
 
 abstract class _SettingsStore with Store {
   @observable
-  ThemeMode themeMode = ThemeMode.system;
+  ThemeMode themeMode = ThemeMode.dark;
 
   @observable
   Locale locale = const Locale('en');
