@@ -28,28 +28,7 @@ class ServiceCard extends StatefulWidget {
   State<ServiceCard> createState() => _ServiceCardState();
 }
 
-class _ServiceCardState extends State<ServiceCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 120),
-      vsync: this,
-    );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.97).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+class _ServiceCardState extends State<ServiceCard> {
 
   String _buildAuthorName(BuildContext context) {
     final author = widget.service.author;
@@ -102,18 +81,9 @@ class _ServiceCardState extends State<ServiceCard>
     final status = widget.service.status;
     final rating = _extractRating();
 
-    return AnimatedBuilder(
-      animation: _scaleAnimation,
-      builder: (context, child) =>
-          Transform.scale(scale: _scaleAnimation.value, child: child),
-      child: GestureDetector(
-        onTapDown: (_) => _controller.forward(),
-        onTapUp: (_) {
-          _controller.reverse();
-          widget.onTap();
-        },
-        onTapCancel: () => _controller.reverse(),
-        child: Padding(
+    return _PressableCard(
+      onTap: widget.onTap,
+      child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           child: DecoratedBox(
             decoration: BoxDecoration(
@@ -333,7 +303,6 @@ class _ServiceCardState extends State<ServiceCard>
             ),
           ),
         ),
-      ),
     );
   }
 
@@ -348,6 +317,49 @@ class _ServiceCardState extends State<ServiceCard>
         content: Text(
           err == null ? 'Отклик отправлен' : 'Ошибка: $err',
         ),
+      ),
+    );
+  }
+}
+
+class _PressableCard extends StatefulWidget {
+  final Widget child;
+  final VoidCallback? onTap;
+  const _PressableCard({required this.child, this.onTap});
+  @override
+  State<_PressableCard> createState() => _PressableCardState();
+}
+
+class _PressableCardState extends State<_PressableCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 100),
+    reverseDuration: const Duration(milliseconds: 180),
+    lowerBound: 0.97,
+    upperBound: 1.0,
+    value: 1.0,
+  );
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => _ctrl.reverse(),
+      onTapUp: (_) {
+        _ctrl.forward();
+        widget.onTap?.call();
+      },
+      onTapCancel: () => _ctrl.forward(),
+      child: AnimatedBuilder(
+        animation: _ctrl,
+        builder: (_, child) => Transform.scale(scale: _ctrl.value, child: child),
+        child: widget.child,
       ),
     );
   }

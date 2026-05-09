@@ -1,3 +1,4 @@
+import 'package:korst/core/theme/app_colors.dart';
 import 'package:korst/core/widgets/glass.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
@@ -48,10 +49,11 @@ class _ChatListPageState extends State<ChatListPage>
           indicatorSize: TabBarIndicatorSize.tab,
           indicator: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            color: Theme.of(
-              context,
-            ).colorScheme.primaryContainer.withValues(alpha: 0.6),
+            color: AppColors.primary.withValues(alpha: 0.15),
+            border: Border.all(color: AppColors.border),
           ),
+          labelColor: AppColors.primaryLight,
+          unselectedLabelColor: AppColors.muted,
           dividerColor: Colors.transparent,
           tabs: [
             Tab(text: l10n.messagesAsBuyer),
@@ -131,10 +133,21 @@ class _ChatListPageState extends State<ChatListPage>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              type == 'customer' ? Icons.work_outline : Icons.person_outline,
-              size: 64,
-              color: Colors.grey,
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceCard,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.borderSubtle),
+                boxShadow: const [
+                  BoxShadow(color: AppColors.goldGlow, blurRadius: 12),
+                ],
+              ),
+              child: Icon(
+                type == 'customer' ? Icons.work_outline : Icons.person_outline,
+                size: 48,
+                color: AppColors.muted,
+              ),
             ),
             const SizedBox(height: 16),
             Text(
@@ -142,7 +155,7 @@ class _ChatListPageState extends State<ChatListPage>
                   ? l10n.messagesNoChatsBuyer
                   : l10n.messagesNoChatsSeller,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.grey),
+              style: const TextStyle(color: AppColors.muted),
             ),
           ],
         ),
@@ -177,17 +190,19 @@ class _ChatListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final lastMessage = chat.lastMessage;
-    final colorScheme = Theme.of(context).colorScheme;
+    final hasUnread = lastMessage?.isSeen == false;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Glass(
-        blurSigma: 12,
-        opacity: 0.65,
-        color: colorScheme.surface.withValues(alpha: 0.7),
-        borderColor: colorScheme.outlineVariant.withValues(alpha: 0.4),
-        borderWidth: 1,
-        borderRadius: BorderRadius.circular(8),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: AppColors.surfaceCard,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.border),
+          boxShadow: const [
+            BoxShadow(color: AppColors.goldGlow, blurRadius: 8),
+          ],
+        ),
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(8),
@@ -195,21 +210,27 @@ class _ChatListTile extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             child: Row(
               children: [
-                CircleAvatar(
-                  radius: 24,
-                  backgroundColor: colorScheme.primaryContainer,
-                  backgroundImage: chat.user.imageUrl != null
-                      ? NetworkImage(chat.user.imageUrl!)
-                      : null,
-                  child: chat.user.imageUrl == null
-                      ? Text(
-                          chat.user.name[0].toUpperCase(),
-                          style: TextStyle(
-                            color: colorScheme.onPrimaryContainer,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        )
-                      : null,
+                Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.border, width: 1.5),
+                  ),
+                  child: CircleAvatar(
+                    radius: 24,
+                    backgroundColor: AppColors.borderSubtle,
+                    backgroundImage: chat.user.imageUrl != null
+                        ? NetworkImage(chat.user.imageUrl!)
+                        : null,
+                    child: chat.user.imageUrl == null
+                        ? Text(
+                            chat.user.name[0].toUpperCase(),
+                            style: const TextStyle(
+                              color: AppColors.primaryLight,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          )
+                        : null,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -224,8 +245,9 @@ class _ChatListTile extends StatelessWidget {
                               '${chat.user.name} ${chat.user.surname ?? ''}'
                                   .trim(),
                               style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
+                                color: AppColors.onBackground,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 15,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -234,9 +256,9 @@ class _ChatListTile extends StatelessWidget {
                           if (lastMessage != null)
                             Text(
                               _formatTime(lastMessage.created),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: colorScheme.onSurfaceVariant,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: AppColors.muted,
                               ),
                             ),
                         ],
@@ -244,9 +266,9 @@ class _ChatListTile extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         chat.card.name,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: colorScheme.primary,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.primary,
                           fontWeight: FontWeight.w500,
                         ),
                         maxLines: 1,
@@ -256,9 +278,9 @@ class _ChatListTile extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           lastMessage.text,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: colorScheme.onSurfaceVariant,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppColors.muted,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -267,6 +289,17 @@ class _ChatListTile extends StatelessWidget {
                     ],
                   ),
                 ),
+                if (hasUnread) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

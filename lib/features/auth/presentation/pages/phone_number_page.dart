@@ -4,6 +4,8 @@ import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
+import '../../../../core/theme/animated_gradient_background.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_layout.dart';
 import '../store/auth_store.dart';
 import 'package:korst/l10n/generated/app_localizations.dart';
@@ -60,9 +62,10 @@ class _PhoneNumberPageState extends State<PhoneNumberPage> {
       appBar: GlassAppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: BackButton(color: Theme.of(context).colorScheme.onSurface),
+        leading: const BackButton(color: AppColors.onSurface),
       ),
-      body: SafeArea(
+      body: AnimatedGradientBackground(
+        child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
@@ -80,18 +83,30 @@ class _PhoneNumberPageState extends State<PhoneNumberPage> {
                 controller: _phoneController,
                 inputFormatters: [_maskFormatter],
                 keyboardType: TextInputType.phone,
-                style: const TextStyle(fontSize: 18),
+                style: const TextStyle(color: AppColors.onBackground, fontSize: 18),
                 decoration: InputDecoration(
                   labelText: AppLocalizations.of(context)!.phoneNumber,
                   prefixText: '+7 ',
-                  prefixStyle: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface,
+                  prefixStyle: const TextStyle(
+                    color: AppColors.primaryLight,
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
                   ),
                   hintText: '(999) 000-00-00',
+                  hintStyle: const TextStyle(color: AppColors.muted),
+                  filled: true,
+                  fillColor: AppColors.surfaceCard,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.border),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.border),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
                   ),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -102,9 +117,11 @@ class _PhoneNumberPageState extends State<PhoneNumberPage> {
               ),
               const Spacer(),
               Observer(
-                builder: (_) => ElevatedButton(
+                builder: (_) => FilledButton(
                   onPressed: _authStore.isLoading ? null : _onContinue,
-                  style: ElevatedButton.styleFrom(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: AppColors.onPrimary,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -116,12 +133,12 @@ class _PhoneNumberPageState extends State<PhoneNumberPage> {
                           width: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.white,
+                            color: AppColors.onPrimary,
                           ),
                         )
                       : Text(
                           AppLocalizations.of(context)!.continueAction,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
@@ -131,6 +148,7 @@ class _PhoneNumberPageState extends State<PhoneNumberPage> {
               const SizedBox(height: 16),
             ],
           ),
+        ),
         ),
       ),
     );

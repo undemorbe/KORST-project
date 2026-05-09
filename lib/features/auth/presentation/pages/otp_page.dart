@@ -4,6 +4,8 @@ import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pinput/pinput.dart';
+import '../../../../core/theme/animated_gradient_background.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_layout.dart';
 import '../../domain/entities/auth_user_status.dart';
 import '../store/auth_store.dart';
@@ -84,9 +86,10 @@ class _OtpPageState extends State<OtpPage> {
         appBar: GlassAppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: BackButton(color: Theme.of(context).colorScheme.onSurface),
+          leading: const BackButton(color: AppColors.onSurface),
         ),
-        body: SafeArea(
+        body: AnimatedGradientBackground(
+          child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(24.0),
             child: Column(
@@ -109,30 +112,30 @@ class _OtpPageState extends State<OtpPage> {
                     defaultPinTheme: PinTheme(
                       width: 56,
                       height: 56,
-                      textStyle: TextStyle(
+                      textStyle: const TextStyle(
                         fontSize: 20,
-                        color: Theme.of(context).colorScheme.onSurface,
+                        color: AppColors.onBackground,
                         fontWeight: FontWeight.w600,
                       ),
                       decoration: BoxDecoration(
-                        border: Border.all(
-                          color: Theme.of(context).colorScheme.outlineVariant,
-                        ),
+                        color: AppColors.surfaceCard,
+                        border: Border.all(color: AppColors.border),
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
                     focusedPinTheme: PinTheme(
                       width: 56,
                       height: 56,
-                      textStyle: TextStyle(
+                      textStyle: const TextStyle(
                         fontSize: 20,
-                        color: Theme.of(context).colorScheme.onSurface,
+                        color: AppColors.onBackground,
                         fontWeight: FontWeight.w600,
                       ),
                       decoration: BoxDecoration(
+                        color: AppColors.surfaceCard,
                         border: Border.all(
-                          color: Theme.of(context).colorScheme.primary,
-                          width: 2,
+                          color: AppColors.primary,
+                          width: 1.5,
                         ),
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -149,6 +152,7 @@ class _OtpPageState extends State<OtpPage> {
                 const SizedBox(height: 32),
               ],
             ),
+          ),
           ),
         ),
       ),

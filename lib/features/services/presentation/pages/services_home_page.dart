@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:mobx/mobx.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/glass.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/network/connectivity_service.dart';
 import '../../../../core/widgets/app_layout.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../domain/entities/service_category.dart';
@@ -26,6 +28,7 @@ class _ServicesHomePageState extends State<ServicesHomePage> {
   final FavoritesStore _favoritesStore = sl<FavoritesStore>();
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  ReactionDisposer? _connectivityReaction;
 
   @override
   void initState() {
@@ -35,10 +38,19 @@ class _ServicesHomePageState extends State<ServicesHomePage> {
     });
     _store.loadServices();
     _scrollController.addListener(_onScroll);
+    _connectivityReaction = reaction(
+      (_) => sl<ConnectivityService>().isConnected,
+      (bool online) {
+        if (online && _store.services.isEmpty) {
+          _store.loadServices();
+        }
+      },
+    );
   }
 
   @override
   void dispose() {
+    _connectivityReaction?.call();
     _searchController.dispose();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
@@ -92,6 +104,8 @@ class _ServicesHomePageState extends State<ServicesHomePage> {
         child: const Icon(Icons.add),
       ),
       body: RefreshIndicator(
+        color: AppColors.primary,
+        backgroundColor: AppColors.surfaceCard,
         onRefresh: _store.loadServices,
         child: CustomScrollView(
           controller: _scrollController,
@@ -204,25 +218,11 @@ class _ServicesHomePageState extends State<ServicesHomePage> {
                     );
                   }
 
-                  if (_store.errorMessage != null) {
+                  if (_store.errorMessage != null && _store.services.isEmpty) {
                     return SliverToBoxAdapter(
-                      child: Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                '${l10n.errorLoading}: ${_store.errorMessage}',
-                              ),
-                              const SizedBox(height: 12),
-                              OutlinedButton(
-                                onPressed: _store.loadServices,
-                                child: Text(l10n.retry),
-                              ),
-                            ],
-                          ),
-                        ),
+                      child: EmptyState(
+                        icon: Icons.cloud_off_outlined,
+                        title: l10n.errorLoading,
                       ),
                     );
                   }

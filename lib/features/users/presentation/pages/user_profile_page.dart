@@ -1,6 +1,7 @@
 import 'package:korst/core/widgets/glass.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/theme/app_colors.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/di/injection_container.dart';
@@ -143,7 +144,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                 : rating >= currentFull - 0.5
                                 ? Icons.star_half
                                 : Icons.star_border,
-                            color: Colors.amber,
+                            color: AppColors.ratingStar,
                             size: 32,
                           ),
                         ),
@@ -267,6 +268,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
           return RefreshIndicator(
             onRefresh: _reload,
+            color: AppColors.primary,
             child: ListView(
               padding: EdgeInsets.only(
                 top: MediaQuery.of(context).padding.top + kToolbarHeight + 16,
@@ -303,9 +305,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                             children: [
                               CircleAvatar(
                                 radius: 36,
-                                backgroundColor: Theme.of(
-                                  context,
-                                ).colorScheme.surfaceContainerHighest,
+                                backgroundColor: AppColors.borderSubtle,
                                 backgroundImage:
                                     profile.photoUrl != null &&
                                         profile.photoUrl!.isNotEmpty
@@ -331,18 +331,14 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                   right: 0,
                                   child: Container(
                                     padding: const EdgeInsets.all(4),
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.primary,
+                                    decoration: const BoxDecoration(
+                                      color: AppColors.primary,
                                       shape: BoxShape.circle,
                                     ),
-                                    child: Icon(
+                                    child: const Icon(
                                       Icons.camera_alt,
                                       size: 16,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onPrimary,
+                                      color: AppColors.onPrimary,
                                     ),
                                   ),
                                 ),
@@ -518,11 +514,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                           Text(
                             'Reviews from other users about you',
                             style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
-                                ),
+                                ?.copyWith(color: AppColors.muted),
                           ),
                         ],
                         const SizedBox(height: 12),
@@ -577,7 +569,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                       return Icon(
                                         iconData,
                                         size: 16,
-                                        color: Colors.amber,
+                                        color: AppColors.ratingStar,
                                       );
                                     }),
                                     const SizedBox(width: 4),
@@ -596,7 +588,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 Text(
                   '${l10n.updated}: ${profile.updated.toLocal()}',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    color: AppColors.muted,
                   ),
                 ),
               ],
@@ -630,7 +622,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
           : diff > -1
           ? Icons.star_half
           : Icons.star_border;
-      widgets.add(Icon(icon, color: Colors.amber, size: 20));
+      widgets.add(Icon(icon, color: AppColors.ratingStar, size: 20));
     }
     return widgets;
   }
@@ -640,11 +632,24 @@ class _UserProfilePageState extends State<UserProfilePage> {
     required String title,
     required String value,
   }) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: Icon(icon),
-      title: Text(title),
-      subtitle: Text(value.trim().isEmpty ? '—' : value.trim()),
+    final displayValue = value.trim().isEmpty ? '—' : value.trim();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceCard,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: AppColors.borderSubtle),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 14, color: AppColors.primary),
+            const SizedBox(width: 6),
+            Text(displayValue, style: const TextStyle(color: AppColors.onSurface, fontSize: 12)),
+          ],
+        ),
+      ),
     );
   }
 

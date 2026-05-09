@@ -384,35 +384,40 @@ class _MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final imageUrl = message.imageUrl;
     final hasImage = imageUrl != null && imageUrl.isNotEmpty;
     final hasText = message.text.trim().isNotEmpty;
+
+    final borderRadius = BorderRadius.only(
+      topLeft: const Radius.circular(16),
+      topRight: const Radius.circular(16),
+      bottomLeft: Radius.circular(isMe ? 16 : 4),
+      bottomRight: Radius.circular(isMe ? 4 : 16),
+    );
 
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.only(bottom: 8, top: 4),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: isMe
-              ? colorScheme.primary
-              : colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: Radius.circular(isMe ? 16 : 4),
-            bottomRight: Radius.circular(isMe ? 4 : 16),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
+        decoration: isMe
+            ? BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [AppColors.mutedDark, AppColors.surfaceCard],
+                ),
+                borderRadius: borderRadius,
+                border: Border.all(color: AppColors.border),
+                boxShadow: const [
+                  BoxShadow(color: AppColors.goldGlow, blurRadius: 8),
+                ],
+              )
+            : BoxDecoration(
+                color: AppColors.surfaceCard,
+                borderRadius: borderRadius,
+                border: Border.all(color: AppColors.borderSubtle),
+              ),
         constraints: BoxConstraints(
           maxWidth: MediaQuery.of(context).size.width * 0.75,
         ),
@@ -442,7 +447,7 @@ class _MessageBubble extends StatelessWidget {
                 Text(
                   message.text,
                   style: TextStyle(
-                    color: isMe ? colorScheme.onPrimary : colorScheme.onSurface,
+                    color: isMe ? AppColors.primaryLight : AppColors.onSurface,
                     fontSize: 15,
                   ),
                 ),
@@ -454,11 +459,9 @@ class _MessageBubble extends StatelessWidget {
                   children: [
                     Text(
                       _formatTime(message.created),
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 11,
-                        color: isMe
-                            ? colorScheme.onPrimary.withValues(alpha: 0.7)
-                            : colorScheme.onSurfaceVariant,
+                        color: AppColors.muted,
                       ),
                     ),
                     if (isMe && message.isSeen != null) ...[
@@ -466,7 +469,7 @@ class _MessageBubble extends StatelessWidget {
                       Icon(
                         message.isSeen! ? Icons.done_all : Icons.done,
                         size: 14,
-                        color: colorScheme.onPrimary.withValues(alpha: 0.75),
+                        color: AppColors.primary,
                       ),
                     ],
                   ],
@@ -488,7 +491,7 @@ class _MessageBubble extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.edit),
+              leading: const Icon(Icons.edit, color: AppColors.primary),
               title: Text(l10n.messagesEdit),
               onTap: () {
                 Navigator.of(context).pop();
@@ -496,10 +499,10 @@ class _MessageBubble extends StatelessWidget {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.delete, color: Colors.red),
+              leading: const Icon(Icons.delete, color: AppColors.error),
               title: Text(
                 l10n.delete,
-                style: const TextStyle(color: Colors.red),
+                style: const TextStyle(color: AppColors.error),
               ),
               onTap: () {
                 Navigator.of(context).pop();

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../theme/app_colors.dart';
 
 class EmptyState extends StatelessWidget {
   final IconData icon;
@@ -18,9 +20,6 @@ class EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -32,45 +31,20 @@ class EmptyState extends StatelessWidget {
               width: iconSize,
               height: iconSize,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    colors.primaryContainer.withValues(alpha: 0.7),
-                    colors.secondaryContainer.withValues(alpha: 0.7),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(24),
+                color: AppColors.surfaceCard,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.border),
+                boxShadow: const [BoxShadow(color: AppColors.goldGlow, blurRadius: 20, spreadRadius: 2)],
               ),
-              child: Icon(
-                icon,
-                size: iconSize * 0.5,
-                color: colors.onPrimaryContainer,
-              ),
+              child: Icon(icon, size: iconSize * 0.45, color: AppColors.muted),
             ),
-            const SizedBox(height: 24),
-            Text(
-              title,
-              style: textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: colors.onSurface,
-              ),
-              textAlign: TextAlign.center,
-            ),
+            const SizedBox(height: 20),
+            Text(title, style: GoogleFonts.cinzel(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.primaryLight, letterSpacing: 0.06), textAlign: TextAlign.center),
             if (subtitle != null) ...[
               const SizedBox(height: 8),
-              Text(
-                subtitle!,
-                style: textTheme.bodyMedium?.copyWith(
-                  color: colors.onSurfaceVariant,
-                ),
-                textAlign: TextAlign.center,
-              ),
+              Text(subtitle!, style: const TextStyle(color: AppColors.muted, fontSize: 13, height: 1.4), textAlign: TextAlign.center),
             ],
-            if (action != null) ...[
-              const SizedBox(height: 24),
-              action!,
-            ],
+            if (action != null) ...[const SizedBox(height: 20), action!],
           ],
         ),
       ),
