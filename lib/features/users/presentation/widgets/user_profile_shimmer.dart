@@ -35,9 +35,7 @@ class _ShimmerCard extends StatelessWidget {
       context,
     ).colorScheme.surface.withValues(alpha: 0.62);
     return GlassCard(
-      elevation: 0,
       color: surface,
-      shape: RoundedRectangleBorder(borderRadius: radius),
       child: ClipRRect(
         borderRadius: radius,
         child: SizedBox(

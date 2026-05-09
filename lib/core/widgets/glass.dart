@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 
 class Glass extends StatelessWidget {
   final Widget child;
@@ -13,9 +14,9 @@ class Glass extends StatelessWidget {
   const Glass({
     super.key,
     required this.child,
-    this.borderRadius = const BorderRadius.all(Radius.circular(999)),
+    this.borderRadius = const BorderRadius.all(Radius.circular(8)),
     this.blurSigma = 10,
-    this.opacity = 0.55,
+    this.opacity = 0.92,
     this.color,
     this.borderColor,
     this.borderWidth = 1,
@@ -23,17 +24,8 @@ class Glass extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final base =
-        color ??
-        (isDark
-            ? Colors.black.withValues(alpha: opacity)
-            : Colors.white.withValues(alpha: opacity));
-    final border =
-        borderColor ??
-        (isDark
-            ? Colors.white.withValues(alpha: 0.14)
-            : Colors.black.withValues(alpha: 0.06));
+    final base = color ?? AppColors.surface.withValues(alpha: opacity);
+    final border = borderColor ?? AppColors.border;
 
     return ClipRRect(
       borderRadius: borderRadius,
@@ -52,54 +44,54 @@ class Glass extends StatelessWidget {
   }
 }
 
+/// Relic-panel card: gradient fill + gold border + gold glow + inset highlight.
 class GlassCard extends StatelessWidget {
   final Widget? child;
   final EdgeInsetsGeometry? margin;
   final Clip clipBehavior;
-  final ShapeBorder? shape;
   final Color? color;
-  final double? elevation;
-  final Color? shadowColor;
 
   const GlassCard({
     super.key,
     this.child,
     this.margin,
     this.clipBehavior = Clip.none,
-    this.shape,
     this.color,
-    this.elevation,
-    this.shadowColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    final themeColor = Theme.of(
-      context,
-    ).colorScheme.surface.withValues(alpha: 0.85);
-    final borderColor = Theme.of(
-      context,
-    ).colorScheme.outlineVariant.withValues(alpha: 0.3);
-
     Widget content = child ?? const SizedBox.shrink();
+    const radius = BorderRadius.all(Radius.circular(8));
 
     if (clipBehavior != Clip.none) {
-      content = ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: content,
-      );
+      content = ClipRRect(borderRadius: radius, child: content);
     }
 
     return Padding(
-      padding:
-          margin ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Glass(
-        blurSigma: 14,
-        opacity: 0.92,
-        color: color ?? themeColor,
-        borderColor: borderColor,
-        borderWidth: 1,
-        borderRadius: BorderRadius.circular(8),
+      padding: margin ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              color ?? AppColors.surfaceCard,
+              color != null
+                  ? color!.withValues(alpha: 0.85)
+                  : AppColors.surfaceCardEnd,
+            ],
+          ),
+          borderRadius: radius,
+          border: Border.all(color: AppColors.border),
+          boxShadow: const [
+            BoxShadow(
+              color: AppColors.goldGlow,
+              blurRadius: 16,
+              spreadRadius: 0,
+            ),
+          ],
+        ),
         child: content,
       ),
     );
@@ -130,21 +122,28 @@ class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    final bg = backgroundColor ?? colors.surface.withValues(alpha: 0.85);
+    final bg = backgroundColor ?? AppColors.surface.withValues(alpha: 0.88);
 
     return ClipRect(
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-        child: AppBar(
-          title: title,
-          actions: actions,
-          leading: leading,
-          automaticallyImplyLeading: automaticallyImplyLeading,
-          centerTitle: centerTitle,
-          bottom: bottom,
-          backgroundColor: bg,
-          elevation: elevation ?? 0,
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: bg,
+            border: const Border(
+              bottom: BorderSide(color: AppColors.borderSubtle),
+            ),
+          ),
+          child: AppBar(
+            title: title,
+            actions: actions,
+            leading: leading,
+            automaticallyImplyLeading: automaticallyImplyLeading,
+            centerTitle: centerTitle,
+            bottom: bottom,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+          ),
         ),
       ),
     );
