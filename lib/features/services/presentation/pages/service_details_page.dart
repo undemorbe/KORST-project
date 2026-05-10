@@ -131,9 +131,6 @@ class _ServiceDetailsPageState extends State<ServiceDetailsPage> {
   void initState() {
     super.initState();
     _serviceStore.loadServiceDetails(widget.service.id);
-    if (_canEdit(widget.service)) {
-      _serviceStore.loadExecutors(widget.service.id);
-    }
   }
 
   void _showCloseCardDialog(BuildContext context, ServiceEntity service) {
@@ -577,34 +574,45 @@ class _ServiceDetailsPageState extends State<ServiceDetailsPage> {
   }
 }
 
-class _ExecutorsSection extends StatelessWidget {
+class _ExecutorsSection extends StatefulWidget {
   final ServiceStore store;
   final String cardId;
 
   const _ExecutorsSection({required this.store, required this.cardId});
 
   @override
+  State<_ExecutorsSection> createState() => _ExecutorsSectionState();
+}
+
+class _ExecutorsSectionState extends State<_ExecutorsSection> {
+  @override
+  void initState() {
+    super.initState();
+    widget.store.loadExecutors(widget.cardId);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Observer(
       builder: (_) {
-        if (store.isLoadingExecutors) {
+        if (widget.store.isLoadingExecutors) {
           return const Padding(
             padding: EdgeInsets.symmetric(vertical: 16),
             child: Center(child: CircularProgressIndicator()),
           );
         }
 
-        if (store.executorsError != null) {
+        if (widget.store.executorsError != null) {
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Text(
-              store.executorsError!,
+              widget.store.executorsError!,
               style: const TextStyle(color: AppColors.error, fontSize: 13),
             ),
           );
         }
 
-        if (store.executors.isEmpty) {
+        if (widget.store.executors.isEmpty) {
           return const Padding(
             padding: EdgeInsets.symmetric(vertical: 8),
             child: Text(
@@ -627,11 +635,11 @@ class _ExecutorsSection extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            ...store.executors.map(
+            ...widget.store.executors.map(
               (e) => _ExecutorTile(
                 executor: e,
-                cardId: cardId,
-                store: store,
+                cardId: widget.cardId,
+                store: widget.store,
               ),
             ),
           ],

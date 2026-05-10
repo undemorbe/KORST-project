@@ -200,7 +200,6 @@ class ApiClient {
     return _dio.post<T>(
       path,
       data: formData,
-      options: Options(contentType: Headers.multipartFormDataContentType),
     );
   }
 

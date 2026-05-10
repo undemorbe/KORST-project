@@ -150,6 +150,25 @@ abstract class _MessengerStore with Store {
       runInAction(() {
         if (selectedChat?.id == chatId) {
           messages = ObservableList.of(msgs);
+          // Update lastMessage in chat lists so chat list shows current message
+          if (msgs.isNotEmpty) {
+            final newest = msgs.first; // sorted descending by backend
+            final currentChat = selectedChat;
+            if (currentChat != null) {
+              final updated = currentChat.copyWith(
+                lastMessage: LastMessage(
+                  id: newest.id,
+                  authorId: newest.authorId,
+                  text: newest.text,
+                  created: newest.created,
+                  isSeen: newest.isSeen,
+                ),
+              );
+              _replaceChat(merchantChats, updated);
+              _replaceChat(customerChats, updated);
+              selectedChat = updated;
+            }
+          }
         }
       });
     } catch (_) {}

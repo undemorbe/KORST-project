@@ -13,4 +13,5 @@ abstract class AuthRepository {
   Future<UserEntity?> getUserProfile();
   Future<void> updateProfile(UserEntity user);
   Future<void> saveLocalProfile(UserEntity user);
+  Future<void> refreshAccessToken();
 }

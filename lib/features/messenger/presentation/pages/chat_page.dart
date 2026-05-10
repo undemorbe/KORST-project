@@ -2,10 +2,12 @@ import 'package:korst/core/theme/animated_gradient_background.dart';
 import 'package:korst/core/theme/app_colors.dart';
 import 'package:korst/core/widgets/glass.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../domain/entities/message_entity.dart';
 import '../store/messenger_store.dart';
@@ -34,6 +36,7 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   void dispose() {
+    _store.selectChat(null);
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -444,9 +447,9 @@ class _MessageBubble extends StatelessWidget {
                 ),
               if (hasImage && hasText) const SizedBox(height: 8),
               if (hasText)
-                Text(
+                _buildTextWithLinks(
                   message.text,
-                  style: TextStyle(
+                  TextStyle(
                     color: isMe ? AppColors.primaryLight : AppColors.onSurface,
                     fontSize: 15,
                   ),
@@ -517,5 +520,55 @@ class _MessageBubble extends StatelessWidget {
 
   String _formatTime(DateTime time) {
     return '${time.hour}:${time.minute.toString().padLeft(2, '0')}';
+  }
+
+  static final _linkPattern = RegExp(
+    r'(korst://[^\s]+|https?://[^\s]+)',
+    caseSensitive: false,
+  );
+
+  Widget _buildTextWithLinks(String text, TextStyle defaultStyle) {
+    final matches = _linkPattern.allMatches(text).toList();
+    if (matches.isEmpty) {
+      return Text(text, style: defaultStyle);
+    }
+
+    final spans = <InlineSpan>[];
+    var lastIndex = 0;
+
+    for (final match in matches) {
+      if (match.start > lastIndex) {
+        spans.add(TextSpan(
+          text: text.substring(lastIndex, match.start),
+          style: defaultStyle,
+        ));
+      }
+      final url = match.group(0)!;
+      spans.add(TextSpan(
+        text: url,
+        style: defaultStyle.copyWith(
+          color: AppColors.primary,
+          decoration: TextDecoration.underline,
+          decorationColor: AppColors.primary,
+        ),
+        recognizer: TapGestureRecognizer()
+          ..onTap = () async {
+            final uri = Uri.tryParse(url);
+            if (uri != null) {
+              await launchUrl(uri, mode: LaunchMode.platformDefault);
+            }
+          },
+      ));
+      lastIndex = match.end;
+    }
+
+    if (lastIndex < text.length) {
+      spans.add(TextSpan(
+        text: text.substring(lastIndex),
+        style: defaultStyle,
+      ));
+    }
+
+    return RichText(text: TextSpan(children: spans));
   }
 }

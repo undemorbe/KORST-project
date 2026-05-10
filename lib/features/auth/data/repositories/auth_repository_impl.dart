@@ -194,6 +194,36 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
+  @override
+  Future<void> refreshAccessToken() async {
+    final refreshToken = _tokenStorage.getRefreshToken();
+    if (refreshToken == null) return;
+    try {
+      Response<dynamic> res;
+      try {
+        res = await _api.get(
+          ApiConstants.authorizeRefresh,
+          queryParameters: {'refresh-token': refreshToken},
+        );
+      } catch (_) {
+        res = await _api.get(
+          ApiConstants.authorizeRefresh,
+          data: {'refresh-token': refreshToken},
+        );
+      }
+      final data = res.data;
+      if (data is Map) {
+        final access = data['access-token'];
+        final refresh = data['refresh-token'];
+        if (access is String && refresh is String) {
+          await _tokenStorage.saveTokens(accessToken: access, refreshToken: refresh);
+        }
+      }
+    } catch (_) {
+      // Silently fail - existing tokens still valid or will be refreshed on first 401
+    }
+  }
+
   static String? _nullIfEmpty(String? v) {
     if (v == null) return null;
     final s = v.trim();

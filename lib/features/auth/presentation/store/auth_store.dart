@@ -52,6 +52,9 @@ abstract class _AuthStore with Store {
     errorMessage = null;
     try {
       isLoggedIn = await _authRepository.isLoggedIn();
+      if (isLoggedIn) {
+        await _authRepository.refreshAccessToken(); // Refresh token on startup
+      }
       userProfile = isLoggedIn ? await _authRepository.getUserProfile() : null;
       final phone = userProfile?.phone;
       if (isLoggedIn && phone != null && phone.isNotEmpty) {
