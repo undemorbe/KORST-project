@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:mobx/mobx.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -15,6 +16,8 @@ import '../widgets/service_card.dart';
 import '../widgets/service_card_shimmer.dart';
 import '../widgets/filter_bottom_sheet.dart';
 import '../../../favorites/presentation/store/favorites_store.dart';
+import '../../../banners/presentation/store/banner_store.dart';
+import '../../../banners/presentation/widgets/banners_section.dart';
 
 class ServicesHomePage extends StatefulWidget {
   const ServicesHomePage({super.key});
@@ -26,17 +29,23 @@ class ServicesHomePage extends StatefulWidget {
 class _ServicesHomePageState extends State<ServicesHomePage> {
   final ServiceStore _store = sl<ServiceStore>();
   final FavoritesStore _favoritesStore = sl<FavoritesStore>();
+  final BannerStore _bannerStore = sl<BannerStore>();
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   ReactionDisposer? _connectivityReaction;
+  Timer? _searchDebounce;
 
   @override
   void initState() {
     super.initState();
     _searchController.addListener(() {
-      _store.setSearchQuery(_searchController.text);
+      _searchDebounce?.cancel();
+      _searchDebounce = Timer(const Duration(milliseconds: 400), () {
+        _store.setSearchQuery(_searchController.text);
+      });
     });
     _store.loadServices();
+    _bannerStore.loadBanners();
     _scrollController.addListener(_onScroll);
     _connectivityReaction = reaction(
       (_) => sl<ConnectivityService>().isConnected,
@@ -51,6 +60,7 @@ class _ServicesHomePageState extends State<ServicesHomePage> {
   @override
   void dispose() {
     _connectivityReaction?.call();
+    _searchDebounce?.cancel();
     _searchController.dispose();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
@@ -96,12 +106,18 @@ class _ServicesHomePageState extends State<ServicesHomePage> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        heroTag: 'services_home_fab',
-        onPressed: () {
-          context.push('/create-service');
-        },
-        child: const Icon(Icons.add),
+      floatingActionButton: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).padding.bottom - 4,
+          right: 1,
+        ),
+        child: FloatingActionButton(
+          heroTag: 'fab_add_retry_main_page',
+          onPressed: () {
+            context.push('/create-service');
+          },
+          child: const Icon(Icons.add),
+        ),
       ),
       body: RefreshIndicator(
         color: AppColors.primary,
@@ -159,6 +175,12 @@ class _ServicesHomePageState extends State<ServicesHomePage> {
                     ),
                   ],
                 ),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.only(bottom: 16),
+              sliver: SliverToBoxAdapter(
+                child: BannersSection(store: _bannerStore),
               ),
             ),
             SliverPersistentHeader(
@@ -220,9 +242,10 @@ class _ServicesHomePageState extends State<ServicesHomePage> {
 
                   if (_store.errorMessage != null && _store.services.isEmpty) {
                     return SliverToBoxAdapter(
-                      child: EmptyState(
+                      child: ErrorState(
                         icon: Icons.cloud_off_outlined,
-                        title: l10n.errorLoading,
+                        message: l10n.errorLoading,
+                        onRetry: _store.loadServices,
                       ),
                     );
                   }

@@ -277,7 +277,7 @@ void main() {
 
     test('createReply sends create-reply payload', () async {
       dio.httpClientAdapter = _Adapter((options) async {
-        expect(options.path, ApiConstants.cardsCreateReply);
+        expect(options.path, ApiConstants.repliesCreateReply);
         expect(options.method, 'POST');
         expect(options.headers[ApiConstants.headerAccessToken], 'access-1');
         expect(options.data, {'card-id': 'card-123'});
@@ -307,15 +307,15 @@ void main() {
       await repo.rejectExecutor(cardId: 'card-2', executorId: 'user-2');
       await repo.closeCard(cardId: 'card-3', status: 'completed');
 
-      expect(calls[ApiConstants.cardsApproveExecutor], {
+      expect(calls[ApiConstants.repliesApproveExecutor], {
         'card-id': 'card-1',
         'executor-id': 'user-1',
       });
-      expect(calls[ApiConstants.cardsRejectExecutor], {
+      expect(calls[ApiConstants.repliesRejectExecutor], {
         'card-id': 'card-2',
         'executor-id': 'user-2',
       });
-      expect(calls[ApiConstants.cardsClose], {
+      expect(calls[ApiConstants.repliesClose], {
         'card-id': 'card-3',
         'status': 'completed',
       });

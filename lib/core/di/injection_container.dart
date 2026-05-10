@@ -3,9 +3,12 @@ import 'package:get_it/get_it.dart';
 import 'package:talker/talker.dart';
 import 'package:talker_dio_logger/talker_dio_logger.dart';
 import '../api/api_client.dart';
+import '../api/retry_interceptor.dart';
 import '../api/token_storage.dart';
 import '../logging/app_talker.dart';
 import '../logging/safe_talker_dio_interceptor.dart';
+import '../network/connectivity_service.dart';
+import '../network/error_banner_service.dart';
 import '../../core/storage/local_storage.dart';
 import '../../features/services/data/repositories/service_repository_impl.dart';
 import '../../features/services/domain/repositories/service_repository.dart';
@@ -24,6 +27,9 @@ import '../../features/messenger/data/services/messenger_socket_service.dart';
 import '../../features/messenger/domain/repositories/messenger_repository.dart';
 import '../../features/messenger/presentation/store/messenger_store.dart';
 import '../../features/notifications/notification_service.dart';
+import '../../features/banners/data/repositories/banner_repository_impl.dart';
+import '../../features/banners/domain/repositories/banner_repository.dart';
+import '../../features/banners/presentation/store/banner_store.dart';
 import '../background/background_task_manager.dart';
 
 final sl = GetIt.instance;
@@ -51,6 +57,7 @@ Future<void> init() async {
         ),
       ),
     );
+    dio.interceptors.add(RetryInterceptor(dio));
     return dio;
   }, instanceName: 'api');
   sl.registerLazySingleton<Dio>(() {
@@ -77,6 +84,8 @@ Future<void> init() async {
       tokenStorage: sl<TokenStorage>(),
     ),
   );
+  sl.registerLazySingleton(() => ConnectivityService());
+  sl.registerLazySingleton(() => ErrorBannerService());
   sl.registerLazySingleton(() => NotificationService());
   sl.registerLazySingleton(() => BackgroundTaskManager());
 
@@ -114,6 +123,10 @@ Future<void> init() async {
 
   // Features - Settings
   sl.registerLazySingleton(() => SettingsStore());
+
+  // Features - Banners
+  sl.registerLazySingleton<BannerRepository>(() => BannerRepositoryImpl(sl()));
+  sl.registerLazySingleton(() => BannerStore(sl()));
 
   // Features - Favorites
   sl.registerLazySingleton(() => FavoritesStore(sl()));

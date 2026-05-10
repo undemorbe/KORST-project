@@ -46,7 +46,10 @@ class ServiceRepositoryImpl implements ServiceRepository {
   }) async {
     try {
       Response<dynamic> res;
-      final queryParams = <String, dynamic>{'key': key, 'query': query};
+      final queryParams = <String, dynamic>{
+        if (key != null) 'key': key,
+        if (query != null) 'query': query,
+      };
       final params = queryParams.isEmpty ? null : queryParams;
       try {
         res = await _api.get(path, queryParameters: params);
@@ -166,7 +169,7 @@ class ServiceRepositoryImpl implements ServiceRepository {
   @override
   Future<void> createReply(String cardId) async {
     try {
-      await _api.post(ApiConstants.cardsCreateReply, data: {'card-id': cardId});
+      await _api.post(ApiConstants.repliesCreateReply, data: {'card-id': cardId});
     } on DioException catch (e) {
       throw ApiException.fromDioException(e, fallbackMessage: 'Failed to create reply');
     }
@@ -179,7 +182,7 @@ class ServiceRepositoryImpl implements ServiceRepository {
   }) async {
     try {
       await _api.put(
-        ApiConstants.cardsApproveExecutor,
+        ApiConstants.repliesApproveExecutor,
         data: {'card-id': cardId, 'executor-id': executorId},
       );
     } on DioException catch (e) {
@@ -194,7 +197,7 @@ class ServiceRepositoryImpl implements ServiceRepository {
   }) async {
     try {
       await _api.put(
-        ApiConstants.cardsRejectExecutor,
+        ApiConstants.repliesRejectExecutor,
         data: {'card-id': cardId, 'executor-id': executorId},
       );
     } on DioException catch (e) {
@@ -209,7 +212,7 @@ class ServiceRepositoryImpl implements ServiceRepository {
   }) async {
     try {
       await _api.put(
-        ApiConstants.cardsClose,
+        ApiConstants.repliesClose,
         data: {'card-id': cardId, 'status': status},
       );
     } on DioException catch (e) {

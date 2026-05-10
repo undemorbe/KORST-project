@@ -17,7 +17,7 @@ class EnvConfig {
 
   static String get apiBaseUrl => _get(
     'API_BASE_URL',
-    'https://unexperimented-janetta-nondisrupting.ngrok-free.dev/api/',
+    'https://2839bc9a-d491-41f2-94d8-c3c98ffedc32.tunnel4.com/api/',
   );
 
   static String get headerAccessToken =>
@@ -58,15 +58,18 @@ class EnvConfig {
       _get('API_CARDS_GET_WITH_QUERY', 'cards/get-with-query');
   static String get cardsSaveImage =>
       _get('API_CARDS_SAVE_IMAGE', 'cards/save-image');
-  static String get cardsCreateReply =>
-      _get('API_CARDS_CREATE_REPLY', 'cards/create-reply');
-  static String get cardsApproveExecutor =>
-      _get('API_CARDS_APPROVE_EXECUTOR', 'cards/approve-executor');
-  static String get cardsRejectExecutor =>
-      _get('API_CARDS_REJECT_EXECUTOR', 'cards/reject-executor');
-  static String get cardsClose => _get('API_CARDS_CLOSE', 'cards/close');
+  static String get repliesCreateReply =>
+      _get('API_REPLIES_CREATE_REPLY', 'replies/create-reply');
+  static String get repliesApproveExecutor =>
+      _get('API_REPLIES_APPROVE_EXECUTOR', 'replies/approve-executor');
+  static String get repliesRejectExecutor =>
+      _get('API_REPLIES_REJECT_EXECUTOR', 'replies/reject-executor');
+  static String get repliesClose => _get('API_REPLIES_CLOSE', 'replies/close');
   static String get repliesGetExecutors =>
       _get('API_REPLIES_GET_EXECUTORS', 'replies/executors');
+
+  static String get bannersGetBanners =>
+      _get('API_BANNERS_GET_BANNERS', 'banners/get-banners');
 
   static String get messengerChats =>
       _get('API_MESSENGER_CHATS', 'messenger/chats');
@@ -98,7 +101,7 @@ class EnvConfig {
         ? apiUri.path.substring(0, apiUri.path.length - 1)
         : apiUri.path;
     return apiUri
-        .replace(scheme: wsScheme, path: '$basePath/messenger/ws')
+        .replace(scheme: wsScheme, path: '$basePath/messenger/websocket')
         .toString();
   }
 
