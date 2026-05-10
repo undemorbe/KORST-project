@@ -8,6 +8,7 @@ import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../../core/widgets/empty_state.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../domain/entities/message_entity.dart';
 import '../store/messenger_store.dart';
@@ -90,19 +91,10 @@ class _ChatPageState extends State<ChatPage> {
                     }
 
                     if (_store.errorMessage != null) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              '${l10n.errorLoading}: ${_store.errorMessage}',
-                            ),
-                            ElevatedButton(
-                              onPressed: () => _store.loadMessages(chat.id),
-                              child: Text(l10n.retry),
-                            ),
-                          ],
-                        ),
+                      return ErrorState(
+                        message: _store.errorMessage!,
+                        icon: Icons.cloud_off_outlined,
+                        onRetry: () => _store.loadMessages(chat.id),
                       );
                     }
 
@@ -402,7 +394,9 @@ class _MessageBubble extends StatelessWidget {
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.only(bottom: 8, top: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: hasImage && !hasText
+            ? EdgeInsets.zero
+            : const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: isMe
             ? BoxDecoration(
                 gradient: const LinearGradient(
@@ -434,13 +428,17 @@ class _MessageBubble extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   child: CachedNetworkImage(
                     imageUrl: imageUrl,
+                    width: double.infinity,
+                    height: 200,
                     fit: BoxFit.cover,
                     placeholder: (context, url) => const SizedBox(
-                      height: 160,
+                      width: double.infinity,
+                      height: 200,
                       child: Center(child: CircularProgressIndicator()),
                     ),
                     errorWidget: (context, url, error) => const SizedBox(
-                      height: 160,
+                      width: double.infinity,
+                      height: 200,
                       child: Center(child: Icon(Icons.broken_image)),
                     ),
                   ),
@@ -454,28 +452,32 @@ class _MessageBubble extends StatelessWidget {
                     fontSize: 15,
                   ),
                 ),
-              const SizedBox(height: 4),
-              Align(
-                alignment: Alignment.centerRight,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      _formatTime(message.created),
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: AppColors.muted,
+              Padding(
+                padding: hasImage && !hasText
+                    ? const EdgeInsets.fromLTRB(8, 4, 8, 6)
+                    : const EdgeInsets.only(top: 4),
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _formatTime(message.created),
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppColors.muted,
+                        ),
                       ),
-                    ),
-                    if (isMe && message.isSeen != null) ...[
-                      const SizedBox(width: 4),
-                      Icon(
-                        message.isSeen! ? Icons.done_all : Icons.done,
-                        size: 14,
-                        color: AppColors.primary,
-                      ),
+                      if (isMe && message.isSeen != null) ...[
+                        const SizedBox(width: 4),
+                        Icon(
+                          message.isSeen! ? Icons.done_all : Icons.done,
+                          size: 14,
+                          color: AppColors.primary,
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
             ],
