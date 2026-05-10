@@ -3,6 +3,7 @@ package services
 
 import (
 	"korst-backend/internal/dto/requests"
+	"korst-backend/internal/dto/responses"
 	"korst-backend/internal/entities"
 	"korst-backend/internal/errors"
 	"korst-backend/internal/infrastructure/logger"
@@ -14,14 +15,17 @@ import (
 // ReplyService - объект, содержащий методы
 // для работы с откликами на карточки
 type ReplyService struct {
+	userRepo  ports.UserRepository
 	cardRepo  ports.CardRepository
 	replyRepo ports.ReplyRepository
 }
 
 // NewReplyService создает и возвращает новый объект
-func NewReplyService(cardRepo ports.CardRepository,
+func NewReplyService(userRepo ports.UserRepository,
+	cardRepo ports.CardRepository,
 	replyRepo ports.ReplyRepository) ports.ReplyService {
 	return &ReplyService{
+		userRepo:  userRepo,
 		cardRepo:  cardRepo,
 		replyRepo: replyRepo,
 	}
@@ -42,7 +46,23 @@ func (s *ReplyService) CreateReply(
 		return errors.ErrorCardNotFound
 	}
 
-	reply := &entities.Reply{
+	if card.UserID == authorID {
+		logger.Log.Warn("Попытка создать отклик на свою карточку")
+		return errors.ErrorForbidden
+	}
+
+	reply, err := s.replyRepo.FindByAuthorAndCard(authorID, cardID)
+	if err != nil {
+		logger.Log.Error("Ошибка при поиске отклика в Бд: ", err)
+		return err
+	}
+
+	if reply != nil {
+		logger.Log.Warn("Попытка создать второй отклик на объявление")
+		return errors.ErrorForbidden
+	}
+
+	reply = &entities.Reply{
 		AuthorID: authorID,
 		CardID:   cardID,
 	}
@@ -53,6 +73,71 @@ func (s *ReplyService) CreateReply(
 	}
 
 	return nil
+}
+
+// GetExecutors получает всех исполниелей для определенной карточки
+func (s *ReplyService) GetExecutors(cardID uuid.UUID) (
+	responses.GetExecutorsResponse, error) {
+
+	var response responses.GetExecutorsResponse
+
+	card, err := s.cardRepo.FindWithReplies(cardID)
+	if err != nil {
+		logger.Log.Error("Ошибка при получении карточки: ", err)
+		return response, err
+	}
+
+	if card == nil {
+		logger.Log.Warn("Указанная карточка не найдена")
+		return response, errors.ErrorCardNotFound
+	}
+
+	for _, reply := range card.Replies {
+
+		convertedUser, err := s.getUserFromReply(&reply)
+		if err != nil {
+			logger.Log.Warn("Ошибка при обработке автора отклика: ", err)
+			continue
+		}
+
+		response.Executors = append(response.Executors, convertedUser)
+	}
+
+	return response, nil
+}
+
+// getUserFromReply находит и приводит к
+// нужному формату сущность автора отклика
+func (s *ReplyService) getUserFromReply(reply *entities.Reply) (
+	responses.CompressedAuthor, error) {
+
+	var convertedUser responses.CompressedAuthor
+
+	user, err := s.userRepo.FindByID(reply.AuthorID)
+	if err != nil {
+		logger.Log.Error("Ошибка при поиске пользователя: ", err)
+		return convertedUser, err
+	}
+
+	if user == nil {
+		logger.Log.Warn("Автор отклика не найден")
+		return convertedUser, errors.ErrorUserNotFound
+	}
+
+	convertedUser = responses.CompressedAuthor{
+		ID:      user.ID.String(),
+		Name:    user.Name,
+		Surname: user.Surname,
+	}
+
+	profile := user.Profile
+
+	if profile != nil {
+		convertedUser.ImageURL = profile.ImageURL
+		convertedUser.Rating = profile.Rating
+	}
+
+	return convertedUser, nil
 }
 
 // ApproveExecutor yтверждает исполнителя для определенной

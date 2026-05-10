@@ -24,6 +24,7 @@ func NewWSHandler(hub *services.Hub,
 	}
 }
 
+// Handle создает WebSocket соединение между мобильным устройством и сервером
 func (h *WSHandler) Handle(c *gin.Context) {
 
 	accessToken := c.GetHeader("Authorization")

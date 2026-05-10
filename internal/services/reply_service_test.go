@@ -16,10 +16,11 @@ import (
 func TestCreateReply(t *testing.T) {
 	logger.InitLoggerTest()
 
+	mockUserRepo := &mockRepositories.MockUserRepo{}
 	mockCardRepo := &mockRepositories.MockCardRepo{}
 	mockReplyRepo := &mockRepositories.MockReplyRepo{}
 
-	replyService := NewReplyService(mockCardRepo, mockReplyRepo)
+	replyService := NewReplyService(mockUserRepo, mockCardRepo, mockReplyRepo)
 
 	authorID := uuid.New()
 	cardID := uuid.New()
@@ -44,10 +45,11 @@ func TestCreateReply(t *testing.T) {
 // TestApproveExecutor тестирует подтверждение отклика на объявление
 func TestApproveExecutor(t *testing.T) {
 
+	mockUserRepo := &mockRepositories.MockUserRepo{}
 	mockCardRepo := &mockRepositories.MockCardRepo{}
 	mockReplyRepo := &mockRepositories.MockReplyRepo{}
 
-	replyService := NewReplyService(mockCardRepo, mockReplyRepo)
+	replyService := NewReplyService(mockUserRepo, mockCardRepo, mockReplyRepo)
 
 	authorID := uuid.New()
 	cardID := uuid.New()
@@ -89,10 +91,11 @@ func TestApproveExecutor(t *testing.T) {
 // TestRejectExecutor тестирует отклонение отклика на объявление
 func TestRejectExecutor(t *testing.T) {
 
+	mockUserRepo := &mockRepositories.MockUserRepo{}
 	mockCardRepo := &mockRepositories.MockCardRepo{}
 	mockReplyRepo := &mockRepositories.MockReplyRepo{}
 
-	replyService := NewReplyService(mockCardRepo, mockReplyRepo)
+	replyService := NewReplyService(mockUserRepo, mockCardRepo, mockReplyRepo)
 
 	authorID := uuid.New()
 	cardID := uuid.New()
@@ -131,10 +134,11 @@ func TestRejectExecutor(t *testing.T) {
 // TestCloseCard тестирует закрытие карточки
 func TestCloseCard(t *testing.T) {
 
+	mockUserRepo := &mockRepositories.MockUserRepo{}
 	mockCardRepo := &mockRepositories.MockCardRepo{}
 	mockReplyRepo := &mockRepositories.MockReplyRepo{}
 
-	replyService := NewReplyService(mockCardRepo, mockReplyRepo)
+	replyService := NewReplyService(mockUserRepo, mockCardRepo, mockReplyRepo)
 
 	authorID := uuid.New()
 	cardID := uuid.New()

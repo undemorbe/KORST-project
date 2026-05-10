@@ -15,7 +15,7 @@ const (
 
 // CreateReply - структура для запроса
 // на создание нового отклика на объявление
-type CreateReply struct {
+type CreateReplyRequest struct {
 	CardID uuid.UUID `json:"card-id" binding:"required"`
 }
 

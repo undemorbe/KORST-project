@@ -135,6 +135,10 @@ type ReplyService interface {
 	// CreateReply создает отклик на определенной объявление
 	CreateReply(authorID uuid.UUID, cardID uuid.UUID) error
 
+	// GetExecutors получает всех исполниелей для определенной карточки
+	GetExecutors(cardID uuid.UUID) (
+		responses.GetExecutorsResponse, error)
+
 	// ApproveExecutor yтверждает исполнителя для определенной
 	// карточки (меняет статус отклика и карточки)
 	ApproveExecutor(authorID uuid.UUID,

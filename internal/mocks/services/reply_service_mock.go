@@ -3,6 +3,8 @@
 package mockServices
 
 import (
+	"korst-backend/internal/dto/responses"
+
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 )
@@ -15,6 +17,12 @@ type MockReplyService struct{ mock.Mock }
 func (m *MockReplyService) CreateReply(authorID uuid.UUID, cardID uuid.UUID) error {
 	args := m.Called(authorID, cardID)
 	return args.Error(0)
+}
+
+// GetExecutors получает всех исполниелей для определенной карточки
+func (m *MockReplyService) GetExecutors(cardID uuid.UUID) (responses.GetExecutorsResponse, error) {
+	args := m.Called(cardID)
+	return args.Get(0).(responses.GetExecutorsResponse), args.Error(1)
 }
 
 // ApproveExecutor задает фиктивную реализацию утверждения исполнителя

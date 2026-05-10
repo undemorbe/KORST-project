@@ -69,6 +69,9 @@ type CardRepository interface {
 	// FindByID находит карточку по ее ID
 	FindByID(cardID uuid.UUID) (*entities.Card, error)
 
+	// FindWithReplies находит карточку по ее ID вместе с откликами на нее
+	FindWithReplies(cardID uuid.UUID) (*entities.Card, error)
+
 	// FindСardsByTime находит заданное количество карточек,
 	// которые больше ключа и отсортированны по времени.
 	FindCardsByTime(key *time.Time, limit int) ([]entities.Card, error)

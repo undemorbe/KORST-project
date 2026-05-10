@@ -12,3 +12,9 @@ type PhoneNumberRequest struct {
 type UserIDRequest struct {
 	UserID string `json:"user-id" form:"user-id" binding:"required"`
 }
+
+// CreateReply - структура для запросов, содержащих
+// только ID карточки объявления в Params или Body
+type CardIDRequest struct {
+	CardID string `json:"card-id" form:"card-id" binding:"required"`
+}

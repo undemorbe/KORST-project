@@ -10,6 +10,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // ReplyHandler - объект, содержащий методы для обработки
@@ -31,7 +32,7 @@ func NewReplyHandler(replyService ports.ReplyService,
 // CreateReply обрабатывает запрос на создание
 // нового отклика на определенное объявление
 func (h *ReplyHandler) CreateReply(c *gin.Context) {
-	var req requests.CreateReply
+	var req requests.CreateReplyRequest
 
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
@@ -56,6 +57,35 @@ func (h *ReplyHandler) CreateReply(c *gin.Context) {
 
 	logger.Log.Info("Создание нового отклика успешно выполнено")
 	c.JSON(http.StatusOK, responses.GenericResponse{})
+}
+
+// GetExecutors обрабатывает запрос на получение
+// возможных исполнителей для определенной карточки
+func (h *ReplyHandler) GetExecutors(c *gin.Context) {
+	var req requests.CardIDRequest
+
+	err := c.ShouldBindQuery(&req)
+	if err != nil {
+		c.Error(errors.ErrorInvalidInput)
+		return
+	}
+
+	cardID, err := uuid.Parse(req.CardID)
+	if err != nil {
+		logger.Log.Warn("Ошибка при парсинге uuid: ", err)
+		c.Error(errors.ErrorInvalidInput)
+		return
+	}
+
+	response, err := h.replyService.GetExecutors(cardID)
+
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	logger.Log.Info("Получение исполнителей успешно выполнено")
+	c.JSON(http.StatusOK, response)
 }
 
 // ApproveExecutor обрабатывает запрос на утверждение

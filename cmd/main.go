@@ -78,7 +78,7 @@ func main() {
 	cardService := services.NewCardService(cardRepo, userRepo, fileService)
 	userService := services.NewUserService(userRepo, profileRepo, fileService)
 	reviewService := services.NewReviewService(userRepo, profileRepo, reviewRepo)
-	replyService := services.NewReplyService(cardRepo, replyRepo)
+	replyService := services.NewReplyService(userRepo, cardRepo, replyRepo)
 	bannerService := services.NewBannerService(bannerRepo, fileService)
 
 	// Подключение общих хэндлеров
@@ -145,11 +145,15 @@ func main() {
 		messenger.POST("/send-image", messageHandler.SendImage)
 		messenger.PUT("/change-message", messageHandler.ChangeMessage)
 		messenger.DELETE("/delete-message", messageHandler.DeleteMessage)
+
+		messenger.GET("/websocket", wsHandler.Handle)
 	}
 
 	replies := api.Group("/replies")
 	{
 		replies.POST("/create-reply", replyHandler.CreateReply)
+		replies.GET("executors", replyHandler.GetExecutors)
+
 		replies.POST("/approve-executor", replyHandler.ApproveExecutor)
 		replies.POST("/reject-executor", replyHandler.RejectExecutor)
 		replies.POST("/close", replyHandler.CloseCard)
@@ -161,13 +165,13 @@ func main() {
 		banners.GET("/get-banners", bannerHandler.GetBanners)
 	}
 
-	api.GET("/websocket", wsHandler.Handle)
-
 	// Маршруты для получения изображений
 	uploads := r.Group("/uploads")
 	{
 		uploads.Static("/profiles", "./uploads/profiles")
 		uploads.Static("/cards", "./uploads/cards")
+		uploads.Static("/messages", "./uploads/messages")
+		uploads.Static("/banners", "./uploads/banners")
 	}
 
 	// Запуск сервера

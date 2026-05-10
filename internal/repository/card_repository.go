@@ -39,6 +39,25 @@ func (r *cardRepo) FindByID(cardID uuid.UUID) (*entities.Card, error) {
 	return &card, nil
 }
 
+// FindWithReplies находит карточку по ее ID вместе с откликами на нее
+func (r *cardRepo) FindWithReplies(cardID uuid.UUID) (*entities.Card, error) {
+	var card entities.Card
+
+	err := r.db.
+		Preload("ActiveReply").
+		Preload("Replies").
+		First(&card, cardID).
+		Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &card, nil
+}
+
 // FindСardsByTime находит заданное количество карточек,
 // которые больше ключа и отсортированны по времени.
 func (r *cardRepo) FindCardsByTime(key *time.Time,
