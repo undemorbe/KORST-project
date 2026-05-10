@@ -76,7 +76,11 @@ class HttpWebSocketService implements MessengerServiceInterface {
       return;
     }
 
-    final url = Uri.parse('${ApiConstants.baseUrl}messenger/websocket');
+    final wsUrl = ApiConstants.messengerSocketUrl;
+    final httpUrl = wsUrl.isNotEmpty
+        ? wsUrl.replaceFirst('wss://', 'https://').replaceFirst('ws://', 'http://')
+        : '${ApiConstants.baseUrl}messenger/ws';
+    final url = Uri.parse(httpUrl);
     final headers = {
       ApiConstants.headerAccessToken: accessToken,
       'Accept': 'text/event-stream',

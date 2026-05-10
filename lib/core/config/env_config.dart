@@ -98,7 +98,7 @@ class EnvConfig {
         ? apiUri.path.substring(0, apiUri.path.length - 1)
         : apiUri.path;
     return apiUri
-        .replace(scheme: wsScheme, path: '$basePath/messenger/websocket')
+        .replace(scheme: wsScheme, path: '$basePath/messenger/ws')
         .toString();
   }
 

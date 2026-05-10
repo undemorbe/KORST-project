@@ -149,7 +149,19 @@ abstract class _MessengerStore with Store {
       final msgs = await _messengerRepository.getMessages(chatId);
       runInAction(() {
         if (selectedChat?.id == chatId) {
-          messages = ObservableList.of(msgs);
+          // Merge: preserve imageUrl from existing messages that server hasn't
+          // returned yet (image still processing on server side).
+          final existing = Map<String, MessageEntity>.fromEntries(
+            messages.map((m) => MapEntry(m.id, m)),
+          );
+          final merged = msgs.map((m) {
+            final prev = existing[m.id];
+            if (prev != null && m.imageUrl == null && prev.imageUrl != null) {
+              return m.copyWith(imageUrl: prev.imageUrl);
+            }
+            return m;
+          }).toList();
+          messages = ObservableList.of(merged);
           // Update lastMessage in chat lists so chat list shows current message
           if (msgs.isNotEmpty) {
             final newest = msgs.first; // sorted descending by backend
@@ -255,9 +267,13 @@ abstract class _MessengerStore with Store {
     runInAction(() {
       final message = event.message;
       if (message != null && selectedChat?.id == event.chatId) {
-        final exists = messages.any((item) => item.id == message.id);
-        if (!exists) {
+        final existingIndex = messages.indexWhere((item) => item.id == message.id);
+        if (existingIndex == -1) {
           messages.insert(0, message);
+        } else if (message.imageUrl != null &&
+            messages[existingIndex].imageUrl == null) {
+          // WS event brought imageUrl for an already-inserted message — update it
+          messages[existingIndex] = message;
         }
       }
 

@@ -51,9 +51,14 @@ abstract class _AuthStore with Store {
     isLoading = true;
     errorMessage = null;
     try {
-      isLoggedIn = await _authRepository.isLoggedIn();
-      if (isLoggedIn) {
-        await _authRepository.refreshAccessToken(); // Refresh token on startup
+      final hasSession = await _authRepository.isLoggedIn();
+      if (hasSession) {
+        // Refresh token BEFORE marking logged in so socket/realtime starts
+        // with a valid token, not a stale one.
+        await _authRepository.refreshAccessToken();
+        isLoggedIn = true;
+      } else {
+        isLoggedIn = false;
       }
       userProfile = isLoggedIn ? await _authRepository.getUserProfile() : null;
       final phone = userProfile?.phone;
