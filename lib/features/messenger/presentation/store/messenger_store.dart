@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:mobx/mobx.dart';
+import '../../data/services/messenger_event_parser.dart';
 import '../../data/services/messenger_service_interface.dart';
 import '../../domain/entities/chat_entity.dart';
 import '../../domain/entities/chats_response.dart';
@@ -18,6 +19,21 @@ abstract class _MessengerStore with Store {
   StreamSubscription<MessengerSocketEvent>? _socketSubscription;
 
   _MessengerStore(this._messengerRepository, this._messengerSocketService);
+
+  // Set from outside when user logs in
+  String? _myUserId;
+
+  void setMyUserId(String? id) {
+    _myUserId = id;
+  }
+
+  final ObservableMap<String, int> unreadCounts = ObservableMap<String, int>();
+
+  final Observable<IncomingMessageInfo?> _incomingMessageObs = Observable(null);
+  IncomingMessageInfo? get incomingMessage => _incomingMessageObs.value;
+
+  @computed
+  int get totalUnreadCount => unreadCounts.values.fold(0, (sum, v) => sum + v);
 
   @observable
   ObservableList<ChatEntity> merchantChats = ObservableList<ChatEntity>();
@@ -178,6 +194,8 @@ abstract class _MessengerStore with Store {
   void selectChat(ChatEntity? chat) {
     selectedChat = chat;
     if (chat != null) {
+      unreadCounts.remove(chat.id);
+      _incomingMessageObs.value = null;
       loadMessages(chat.id);
     } else {
       messages = ObservableList<MessageEntity>();
@@ -236,6 +254,24 @@ abstract class _MessengerStore with Store {
       } else if (event.chat != null) {
         needsChatsReload = true;
       }
+
+      // Detect incoming message (not from me, not in current chat)
+      final msg = event.message;
+      if (msg != null && MessengerEventParser.isIncoming(event, _myUserId)) {
+        if (selectedChat?.id != event.chatId) {
+          unreadCounts[event.chatId] = (unreadCounts[event.chatId] ?? 0) + 1;
+          final chat = _findChat(event.chatId) ?? event.chat;
+          if (chat != null) {
+            _incomingMessageObs.value = IncomingMessageInfo(
+              chatId: event.chatId,
+              senderName:
+                  '${chat.user.name}${chat.user.surname != null ? " ${chat.user.surname}" : ""}',
+              text: msg.text.trim().isNotEmpty ? msg.text.trim() : '🖼️',
+              cardName: chat.card.name,
+            );
+          }
+        }
+      }
     });
 
     if (needsChatsReload) {
@@ -273,4 +309,18 @@ abstract class _MessengerStore with Store {
     }
     return null;
   }
+}
+
+class IncomingMessageInfo {
+  final String chatId;
+  final String senderName;
+  final String text;
+  final String cardName;
+
+  const IncomingMessageInfo({
+    required this.chatId,
+    required this.senderName,
+    required this.text,
+    required this.cardName,
+  });
 }

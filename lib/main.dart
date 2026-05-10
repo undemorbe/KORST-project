@@ -16,6 +16,7 @@ import 'features/auth/presentation/store/session_store.dart';
 import 'features/messenger/presentation/store/messenger_store.dart';
 import 'features/notifications/notification_service.dart';
 import 'features/settings/presentation/store/settings_store.dart';
+import 'core/widgets/connectivity_banner.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -66,6 +67,7 @@ class MyApp extends StatelessWidget {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (isLoggedIn) {
             messengerStore.startRealtime();
+            messengerStore.setMyUserId(authStore.userProfile?.uid);
             backgroundTaskManager.startPolling();
           } else {
             unawaited(messengerStore.stopRealtime());
@@ -93,7 +95,9 @@ class MyApp extends StatelessWidget {
           routerConfig: AppRouter.router,
           builder: (context, child) {
             return AnimatedGradientBackground(
-              child: child ?? const SizedBox.shrink(),
+              child: ConnectivityBanner(
+                child: child ?? const SizedBox.shrink(),
+              ),
             );
           },
         );

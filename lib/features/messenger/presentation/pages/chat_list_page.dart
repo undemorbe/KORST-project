@@ -117,10 +117,13 @@ class _ChatListPageState extends State<ChatListPage>
       floatingActionButton: Observer(
         builder: (_) => _store.isLoading
             ? const SizedBox.shrink()
-            : FloatingActionButton(
-                heroTag: 'chat_list_fab',
-                onPressed: _store.loadChats,
-                child: const Icon(Icons.refresh),
+            : Padding(
+                padding: const EdgeInsets.only(bottom: 90, right: 7),
+                child: FloatingActionButton(
+                  heroTag: 'chat_list_fab',
+                  onPressed: _store.loadChats,
+                  child: const Icon(Icons.refresh),
+                ),
               ),
       ),
     );
@@ -170,7 +173,13 @@ class _ChatListPageState extends State<ChatListPage>
       itemCount: chats.length,
       itemBuilder: (context, index) {
         final chat = chats[index];
-        return _ChatListTile(chat: chat, onTap: () => _openChat(chat));
+        return Observer(
+          builder: (_) => _ChatListTile(
+            chat: chat,
+            store: _store,
+            onTap: () => _openChat(chat),
+          ),
+        );
       },
     );
   }
@@ -183,14 +192,18 @@ class _ChatListPageState extends State<ChatListPage>
 
 class _ChatListTile extends StatelessWidget {
   final ChatEntity chat;
+  final MessengerStore store;
   final VoidCallback onTap;
 
-  const _ChatListTile({required this.chat, required this.onTap});
+  const _ChatListTile({
+    required this.chat,
+    required this.store,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final lastMessage = chat.lastMessage;
-    final hasUnread = lastMessage?.isSeen == false;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -289,17 +302,44 @@ class _ChatListTile extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (hasUnread) ...[
-                  const SizedBox(width: 8),
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                      color: AppColors.primary,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ],
+                Builder(
+                  builder: (context) {
+                    final count = store.unreadCounts[chat.id] ?? 0;
+                    final showBadge =
+                        count > 0 || (chat.lastMessage?.isSeen == false);
+                    if (!showBadge) return const SizedBox.shrink();
+                    return Padding(
+                      padding: const EdgeInsets.only(left: 8),
+                      child: count > 0
+                          ? Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                count > 99 ? '99+' : '$count',
+                                style: const TextStyle(
+                                  color: AppColors.onPrimary,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            )
+                          : Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                color: AppColors.primary,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                    );
+                  },
+                ),
               ],
             ),
           ),
