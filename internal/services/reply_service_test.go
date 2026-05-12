@@ -34,6 +34,10 @@ func TestCreateReply(t *testing.T) {
 		On("FindByID", cardID).
 		Return(&entities.Card{ID: cardID}, nil)
 
+	mockReplyRepo.
+		On("FindByAuthorAndCard", authorID, cardID).
+		Return(nil, nil)
+
 	mockReplyRepo.On("CreateReply", reply).Return(nil)
 
 	err := replyService.CreateReply(authorID, cardID)

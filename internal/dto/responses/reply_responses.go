@@ -4,5 +4,12 @@ package responses
 // GetExecutorsResponse - структура для ответа на запрос
 // получения всех исполнителей объявления
 type GetExecutorsResponse struct {
-	Executors []CompressedAuthor `json:"executors"`
+	Executors []Executor `json:"executors"`
+}
+
+// Executor - структура, содержащая
+// информацию об исполнителе карточки
+type Executor struct {
+	CompressedAuthor
+	ReplyStatus string `json:"reply-status"`
 }

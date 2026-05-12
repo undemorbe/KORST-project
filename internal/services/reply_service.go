@@ -92,6 +92,26 @@ func (s *ReplyService) GetExecutors(cardID uuid.UUID) (
 		return response, errors.ErrorCardNotFound
 	}
 
+	if card.ActiveReply != nil {
+
+		reply := card.ActiveReply
+
+		convertedUser, err := s.getUserFromReply(reply)
+		if err != nil {
+			logger.Log.Warn("Ошибка при обработке автора отклика: ", err)
+			return response, err
+		}
+
+		executor := responses.Executor{
+			CompressedAuthor: convertedUser,
+			ReplyStatus:      string(reply.Status),
+		}
+
+		response.Executors = append(response.Executors, executor)
+
+		return response, nil
+	}
+
 	for _, reply := range card.Replies {
 
 		convertedUser, err := s.getUserFromReply(&reply)
@@ -100,7 +120,12 @@ func (s *ReplyService) GetExecutors(cardID uuid.UUID) (
 			continue
 		}
 
-		response.Executors = append(response.Executors, convertedUser)
+		executor := responses.Executor{
+			CompressedAuthor: convertedUser,
+			ReplyStatus:      string(reply.Status),
+		}
+
+		response.Executors = append(response.Executors, executor)
 	}
 
 	return response, nil
@@ -257,6 +282,11 @@ func (s *ReplyService) CloseCard(authorID uuid.UUID,
 
 	reply := card.ActiveReply
 
+	if reply == nil {
+		logger.Log.Warn("Отклик на оюъявление не найден")
+		reply = &entities.Reply{}
+	}
+
 	switch status {
 
 	case requests.StatusCompleted:
@@ -290,9 +320,13 @@ func (s *ReplyService) CloseCard(authorID uuid.UUID,
 		return err
 	}
 
-	if err = s.replyRepo.UpdateReply(reply); err != nil {
-		logger.Log.Error("Ошибка при обновлении отклика: ", err)
-		return err
+	if reply.AuthorID != uuid.Nil && reply.CardID != uuid.Nil {
+
+		err = s.replyRepo.UpdateReply(reply)
+		if err != nil {
+			logger.Log.Error("Ошибка при обновлении отклика: ", err)
+			return err
+		}
 	}
 
 	return nil
