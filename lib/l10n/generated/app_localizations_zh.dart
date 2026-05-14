@@ -286,10 +286,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get messagesTitle => '消息';
 
   @override
-  String get messagesAsBuyer => '作为买家';
+  String get messagesAsBuyer => 'Как работник';
 
   @override
-  String get messagesAsSeller => '作为卖家';
+  String get messagesAsSeller => 'Как работодатель';
 
   @override
   String get messagesNoChatsBuyer => '您还没有作为买家的聊天\n从服务卡片中给卖家发消息';
@@ -409,292 +409,287 @@ class AppLocalizationsZh extends AppLocalizations {
   String get yesterday => '昨天';
 
   @override
-  String get errorOops => 'Oops! Something went wrong';
+  String get errorOops => '糟糕！出了点问题';
 
   @override
-  String get settingsKorstPromo =>
-      'Korst — services nearby.\\n\\nOpen app: korst:/// \\n';
+  String get settingsKorstPromo => 'Korst — 附近的服务。\\n\\n打开应用：korst:/// \\n';
 
   @override
-  String get myProfile => 'My Profile';
+  String get myProfile => '我的个人资料';
 
   @override
-  String get publicProfile => 'Public Profile';
+  String get publicProfile => '公开个人资料';
 
   @override
-  String get myReviews => 'My Reviews';
+  String get myReviews => '我的评论';
 
   @override
-  String get appSettings => 'App Settings';
+  String get appSettings => '应用设置';
 
   @override
-  String get russianLanguage => 'Russian';
+  String get russianLanguage => '俄语';
 
   @override
-  String get additional => 'Additional';
+  String get additional => '附加';
 
   @override
-  String get rateApp => 'Rate App';
+  String get rateApp => '评价应用';
 
   @override
-  String get shareApp => 'Share App';
+  String get shareApp => '分享应用';
 
   @override
-  String get high => 'High';
+  String get high => '高';
 
   @override
-  String get medium => 'Medium';
+  String get medium => '中';
 
   @override
-  String get low => 'Low';
+  String get low => '低';
 
   @override
-  String get statistics => 'Statistics';
+  String get statistics => '统计';
 
   @override
-  String get services => 'Services';
+  String get services => '服务';
 
   @override
-  String get earned => 'Earned';
+  String get earned => '已赚取';
 
   @override
-  String get rating => 'Rating';
+  String get rating => '评分';
 
   @override
-  String get trustFactor => 'Trust Factor';
+  String get trustFactor => '信任因子';
 
   @override
-  String get trustFactorDesc =>
-      'Calculated based on the number of services, reviews, and rating.';
+  String get trustFactorDesc => '基于服务数量、评论和评分计算。';
 
   @override
-  String get user => 'User';
+  String get user => '用户';
 
   @override
-  String get welcomeToKorst => 'Welcome to Korst';
+  String get welcomeToKorst => '欢迎来到 Korst';
 
   @override
-  String get findServicesNearby =>
-      'Find the best beauty and health services near you';
+  String get findServicesNearby => '寻找附近最好的任务和执行者！';
 
   @override
-  String get start => 'Start';
+  String get start => '开始';
 
   @override
-  String get pleaseEnterValidNumber => 'Please enter a valid number';
+  String get pleaseEnterValidNumber => '请输入有效的号码';
 
   @override
-  String get yourPhoneNumber => 'Your phone number';
+  String get yourPhoneNumber => '您的手机号码';
 
   @override
-  String get weWillSendVerificationCode =>
-      'We will send a verification code to this number';
+  String get weWillSendVerificationCode => '我们将向此号码发送验证码';
 
   @override
-  String get phoneNumber => 'Phone number';
+  String get phoneNumber => '手机号码';
 
   @override
-  String get continueAction => 'Continue';
+  String get continueAction => '继续';
 
   @override
-  String get enterSmsCode => 'Enter SMS code';
+  String get enterSmsCode => '输入短信验证码';
 
   @override
-  String get weSentCodeTo => 'We sent a code to ';
+  String get weSentCodeTo => '我们向...发送了验证码：';
 
   @override
-  String get profileCreatedButPhotoFailed =>
-      'Profile created but photo upload failed: ';
+  String get profileCreatedButPhotoFailed => '个人资料创建成功但照片上传失败：';
 
   @override
-  String get editProfile => 'Edit Profile';
+  String get editProfile => '编辑个人资料';
 
   @override
-  String get createProfile => 'Create Profile';
+  String get createProfile => '创建个人资料';
 
   @override
-  String get saveChanges => 'Save Changes';
+  String get saveChanges => '保存更改';
 
   @override
-  String get createProfileBtn => 'Create Profile';
+  String get createProfileBtn => '创建个人资料';
 
   @override
-  String get basicData => 'Basic Data';
+  String get basicData => '基本信息';
 
   @override
-  String get firstName => 'First Name';
+  String get firstName => '名字';
 
   @override
-  String get enterFirstName => 'Enter first name';
+  String get enterFirstName => '输入名字';
 
   @override
-  String get lastName => 'Last Name';
+  String get lastName => '姓氏';
 
   @override
-  String get aboutMe => 'About Me';
+  String get aboutMe => '关于我';
 
   @override
-  String get additionalContact => 'Additional Contact';
+  String get additionalContact => '附加联系方式';
 
   @override
-  String get errorLoadingPrefix => 'Loading error: ';
+  String get errorLoadingPrefix => '加载错误：';
 
   @override
-  String get profileNotFound => 'Profile not found';
+  String get profileNotFound => '未找到个人资料';
 
   @override
-  String get youHaveNoReviewsYet => 'You have no reviews yet';
+  String get youHaveNoReviewsYet => '您还没有评论';
 
   @override
-  String get errorLoadingPhotoPrefix => 'Error loading photo: ';
+  String get errorLoadingPhotoPrefix => '加载照片错误：';
 
   @override
-  String get noMoreData => 'No more data';
+  String get noMoreData => '没有更多数据';
 
   @override
-  String get taskNotFound => 'Task not found';
+  String get taskNotFound => '未找到任务';
 
   @override
-  String get errorUserNotFound => 'Error: user not found';
+  String get errorUserNotFound => '错误：未找到用户';
 
   @override
-  String get task => 'task';
+  String get task => '任务';
 
   @override
-  String get editTask => 'Edit Task';
+  String get editTask => '编辑任务';
 
   @override
-  String get newTask => 'New Task';
+  String get newTask => '新任务';
 
   @override
-  String get updateTask => 'Update Task';
+  String get updateTask => '更新任务';
 
   @override
-  String get createTask => 'Create Task';
+  String get createTask => '创建任务';
 
   @override
-  String get addPhoto => 'Add Photo';
+  String get addPhoto => '添加照片';
 
   @override
-  String get taskDetails => 'Task Details';
+  String get taskDetails => '任务详情';
 
   @override
-  String get title => 'Title';
+  String get title => '标题';
 
   @override
-  String get enterTitle => 'Enter title';
+  String get enterTitle => '输入标题';
 
   @override
-  String get description => 'Description';
+  String get description => '描述';
 
   @override
-  String get budget => 'Budget';
+  String get budget => '预算';
 
   @override
-  String get enterBudget => 'Enter budget';
+  String get enterBudget => '输入预算';
 
   @override
-  String get invalidBudget => 'Invalid budget';
+  String get invalidBudget => '无效预算';
 
   @override
-  String get category => 'Category';
+  String get category => '类别';
 
   @override
-  String get currency => 'Currency';
+  String get currency => '货币';
 
   @override
-  String get tags => 'Tags';
+  String get tags => '标签';
 
   @override
-  String get tagsHint => 'repair, fast, urgent';
+  String get tagsHint => '维修，快速，紧急';
 
   @override
-  String get failedToCreateChatPrefix => 'Failed to create chat: ';
+  String get failedToCreateChatPrefix => '创建聊天失败：';
 
   @override
-  String get serviceCard => 'Service Card';
+  String get serviceCard => '服务卡片';
 
   @override
-  String get openInKorstPrefix => '\\n\\nOpen in Korst: ';
+  String get openInKorstPrefix => '\n\n在 Korst 中打开：';
 
   @override
-  String get authorPrefix => 'Author: ';
+  String get authorPrefix => '作者：';
 
   @override
-  String get you => 'You';
+  String get you => '您';
 
   @override
-  String get respondToTask => 'Respond to task';
+  String get respondToTask => '回应任务';
 
   @override
-  String get errorUpdatingToken => 'Error updating token';
+  String get errorUpdatingToken => '更新令牌错误';
 
   @override
-  String get failedToSendOtp => 'Failed to send OTP';
+  String get failedToSendOtp => '发送 OTP 失败';
 
   @override
-  String get failedToVerifyUser => 'Failed to verify user';
+  String get failedToVerifyUser => '验证用户失败';
 
   @override
-  String get invalidServerResponse => 'Invalid server response';
+  String get invalidServerResponse => '无效的服务器响应';
 
   @override
-  String get failedToConfirmOtp => 'Failed to confirm OTP';
+  String get failedToConfirmOtp => '确认 OTP 失败';
 
   @override
-  String get failedToUpdateProfile => 'Failed to update profile';
+  String get failedToUpdateProfile => '更新个人资料失败';
 
   @override
-  String get failedToLoadChats => 'Failed to load chats';
+  String get failedToLoadChats => '加载聊天失败';
 
   @override
-  String get failedToLoadMessages => 'Failed to load messages';
+  String get failedToLoadMessages => '加载消息失败';
 
   @override
-  String get failedToCreateChat => 'Failed to create chat';
+  String get failedToCreateChat => '创建聊天失败';
 
   @override
-  String get failedToSendMessage => 'Failed to send message';
+  String get failedToSendMessage => '发送消息失败';
 
   @override
-  String get failedToEditMessage => 'Failed to edit message';
+  String get failedToEditMessage => '编辑消息失败';
 
   @override
-  String get failedToDeleteMessage => 'Failed to delete message';
+  String get failedToDeleteMessage => '删除消息失败';
 
   @override
-  String get invalidServerResponseInfo => 'Invalid server response (info)';
+  String get invalidServerResponseInfo => '无效的服务器响应（信息）';
 
   @override
-  String get failedToLoadUserProfile => 'Failed to load user profile';
+  String get failedToLoadUserProfile => '加载用户个人资料失败';
 
   @override
-  String get failedToSendReview => 'Failed to send review';
+  String get failedToSendReview => '发送评论失败';
 
   @override
-  String get failedToLoadProfile => 'Failed to load profile';
+  String get failedToLoadProfile => '加载个人资料失败';
 
   @override
-  String get errorLoadingImage => 'Error loading image';
+  String get errorLoadingImage => '加载图片错误';
 
   @override
-  String get failedToLoadImage => 'Failed to load image';
+  String get failedToLoadImage => '加载图片失败';
 
   @override
-  String get service => 'service';
+  String get service => '服务';
 
   @override
-  String get failedToLoadCards => 'Failed to load cards';
+  String get failedToLoadCards => '加载卡片失败';
 
   @override
-  String get failedToLoadCard => 'Failed to load card';
+  String get failedToLoadCard => '加载卡片失败';
 
   @override
-  String get failedToCreateCard => 'Failed to create card';
+  String get failedToCreateCard => '创建卡片失败';
 
   @override
-  String get failedToUpdateCard => 'Failed to update card';
+  String get failedToUpdateCard => '更新卡片失败';
 
   @override
-  String get failedToLoadCardImage => 'Failed to load card image';
+  String get failedToLoadCardImage => '加载卡片图片失败';
 }

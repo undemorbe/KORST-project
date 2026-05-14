@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/widgets/app_layout.dart';
 import '../../../../core/widgets/shimmer.dart';
+import '../../../../core/widgets/empty_state.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../core/theme/animated_gradient_background.dart';
 import '../../domain/entities/chat_entity.dart';
@@ -71,18 +72,10 @@ class _ChatListPageState extends State<ChatListPage>
               }
 
               if (_store.errorMessage != null && _store.allChats.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('${l10n.errorLoading}: ${_store.errorMessage}'),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _store.loadChats,
-                        child: Text(l10n.retry),
-                      ),
-                    ],
-                  ),
+                return ErrorState(
+                  message: _store.errorMessage!,
+                  icon: Icons.cloud_off_outlined,
+                  onRetry: _store.loadChats,
                 );
               }
 
@@ -118,11 +111,16 @@ class _ChatListPageState extends State<ChatListPage>
         builder: (_) => _store.isLoading
             ? const SizedBox.shrink()
             : Padding(
-                padding: const EdgeInsets.only(bottom: 90, right: 7),
-                child: FloatingActionButton(
-                  heroTag: 'chat_list_fab',
-                  onPressed: _store.loadChats,
-                  child: const Icon(Icons.refresh),
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).padding.bottom - 4,
+                  right: 1,
+                ),
+                
+                  child: FloatingActionButton(
+                    heroTag: 'fab_retry_chat_list_page',
+                    onPressed: _store.loadChats,
+                    child: const Icon(Icons.refresh),
+                  
                 ),
               ),
       ),
@@ -173,12 +171,10 @@ class _ChatListPageState extends State<ChatListPage>
       itemCount: chats.length,
       itemBuilder: (context, index) {
         final chat = chats[index];
-        return Observer(
-          builder: (_) => _ChatListTile(
-            chat: chat,
-            store: _store,
-            onTap: () => _openChat(chat),
-          ),
+        return _ChatListTile(
+          chat: chat,
+          store: _store,
+          onTap: () => _openChat(chat),
         );
       },
     );
@@ -203,17 +199,18 @@ class _ChatListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final lastMessage = chat.lastMessage;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: AppColors.surfaceCard,
+          color: cs.surface,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.border),
-          boxShadow: const [
-            BoxShadow(color: AppColors.goldGlow, blurRadius: 8),
+          border: Border.all(color: cs.outline),
+          boxShadow: [
+            BoxShadow(color: cs.primary.withValues(alpha: 0.07), blurRadius: 8),
           ],
         ),
         child: InkWell(
@@ -226,19 +223,19 @@ class _ChatListTile extends StatelessWidget {
                 Container(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.border, width: 1.5),
+                    border: Border.all(color: cs.outline, width: 1.5),
                   ),
                   child: CircleAvatar(
                     radius: 24,
-                    backgroundColor: AppColors.borderSubtle,
+                    backgroundColor: cs.outlineVariant,
                     backgroundImage: chat.user.imageUrl != null
                         ? NetworkImage(chat.user.imageUrl!)
                         : null,
                     child: chat.user.imageUrl == null
                         ? Text(
                             chat.user.name[0].toUpperCase(),
-                            style: const TextStyle(
-                              color: AppColors.primaryLight,
+                            style: TextStyle(
+                              color: cs.primary,
                               fontWeight: FontWeight.bold,
                             ),
                           )
@@ -257,8 +254,8 @@ class _ChatListTile extends StatelessWidget {
                             child: Text(
                               '${chat.user.name} ${chat.user.surname ?? ''}'
                                   .trim(),
-                              style: const TextStyle(
-                                color: AppColors.onBackground,
+                              style: TextStyle(
+                                color: cs.onSurface,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 15,
                               ),
@@ -269,9 +266,9 @@ class _ChatListTile extends StatelessWidget {
                           if (lastMessage != null)
                             Text(
                               _formatTime(lastMessage.created),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11,
-                                color: AppColors.muted,
+                                color: cs.onSurfaceVariant,
                               ),
                             ),
                         ],
@@ -279,9 +276,9 @@ class _ChatListTile extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         chat.card.name,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: AppColors.primary,
+                          color: cs.primary,
                           fontWeight: FontWeight.w500,
                         ),
                         maxLines: 1,
@@ -291,9 +288,9 @@ class _ChatListTile extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           lastMessage.text,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
-                            color: AppColors.muted,
+                            color: cs.onSurfaceVariant,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -317,13 +314,13 @@ class _ChatListTile extends StatelessWidget {
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.primary,
+                                color: cs.primary,
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Text(
                                 count > 99 ? '99+' : '$count',
-                                style: const TextStyle(
-                                  color: AppColors.onPrimary,
+                                style: TextStyle(
+                                  color: cs.onPrimary,
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -332,8 +329,8 @@ class _ChatListTile extends StatelessWidget {
                           : Container(
                               width: 8,
                               height: 8,
-                              decoration: const BoxDecoration(
-                                color: AppColors.primary,
+                              decoration: BoxDecoration(
+                                color: cs.primary,
                                 shape: BoxShape.circle,
                               ),
                             ),

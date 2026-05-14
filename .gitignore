@@ -43,7 +43,8 @@ https:*
 /build/
 .claude
 /coverage/
-
+.superpowers
+docs/superpowers
 # Symbolication related
 app.*.symbols
 

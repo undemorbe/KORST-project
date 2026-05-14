@@ -16,7 +16,7 @@ import '../../features/users/presentation/pages/my_reviews_page.dart';
 import '../../features/messenger/presentation/pages/chat_list_page.dart';
 import '../../features/messenger/presentation/pages/chat_page.dart';
 import '../../features/messenger/presentation/store/messenger_store.dart';
-import '../../features/auth/presentation/pages/auth_gate_page.dart';
+import '../../features/auth/presentation/pages/splash_page.dart';
 import '../../features/auth/presentation/pages/onboarding_page.dart';
 import '../../features/auth/presentation/pages/phone_number_page.dart';
 import '../../features/auth/presentation/pages/otp_page.dart';
@@ -117,7 +117,7 @@ class AppRouter {
       GoRoute(
         path: '/auth-gate',
         pageBuilder: (context, state) =>
-            _buildTransitionPage(state, const AuthGatePage()),
+            _buildTransitionPage(state, const SplashPage()),
       ),
       GoRoute(
         path: '/onboarding',

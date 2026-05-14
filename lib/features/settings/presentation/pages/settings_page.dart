@@ -6,6 +6,7 @@ import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:go_router/go_router.dart';
 import 'package:in_app_review/in_app_review.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/widgets/app_layout.dart';
 import '../../../../l10n/generated/app_localizations.dart';
@@ -18,14 +19,9 @@ class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
   Future<void> _rateApp(BuildContext context) async {
+    final url = Uri.parse('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
     try {
-      final inAppReview = InAppReview.instance;
-      final available = await inAppReview.isAvailable();
-      if (available) {
-        await inAppReview.requestReview();
-        return;
-      }
-      await inAppReview.openStoreListing();
+      await launchUrl(url, mode: LaunchMode.platformDefault);
     } catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(
@@ -81,10 +77,7 @@ class SettingsPage extends StatelessWidget {
                 title: l10n.settingsTitle,
                 subtitle: l10n.appSettings,
                 icon: Icons.tune_outlined,
-                trailing: IconButton.filled(
-                  onPressed: () => context.push('/user-profile/me'),
-                  icon: const Icon(Icons.person_outline),
-                ),
+                trailing: null,
               ),
               const ProfileBanner(),
               const SizedBox(height: 16),

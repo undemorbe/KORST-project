@@ -104,6 +104,7 @@ class MessengerEventParser {
     final normalized = Map<String, dynamic>.from(map);
     normalized['id'] ??= normalized['message-id'] ?? normalized['messageId'];
     normalized['authorId'] ??= normalized['author-id'] ?? normalized['authorId'];
+    normalized['imageURL'] ??= normalized['image-url'] ?? normalized['imageUrl'] ?? normalized['image_url'];
     normalized['created'] ??= DateTime.now().toIso8601String();
     try {
       return MessageEntity.fromJson(normalized);

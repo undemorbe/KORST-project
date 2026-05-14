@@ -49,6 +49,7 @@ class _StatisticsWidgetState extends State<StatisticsWidget> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
 
     // Real data from /user/me + /user/reviews
     final cards = _profile?.cards ?? [];
@@ -61,6 +62,7 @@ class _StatisticsWidgetState extends State<StatisticsWidget> {
     final rating = _profile?.rating ?? 0.0;
     final reviews = _profile?.reviews ?? [];
     final reviewsCount = reviews.length;
+    final repliesInfo = _profile?.repliesInfo;
 
     // Average review rating (from /user/reviews)
     final avgReviewRating = reviewsCount > 0
@@ -88,7 +90,7 @@ class _StatisticsWidgetState extends State<StatisticsWidget> {
       trustColor = AppColors.warning;
     } else {
       trustLevel = l10n.low;
-      trustColor = AppColors.error;
+      trustColor = cs.error;
     }
 
     return GlassCard(
@@ -107,22 +109,22 @@ class _StatisticsWidgetState extends State<StatisticsWidget> {
                   style: GoogleFonts.cinzel(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.primaryLight,
+                    color: cs.primary,
                     letterSpacing: 0.08,
                   ),
                 ),
                 if (_isLoading)
-                  const SizedBox(
+                  SizedBox(
                     width: 16,
                     height: 16,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: AppColors.primary,
+                      color: cs.primary,
                     ),
                   )
                 else
                   IconButton(
-                    icon: const Icon(Icons.refresh, size: 20, color: AppColors.muted),
+                    icon: Icon(Icons.refresh, size: 20, color: cs.onSurfaceVariant),
                     onPressed: _refresh,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
@@ -137,7 +139,7 @@ class _StatisticsWidgetState extends State<StatisticsWidget> {
                 Expanded(
                   child: _HeroStat(
                     icon: Icons.star_rounded,
-                    iconColor: AppColors.ratingStar,
+                    iconColor: cs.primary,
                     value: rating > 0 ? rating.toStringAsFixed(1) : '—',
                     label: l10n.rating,
                     onTap: () => context.push('/user-profile/me'),
@@ -148,7 +150,7 @@ class _StatisticsWidgetState extends State<StatisticsWidget> {
                 Expanded(
                   child: _HeroStat(
                     icon: Icons.chat_bubble_outline_rounded,
-                    iconColor: AppColors.primary,
+                    iconColor: cs.primary,
                     value: reviewsCount > 0
                         ? '$reviewsCount (${avgReviewRating.toStringAsFixed(1)}★)'
                         : '—',
@@ -167,7 +169,7 @@ class _StatisticsWidgetState extends State<StatisticsWidget> {
                     icon: Icons.layers_outlined,
                     value: '$cardsTotal',
                     label: l10n.services,
-                    color: AppColors.primary,
+                    color: cs.primary,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -200,24 +202,68 @@ class _StatisticsWidgetState extends State<StatisticsWidget> {
               ],
             ),
 
+            // ── Replies stats ──
+            if (repliesInfo != null && repliesInfo.total > 0) ...[
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _StatChip(
+                      icon: Icons.send_rounded,
+                      value: '${repliesInfo.total}',
+                      label: 'Откликов',
+                      color: cs.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _StatChip(
+                      icon: Icons.handshake_outlined,
+                      value: '${repliesInfo.accepted}',
+                      label: 'Принято',
+                      color: AppColors.success,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _StatChip(
+                      icon: Icons.verified_rounded,
+                      value: '${repliesInfo.completed}',
+                      label: 'Выполнено',
+                      color: cs.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _StatChip(
+                      icon: Icons.cancel_outlined,
+                      value: '${repliesInfo.failed}',
+                      label: 'Провалено',
+                      color: cs.error,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+
             // ── Success rate bar (only when meaningful) ──
             if (successRate != null) ...[
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Успешность',
                     style: TextStyle(
-                      color: AppColors.onSurface,
+                      color: cs.onSurface,
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   Text(
                     '${(successRate * 100).toStringAsFixed(0)}%',
-                    style: const TextStyle(
-                      color: AppColors.primaryLight,
+                    style: TextStyle(
+                      color: cs.primary,
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                     ),
@@ -231,13 +277,13 @@ class _StatisticsWidgetState extends State<StatisticsWidget> {
                   height: 6,
                   child: Stack(
                     children: [
-                      Container(width: double.infinity, color: AppColors.borderSubtle),
+                      Container(width: double.infinity, color: cs.outlineVariant),
                       FractionallySizedBox(
                         widthFactor: successRate,
                         child: Container(
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             gradient: LinearGradient(
-                              colors: [AppColors.mutedDark, AppColors.primary],
+                              colors: [cs.surfaceContainerHighest, cs.primary],
                             ),
                           ),
                         ),
@@ -256,9 +302,9 @@ class _StatisticsWidgetState extends State<StatisticsWidget> {
               children: [
                 Text(
                   l10n.trustFactor,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    color: AppColors.onSurface,
+                    color: cs.onSurface,
                     fontSize: 13,
                   ),
                 ),
@@ -287,13 +333,13 @@ class _StatisticsWidgetState extends State<StatisticsWidget> {
                 height: 8,
                 child: Stack(
                   children: [
-                    Container(width: double.infinity, color: AppColors.borderSubtle),
+                    Container(width: double.infinity, color: cs.outlineVariant),
                     FractionallySizedBox(
                       widthFactor: trustFactor,
                       child: Container(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
-                            colors: [AppColors.mutedDark, trustColor],
+                            colors: [cs.surfaceContainerHighest, trustColor],
                           ),
                         ),
                       ),
@@ -305,7 +351,7 @@ class _StatisticsWidgetState extends State<StatisticsWidget> {
             const SizedBox(height: 8),
             Text(
               l10n.trustFactorDesc,
-              style: const TextStyle(color: AppColors.muted, fontSize: 11),
+              style: TextStyle(color: cs.onSurfaceVariant, fontSize: 11),
             ),
 
             // ── Recent reviews ──
@@ -316,7 +362,7 @@ class _StatisticsWidgetState extends State<StatisticsWidget> {
                 style: GoogleFonts.cinzel(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.primaryLight,
+                  color: cs.primary,
                   letterSpacing: 0.06,
                 ),
               ),
@@ -327,14 +373,19 @@ class _StatisticsWidgetState extends State<StatisticsWidget> {
                   onTap: () => context.push('/my-reviews'),
                   child: Padding(
                     padding: const EdgeInsets.only(top: 6),
-                    child: Text(
-                      'Все отзывы (${reviews.length})',
-                      style: const TextStyle(
-                        color: AppColors.primary,
-                        fontSize: 12,
-                        decoration: TextDecoration.underline,
-                        decorationColor: AppColors.primary,
-                      ),
+                    child: Builder(
+                      builder: (context) {
+                        final cs = Theme.of(context).colorScheme;
+                        return Text(
+                          'Все отзывы (${reviews.length})',
+                          style: TextStyle(
+                            color: cs.primary,
+                            fontSize: 12,
+                            decoration: TextDecoration.underline,
+                            decorationColor: cs.primary,
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
@@ -366,18 +417,19 @@ class _HeroStat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: AppColors.surfaceCard,
+          color: cs.surface,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: highlight ? AppColors.primary : AppColors.border,
+            color: highlight ? cs.primary : cs.outline,
           ),
           boxShadow: highlight
-              ? const [BoxShadow(color: AppColors.goldGlow, blurRadius: 8)]
+              ? [BoxShadow(color: cs.primary.withValues(alpha: 0.07), blurRadius: 8)]
               : null,
         ),
         child: Row(
@@ -390,8 +442,8 @@ class _HeroStat extends StatelessWidget {
                 children: [
                   Text(
                     value,
-                    style: const TextStyle(
-                      color: AppColors.primaryLight,
+                    style: TextStyle(
+                      color: cs.primary,
                       fontWeight: FontWeight.w700,
                       fontSize: 15,
                     ),
@@ -399,13 +451,13 @@ class _HeroStat extends StatelessWidget {
                   ),
                   Text(
                     label,
-                    style: const TextStyle(color: AppColors.muted, fontSize: 11),
+                    style: TextStyle(color: cs.onSurfaceVariant, fontSize: 11),
                   ),
                 ],
               ),
             ),
             if (onTap != null)
-              const Icon(Icons.chevron_right, color: AppColors.muted, size: 16),
+              Icon(Icons.chevron_right, color: cs.onSurfaceVariant, size: 16),
           ],
         ),
       ),
@@ -429,12 +481,13 @@ class _StatChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
       decoration: BoxDecoration(
-        color: AppColors.surfaceCard,
+        color: cs.surface,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: cs.outline),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -453,7 +506,7 @@ class _StatChip extends StatelessWidget {
           Text(
             label,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: AppColors.muted, fontSize: 10),
+            style: TextStyle(color: cs.onSurfaceVariant, fontSize: 10),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
@@ -471,6 +524,7 @@ class _ReviewRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final rating = review.rating;
     final comment = review.comment;
     final authorName = review.author.name;
@@ -480,9 +534,9 @@ class _ReviewRow extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppColors.surfaceCard,
+          color: cs.surface,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.borderSubtle),
+          border: Border.all(color: cs.outlineVariant),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -493,13 +547,13 @@ class _ReviewRow extends StatelessWidget {
                   return Icon(
                     i < rating.round() ? Icons.star_rounded : Icons.star_outline_rounded,
                     size: 13,
-                    color: AppColors.ratingStar,
+                    color: cs.primary,
                   );
                 }),
                 const SizedBox(width: 8),
                 Text(
                   authorName,
-                  style: const TextStyle(color: AppColors.muted, fontSize: 11),
+                  style: TextStyle(color: cs.onSurfaceVariant, fontSize: 11),
                 ),
               ],
             ),
@@ -507,7 +561,7 @@ class _ReviewRow extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 comment,
-                style: const TextStyle(color: AppColors.onSurface, fontSize: 12),
+                style: TextStyle(color: cs.onSurface, fontSize: 12),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),

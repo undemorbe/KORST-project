@@ -69,4 +69,31 @@ class AppColors {
   // Light theme aliases (point to same dark values — dark-only app)
   static const Color lightBackground = background;
   static const Color lightSurface    = surface;
+
+  // ── Light theme — aged parchment / Bloodborne aesthetic ──────────────────
+  static const Color lBackground     = Color(0xFFF5EDDB); // aged parchment
+  static const Color lSurface        = Color(0xFFEDE4CC);
+  static const Color lSurfaceCard    = Color(0xFFE8DCC0); // card gradient start
+  static const Color lSurfaceCardEnd = Color(0xFFDDD0AA); // card gradient end
+  static const Color lSurfaceVariant = Color(0xFFE0D4B0);
+
+  static const Color lBorder         = Color(0xFF8B6D3A); // deep sepia
+  static const Color lBorderSubtle   = Color(0xFFBFA06A);
+  static const Color lInsetHighlight = Color(0xFF9A7840);
+
+  static const Color lPrimary        = Color(0xFF7A4F0A); // dark-gold readable on light
+  static const Color lPrimaryLight   = Color(0xFF9A6B1A);
+  static const Color lOnPrimary      = Color(0xFFF5EDDB);
+
+  static const Color lOnBackground   = Color(0xFF1C1208); // near-black sepia
+  static const Color lOnSurface      = Color(0xFF2C1E10);
+  static const Color lMuted          = Color(0xFF8B7355);
+  static const Color lMutedDark      = Color(0xFF6B5535);
+
+  static const Color lError          = Color(0xFF8B2020);
+  static const Color lSuccess        = Color(0xFF2A6B2A);
+  static const Color lWarning        = Color(0xFF8B6010);
+
+  static const Color lGoldGlow       = Color(0x187A4F0A);
+  static const Color lGoldGlowText   = Color(0x507A4F0A);
 }

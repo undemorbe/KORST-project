@@ -9,6 +9,13 @@ part of 'messenger_store.dart';
 // ignore_for_file: non_constant_identifier_names, unnecessary_brace_in_string_interps, unnecessary_lambdas, prefer_expression_function_bodies, lines_longer_than_80_chars, avoid_as, avoid_annotating_with_dynamic, no_leading_underscores_for_local_identifiers
 
 mixin _$MessengerStore on _MessengerStore, Store {
+  Computed<int>? _$totalUnreadCountComputed;
+
+  @override
+  int get totalUnreadCount => (_$totalUnreadCountComputed ??= Computed<int>(
+          () => super.totalUnreadCount,
+          name: '_MessengerStore.totalUnreadCount'))
+      .value;
   Computed<List<ChatEntity>>? _$allChatsComputed;
 
   @override
@@ -223,6 +230,7 @@ selectedChat: ${selectedChat},
 isLoading: ${isLoading},
 isSendingMessage: ${isSendingMessage},
 errorMessage: ${errorMessage},
+totalUnreadCount: ${totalUnreadCount},
 allChats: ${allChats}
     ''';
   }

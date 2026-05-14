@@ -286,10 +286,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get messagesTitle => 'Messages';
 
   @override
-  String get messagesAsBuyer => 'As Buyer';
+  String get messagesAsBuyer => 'Как работник';
 
   @override
-  String get messagesAsSeller => 'As Seller';
+  String get messagesAsSeller => 'Как работодатель';
 
   @override
   String get messagesNoChatsBuyer =>
@@ -476,8 +476,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get welcomeToKorst => 'Welcome to Korst';
 
   @override
-  String get findServicesNearby =>
-      'Find the best beauty and health services near you';
+  String get findServicesNearby => 'Find the best tasks and performers nearby!';
 
   @override
   String get start => 'Start';

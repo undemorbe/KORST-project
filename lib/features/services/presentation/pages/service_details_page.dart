@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:go_router/go_router.dart';
@@ -13,6 +14,7 @@ import '../../../favorites/presentation/store/favorites_store.dart';
 
 import '../../../auth/presentation/store/auth_store.dart';
 import '../../../messenger/presentation/store/messenger_store.dart';
+import '../../../messenger/domain/entities/chat_entity.dart';
 
 class ServiceDetailsPage extends StatefulWidget {
   final ServiceEntity service;
@@ -99,21 +101,79 @@ class _ServiceDetailsPageState extends State<ServiceDetailsPage> {
       Navigator.of(context).pop(); // Close loading
       // Navigate to chat
       context.push('/chat', extra: messengerStore);
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       Navigator.of(context).pop(); // Close loading
+      final forbidden = _serviceStore.replyForbidden;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            "${AppLocalizations.of(context)!.failedToCreateChatPrefix}$e",
+            forbidden
+                ? 'Вы не можете откликнуться на эту задачу'
+                : AppLocalizations.of(context)!.failedToCreateChatPrefix,
           ),
         ),
       );
     }
   }
 
+  Future<void> _openExistingChat(ServiceEntity service) async {
+    final messengerStore = sl<MessengerStore>();
+    final author = service.author;
+    if (author == null || author.uid.isEmpty) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      // Try to find existing chat; if absent, create it
+      await messengerStore.loadChats();
+
+      ChatEntity? chat;
+      try {
+        chat = messengerStore.customerChats.firstWhere(
+          (c) => c.card.id == service.id,
+        );
+      } catch (_) {
+        try {
+          chat = messengerStore.merchantChats.firstWhere(
+            (c) => c.card.id == service.id,
+          );
+        } catch (_) {}
+      }
+
+      if (chat == null) {
+        await messengerStore.createChat(
+          userId: author.uid,
+          cardId: service.id,
+        );
+        await messengerStore.loadChats();
+        chat = messengerStore.customerChats.firstWhere(
+          (c) => c.card.id == service.id,
+          orElse: () => messengerStore.merchantChats.firstWhere(
+            (c) => c.card.id == service.id,
+          ),
+        );
+      }
+
+      messengerStore.selectChat(chat);
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      context.push('/chat', extra: messengerStore);
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка: $e')),
+      );
+    }
+  }
+
   Future<void> _shareService(ServiceEntity service) async {
-    final link = 'korst:///service/${service.id}';
+    final link = 'https://2839bc9a-d491-41f2-94d8-c3c98ffedc32.tunnel4.com/links/service/${service.id}';
     final title = service.title.trim().isEmpty
         ? AppLocalizations.of(context)!.serviceCard
         : service.title.trim();
@@ -121,7 +181,7 @@ class _ServiceDetailsPageState extends State<ServiceDetailsPage> {
     await SharePlus.instance.share(
       ShareParams(
         text:
-            "$title\n$price${AppLocalizations.of(context)!.openInKorstPrefix}$link",
+            "$title \n \n$price ${AppLocalizations.of(context)!.openInKorstPrefix}$link",
         subject: title,
       ),
     );
@@ -275,6 +335,15 @@ class _ServiceDetailsPageState extends State<ServiceDetailsPage> {
               SliverAppBar(
                 expandedHeight: 300,
                 pinned: true,
+                backgroundColor: Colors.transparent,
+                foregroundColor: Colors.white,
+                iconTheme: const IconThemeData(color: Colors.white),
+                actionsIconTheme: const IconThemeData(color: Colors.white),
+                systemOverlayStyle: const SystemUiOverlayStyle(
+                  statusBarColor: Colors.transparent,
+                  statusBarIconBrightness: Brightness.light,
+                  statusBarBrightness: Brightness.dark,
+                ),
                 actions: [
                   if (_canEdit(currentService))
                     IconButton(
@@ -366,24 +435,26 @@ class _ServiceDetailsPageState extends State<ServiceDetailsPage> {
                                 ),
                               ),
                             ),
+                      // Top scrim — AppBar icons readable over any image
                       DecoratedBox(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
-                            begin: Alignment.bottomCenter,
-                            end: Alignment.topCenter,
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            stops: const [0.0, 0.28],
                             colors: [
-                              Colors.black.withValues(alpha: 0.78),
-                              Colors.black.withValues(alpha: 0.28),
+                              Colors.black.withValues(alpha: 0.55),
                               Colors.transparent,
                             ],
                           ),
                         ),
                       ),
+                      // Bottom scrim — title readable
                       Positioned(
                         bottom: 0,
                         left: 0,
                         right: 0,
-                        height: 100,
+                        height: 140,
                         child: DecoratedBox(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
@@ -391,7 +462,7 @@ class _ServiceDetailsPageState extends State<ServiceDetailsPage> {
                               end: Alignment.bottomCenter,
                               colors: [
                                 Colors.transparent,
-                                AppColors.background.withValues(alpha: 0.85),
+                                Colors.black.withValues(alpha: 0.80),
                               ],
                             ),
                           ),
@@ -538,21 +609,89 @@ class _ServiceDetailsPageState extends State<ServiceDetailsPage> {
                       const SizedBox(height: 16),
                       if (!_canEdit(currentService) &&
                           currentService.author != null)
-                        SizedBox(
-                          width: double.infinity,
-                          child: FilledButton.icon(
-                            onPressed: () => _startChat(currentService),
-                            icon: const Icon(Icons.handshake),
-                            label: Text(
-                              AppLocalizations.of(context)!.respondToTask,
-                            ),
-                            style: FilledButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+                        Observer(
+                          builder: (_) {
+                            final replied = _serviceStore.hasReplied(
+                              currentService.id,
+                            );
+                            if (replied) {
+                              final cs = Theme.of(context).colorScheme;
+                              return Column(
+                                children: [
+                                  Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: cs.primaryContainer,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.check_circle_rounded,
+                                          color: cs.primary,
+                                          size: 18,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'Вы откликнулись',
+                                          style: TextStyle(
+                                            color: cs.primary,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: OutlinedButton.icon(
+                                      onPressed: () =>
+                                          _openExistingChat(currentService),
+                                      icon: const Icon(
+                                        Icons.chat_bubble_outline,
+                                        size: 18,
+                                      ),
+                                      label: const Text('Перейти в чат'),
+                                      style: OutlinedButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 14,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }
+                            return SizedBox(
+                              width: double.infinity,
+                              child: FilledButton.icon(
+                                onPressed: () => _startChat(currentService),
+                                icon: const Icon(Icons.handshake),
+                                label: Text(
+                                  AppLocalizations.of(context)!.respondToTask,
+                                ),
+                                style: FilledButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
+                            );
+                          },
                         ),
                       if (_canEdit(currentService)) ...[
                         const SizedBox(height: 24),
@@ -660,138 +799,218 @@ class _ExecutorTile extends StatelessWidget {
     required this.store,
   });
 
+  // ── Status badge ───────────────────────────────────────────────────────────
+  static ({String label, Color color, IconData icon}) _statusMeta(
+      ReplyStatus s, BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return switch (s) {
+      ReplyStatus.pending => (
+          label: 'Ожидает',
+          color: cs.secondary,
+          icon: Icons.hourglass_empty_rounded,
+        ),
+      ReplyStatus.accepted => (
+          label: 'Принят',
+          color: AppColors.success,
+          icon: Icons.check_circle_rounded,
+        ),
+      ReplyStatus.rejected => (
+          label: 'Отклонён',
+          color: cs.error,
+          icon: Icons.cancel_rounded,
+        ),
+      ReplyStatus.completed => (
+          label: 'Выполнен',
+          color: cs.primary,
+          icon: Icons.verified_rounded,
+        ),
+      ReplyStatus.failed => (
+          label: 'Не выполнен',
+          color: AppColors.error,
+          icon: Icons.error_rounded,
+        ),
+      ReplyStatus.unknown => (
+          label: '',
+          color: cs.onSurfaceVariant,
+          icon: Icons.help_outline_rounded,
+        ),
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final status = executor.replyStatus;
+    final meta = _statusMeta(status, context);
+    final isPending = status == ReplyStatus.pending ||
+        status == ReplyStatus.unknown;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: AppColors.surfaceCard,
+          color: cs.surface,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: cs.outline),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           child: Row(
             children: [
-              CircleAvatar(
-                radius: 22,
-                backgroundColor: AppColors.borderSubtle,
-                backgroundImage: executor.imageUrl != null &&
-                        executor.imageUrl!.isNotEmpty
-                    ? NetworkImage(executor.imageUrl!)
-                    : null,
-                child: executor.imageUrl == null || executor.imageUrl!.isEmpty
-                    ? Text(
-                        executor.name.isNotEmpty
-                            ? executor.name[0].toUpperCase()
-                            : '?',
-                        style: const TextStyle(
-                          color: AppColors.primaryLight,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      )
-                    : null,
-              ),
-              const SizedBox(width: 12),
+              // Tappable: avatar + name → profile
               Expanded(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: executor.id.isNotEmpty
+                      ? () => context.push('/user-profile/${executor.id}')
+                      : null,
+                  child: Row(
+                    children: [
+                      // Avatar
+                      CircleAvatar(
+                        radius: 22,
+                        backgroundColor: cs.outlineVariant,
+                        backgroundImage: executor.imageUrl != null &&
+                                executor.imageUrl!.isNotEmpty
+                            ? NetworkImage(executor.imageUrl!)
+                            : null,
+                        child:
+                            executor.imageUrl == null ||
+                                    executor.imageUrl!.isEmpty
+                                ? Text(
+                                    executor.name.isNotEmpty
+                                        ? executor.name[0].toUpperCase()
+                                        : '?',
+                                    style: TextStyle(
+                                      color: cs.primary,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  )
+                                : null,
+                      ),
+                      const SizedBox(width: 12),
+
+                      // Name + rating + status
+                      Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       executor.displayName,
-                      style: const TextStyle(
-                        color: AppColors.onBackground,
+                      style: TextStyle(
+                        color: cs.onSurface,
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 3),
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.star_rounded,
-                          size: 14,
-                          color: AppColors.ratingStar,
+                          size: 13,
+                          color: cs.primary,
                         ),
                         const SizedBox(width: 3),
                         Text(
                           executor.rating.toStringAsFixed(1),
-                          style: const TextStyle(
-                            color: AppColors.muted,
+                          style: TextStyle(
+                            color: cs.onSurfaceVariant,
                             fontSize: 12,
                           ),
                         ),
+                        if (meta.label.isNotEmpty) ...[
+                          const SizedBox(width: 8),
+                          Icon(meta.icon, size: 12, color: meta.color),
+                          const SizedBox(width: 3),
+                          Text(
+                            meta.label,
+                            style: TextStyle(
+                              color: meta.color,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    tooltip: 'Одобрить',
-                    icon: const Icon(
-                      Icons.check_circle_outline,
-                      color: AppColors.success,
-                      size: 26,
-                    ),
-                    onPressed: () async {
-                      final messenger = ScaffoldMessenger.of(context);
-                      try {
-                        await store.approveExecutor(
-                          cardId: cardId,
-                          executorId: executor.id,
-                        );
-                        messenger.showSnackBar(
-                          const SnackBar(
-                            content: Text('Исполнитель одобрен'),
-                          ),
-                        );
-                      } catch (_) {
-                        messenger.showSnackBar(
-                          SnackBar(
-                            content: Text(store.errorMessage ?? 'Ошибка'),
-                            backgroundColor: AppColors.error,
-                          ),
-                        );
-                      }
-                    },
+                    ],
                   ),
-                  IconButton(
-                    tooltip: 'Отклонить',
-                    icon: const Icon(
-                      Icons.cancel_outlined,
-                      color: AppColors.error,
-                      size: 26,
-                    ),
-                    onPressed: () async {
-                      final messenger = ScaffoldMessenger.of(context);
-                      try {
-                        await store.rejectExecutor(
-                          cardId: cardId,
-                          executorId: executor.id,
-                        );
-                        await store.loadExecutors(cardId);
-                        messenger.showSnackBar(
-                          const SnackBar(
-                            content: Text('Исполнитель отклонён'),
-                          ),
-                        );
-                      } catch (_) {
-                        messenger.showSnackBar(
-                          SnackBar(
-                            content: Text(store.errorMessage ?? 'Ошибка'),
-                            backgroundColor: AppColors.error,
-                          ),
-                        );
-                      }
-                    },
-                  ),
-                ],
+                ),
               ),
+
+              const SizedBox(width: 8),
+
+              // Actions — only for pending/unknown
+              if (isPending)
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      tooltip: 'Принять',
+                      icon: const Icon(
+                        Icons.check_circle_outline,
+                        color: AppColors.success,
+                        size: 26,
+                      ),
+                      onPressed: () async {
+                        final messenger = ScaffoldMessenger.of(context);
+                        try {
+                          await store.approveExecutor(
+                            cardId: cardId,
+                            executorId: executor.id,
+                          );
+                          await store.loadExecutors(cardId);
+                          messenger.showSnackBar(
+                            const SnackBar(
+                              content: Text('Исполнитель принят'),
+                            ),
+                          );
+                        } catch (_) {
+                          messenger.showSnackBar(
+                            SnackBar(
+                              content: Text(store.errorMessage ?? 'Ошибка'),
+                              backgroundColor: AppColors.error,
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                    IconButton(
+                      tooltip: 'Отклонить',
+                      icon: Icon(
+                        Icons.cancel_outlined,
+                        color: cs.error,
+                        size: 26,
+                      ),
+                      onPressed: () async {
+                        final messenger = ScaffoldMessenger.of(context);
+                        try {
+                          await store.rejectExecutor(
+                            cardId: cardId,
+                            executorId: executor.id,
+                          );
+                          await store.loadExecutors(cardId);
+                          messenger.showSnackBar(
+                            const SnackBar(
+                              content: Text('Исполнитель отклонён'),
+                            ),
+                          );
+                        } catch (_) {
+                          messenger.showSnackBar(
+                            SnackBar(
+                              content: Text(store.errorMessage ?? 'Ошибка'),
+                              backgroundColor: AppColors.error,
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                  ],
+                ),
             ],
           ),
         ),

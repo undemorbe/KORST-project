@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
+import 'package:go_router/go_router.dart';
 import 'package:get_it/get_it.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/widgets/glass.dart';
@@ -83,7 +84,9 @@ class _ProfileBannerState extends State<ProfileBanner> {
               : null,
         );
 
-        return GlassCard(
+        return GestureDetector(
+          onTap: () => context.push('/user-profile/me'),
+          child: GlassCard(
           margin: EdgeInsets.zero,
           child: Padding(
             padding: const EdgeInsets.all(18),
@@ -139,6 +142,7 @@ class _ProfileBannerState extends State<ProfileBanner> {
               ],
             ),
           ),
+        ),
         );
       },
     );

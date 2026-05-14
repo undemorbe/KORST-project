@@ -145,6 +145,22 @@ mixin _$ServiceStore on _ServiceStore, Store {
     });
   }
 
+  late final _$repliedCardIdsAtom =
+      Atom(name: '_ServiceStore.repliedCardIds', context: context);
+
+  @override
+  ObservableSet<String> get repliedCardIds {
+    _$repliedCardIdsAtom.reportRead();
+    return super.repliedCardIds;
+  }
+
+  @override
+  set repliedCardIds(ObservableSet<String> value) {
+    _$repliedCardIdsAtom.reportWrite(value, super.repliedCardIds, () {
+      super.repliedCardIds = value;
+    });
+  }
+
   late final _$searchQueryAtom =
       Atom(name: '_ServiceStore.searchQuery', context: context);
 
@@ -431,6 +447,7 @@ replyError: ${replyError},
 executors: ${executors},
 isLoadingExecutors: ${isLoadingExecutors},
 executorsError: ${executorsError},
+repliedCardIds: ${repliedCardIds},
 searchQuery: ${searchQuery},
 selectedCategory: ${selectedCategory},
 nextKey: ${nextKey},

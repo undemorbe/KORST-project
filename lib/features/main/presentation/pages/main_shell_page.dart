@@ -4,7 +4,6 @@ import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobx/mobx.dart';
 import '../../../../core/di/injection_container.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/glass.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../messenger/presentation/store/messenger_store.dart';
@@ -84,6 +83,7 @@ class _MainShellPageState extends State<MainShellPage>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -94,8 +94,8 @@ class _MainShellPageState extends State<MainShellPage>
         child: Glass(
           borderRadius: BorderRadius.circular(12),
           blurSigma: 20,
-          color: AppColors.surface.withValues(alpha: 0.94),
-          borderColor: AppColors.border,
+          color: cs.surface.withValues(alpha: 0.94),
+          borderColor: cs.outline,
           child: SizedBox(
             height: 68,
             child: Observer(
@@ -106,7 +106,7 @@ class _MainShellPageState extends State<MainShellPage>
                   onDestinationSelected: _goBranch,
                   backgroundColor: Colors.transparent,
                   elevation: 0,
-                  indicatorColor: AppColors.primary.withValues(alpha: 0.15),
+                  indicatorColor: cs.primary.withValues(alpha: 0.15),
                   indicatorShape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -131,8 +131,8 @@ class _MainShellPageState extends State<MainShellPage>
                           unread > 99 ? '99+' : '$unread',
                           style: const TextStyle(fontSize: 10),
                         ),
-                        backgroundColor: AppColors.primary,
-                        textColor: AppColors.onPrimary,
+                        backgroundColor: cs.primary,
+                        textColor: cs.onPrimary,
                         child: const Icon(Icons.chat_bubble_outline, size: 24),
                       ),
                       selectedIcon: Badge(
@@ -141,8 +141,8 @@ class _MainShellPageState extends State<MainShellPage>
                           unread > 99 ? '99+' : '$unread',
                           style: const TextStyle(fontSize: 10),
                         ),
-                        backgroundColor: AppColors.primary,
-                        textColor: AppColors.onPrimary,
+                        backgroundColor: cs.primary,
+                        textColor: cs.onPrimary,
                         child: const Icon(Icons.chat_bubble_rounded, size: 24),
                       ),
                       label: l10n.navChats,
@@ -208,6 +208,7 @@ class _IncomingBannerState extends State<_IncomingBanner>
   @override
   Widget build(BuildContext context) {
     final topPad = MediaQuery.of(context).padding.top;
+    final cs = Theme.of(context).colorScheme;
     return Positioned(
       top: topPad + 8,
       left: 16,
@@ -223,51 +224,49 @@ class _IncomingBannerState extends State<_IncomingBanner>
               child: Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                decoration: const BoxDecoration(
-                  color: AppColors.surfaceCard,
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                decoration: BoxDecoration(
+                  color: cs.surfaceContainerHighest,
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
                   border: Border(
-                    left: BorderSide(color: AppColors.primary, width: 4),
-                    top: BorderSide(color: AppColors.border),
-                    right: BorderSide(color: AppColors.border),
-                    bottom: BorderSide(color: AppColors.border),
+                    left: BorderSide(color: cs.primary, width: 4),
+                    top: BorderSide(color: cs.outlineVariant),
+                    right: BorderSide(color: cs.outlineVariant),
+                    bottom: BorderSide(color: cs.outlineVariant),
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.goldGlow,
+                      color: cs.shadow.withValues(alpha: 0.18),
                       blurRadius: 16,
-                      spreadRadius: 2,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
                 child: Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.chat_bubble_rounded,
-                      color: AppColors.primary,
+                      color: cs.primary,
                       size: 20,
                     ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
                             widget.info.senderName,
-                            style: const TextStyle(
-                              color: AppColors.primaryLight,
+                            style: TextStyle(
+                              color: cs.onSurface,
                               fontWeight: FontWeight.w700,
-                              fontSize: 13,
+                              fontSize: 15,
                             ),
                             maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
                           if (widget.info.cardName.isNotEmpty)
                             Text(
                               widget.info.cardName,
-                              style: const TextStyle(
-                                color: AppColors.muted,
+                              style: TextStyle(
+                                color: cs.onSurfaceVariant,
                                 fontSize: 11,
                               ),
                               maxLines: 1,
@@ -275,8 +274,8 @@ class _IncomingBannerState extends State<_IncomingBanner>
                             ),
                           Text(
                             widget.info.text,
-                            style: const TextStyle(
-                              color: AppColors.onSurface,
+                            style: TextStyle(
+                              color: cs.onSurfaceVariant,
                               fontSize: 12,
                             ),
                             maxLines: 1,
@@ -287,9 +286,9 @@ class _IncomingBannerState extends State<_IncomingBanner>
                     ),
                     IconButton(
                       onPressed: widget.onDismiss,
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.close,
-                        color: AppColors.muted,
+                        color: cs.onSurfaceVariant,
                         size: 18,
                       ),
                       padding: EdgeInsets.zero,

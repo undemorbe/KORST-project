@@ -1,6 +1,5 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
 
 class Glass extends StatelessWidget {
   final Widget child;
@@ -24,8 +23,9 @@ class Glass extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final base = color ?? AppColors.surface.withValues(alpha: opacity);
-    final border = borderColor ?? AppColors.border;
+    final cs = Theme.of(context).colorScheme;
+    final base = color ?? cs.surface.withValues(alpha: opacity);
+    final border = borderColor ?? cs.outline;
 
     return ClipRRect(
       borderRadius: borderRadius,
@@ -61,6 +61,8 @@ class GlassCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final glow = cs.primary.withValues(alpha: 0.07);
     Widget content = child ?? const SizedBox.shrink();
     const radius = BorderRadius.all(Radius.circular(8));
 
@@ -76,20 +78,16 @@ class GlassCard extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              color ?? AppColors.surfaceCard,
+              color ?? cs.surface,
               color != null
                   ? color!.withValues(alpha: 0.85)
-                  : AppColors.surfaceCardEnd,
+                  : cs.surfaceContainerHighest,
             ],
           ),
           borderRadius: radius,
-          border: Border.all(color: AppColors.border),
-          boxShadow: const [
-            BoxShadow(
-              color: AppColors.goldGlow,
-              blurRadius: 16,
-              spreadRadius: 0,
-            ),
+          border: Border.all(color: cs.outline),
+          boxShadow: [
+            BoxShadow(color: glow, blurRadius: 16, spreadRadius: 0),
           ],
         ),
         child: content,
@@ -122,7 +120,8 @@ class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg = backgroundColor ?? AppColors.surface.withValues(alpha: 0.88);
+    final cs = Theme.of(context).colorScheme;
+    final bg = backgroundColor ?? cs.surface.withValues(alpha: 0.88);
 
     return ClipRect(
       child: BackdropFilter(
@@ -130,8 +129,8 @@ class GlassAppBar extends StatelessWidget implements PreferredSizeWidget {
         child: DecoratedBox(
           decoration: BoxDecoration(
             color: bg,
-            border: const Border(
-              bottom: BorderSide(color: AppColors.borderSubtle),
+            border: Border(
+              bottom: BorderSide(color: cs.outlineVariant),
             ),
           ),
           child: AppBar(

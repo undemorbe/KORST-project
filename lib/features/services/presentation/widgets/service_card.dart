@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter_mobx/flutter_mobx.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../domain/entities/service_entity.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/store/auth_store.dart';
+import '../../../messenger/domain/entities/chat_entity.dart';
+import '../../../messenger/presentation/store/messenger_store.dart';
 import '../store/service_store.dart';
 
 class ServiceCard extends StatefulWidget {
@@ -62,9 +66,27 @@ class _ServiceCardState extends State<ServiceCard> {
   bool get _isMyCard {
     final me = sl<AuthStore>().userProfile;
     final author = widget.service.author;
-    return author != null &&
-        author.uid.isNotEmpty &&
-        author.uid == (me?.uid ?? '');
+    if (author == null || me == null) return false;
+
+    // UID match
+    if (author.uid.isNotEmpty && me.uid.isNotEmpty && author.uid == me.uid) {
+      return true;
+    }
+
+    // Phone fallback (server may return phone as UID)
+    final cleanAuthor = author.phone.replaceAll(RegExp(r'\D'), '');
+    final cleanMe = me.phone.replaceAll(RegExp(r'\D'), '');
+    final cleanAuthorUid = author.uid.replaceAll(RegExp(r'\D'), '');
+    final cleanMeUid = me.uid.replaceAll(RegExp(r'\D'), '');
+
+    if (cleanAuthor.length >= 7 && cleanMe.length >= 7 &&
+        cleanAuthor == cleanMe) { return true; }
+    if (cleanAuthorUid.length >= 7 && cleanMe.length >= 7 &&
+        cleanAuthorUid == cleanMe) { return true; }
+    if (cleanAuthor.length >= 7 && cleanMeUid.length >= 7 &&
+        cleanAuthor == cleanMeUid) { return true; }
+
+    return false;
   }
 
   @override
@@ -81,22 +103,23 @@ class _ServiceCardState extends State<ServiceCard> {
     final status = widget.service.status;
     final rating = _extractRating();
 
+    final cs = Theme.of(context).colorScheme;
     return _PressableCard(
       onTap: widget.onTap,
       child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           child: DecoratedBox(
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
+              gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [AppColors.surfaceCard, AppColors.surfaceCardEnd],
+                colors: [cs.surface, cs.surfaceContainerHighest],
               ),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.border),
-              boxShadow: const [
+              border: Border.all(color: cs.outline),
+              boxShadow: [
                 BoxShadow(
-                  color: AppColors.goldGlow,
+                  color: cs.primary.withValues(alpha: 0.07),
                   blurRadius: 16,
                   spreadRadius: 0,
                 ),
@@ -140,7 +163,7 @@ class _ServiceCardState extends State<ServiceCard> {
                               style: GoogleFonts.cinzel(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w700,
-                                color: AppColors.onBackground,
+                                color: cs.onSurface,
                                 letterSpacing: 0.04,
                                 height: 1.25,
                               ),
@@ -161,8 +184,8 @@ class _ServiceCardState extends State<ServiceCard> {
                                     : Icons.favorite_border,
                                 size: 20,
                                 color: widget.isFavorite
-                                    ? AppColors.error
-                                    : AppColors.mutedDark,
+                                    ? cs.error
+                                    : cs.surfaceContainerHighest,
                               ),
                               onPressed: widget.onFavoriteToggle,
                             ),
@@ -175,9 +198,9 @@ class _ServiceCardState extends State<ServiceCard> {
                         const SizedBox(height: 4),
                         Text(
                           widget.service.description.trim(),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: AppColors.muted,
+                            color: cs.onSurfaceVariant,
                             height: 1.35,
                           ),
                           maxLines: 2,
@@ -196,7 +219,7 @@ class _ServiceCardState extends State<ServiceCard> {
                             style: GoogleFonts.cinzel(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
-                              color: AppColors.primaryLight,
+                              color: cs.primary,
                             ),
                           ),
                           const Spacer(),
@@ -228,7 +251,7 @@ class _ServiceCardState extends State<ServiceCard> {
                         children: [
                           CircleAvatar(
                             radius: 14,
-                            backgroundColor: AppColors.darkSurfaceVariant,
+                            backgroundColor: cs.surfaceContainerHighest,
                             backgroundImage: (authorPhotoUrl != null &&
                                     authorPhotoUrl.isNotEmpty)
                                 ? CachedNetworkImageProvider(authorPhotoUrl)
@@ -237,8 +260,8 @@ class _ServiceCardState extends State<ServiceCard> {
                                     authorPhotoUrl.isEmpty)
                                 ? Text(
                                     avatarLetter,
-                                    style: const TextStyle(
-                                      color: AppColors.primary,
+                                    style: TextStyle(
+                                      color: cs.primary,
                                       fontWeight: FontWeight.w700,
                                       fontSize: 12,
                                     ),
@@ -251,50 +274,73 @@ class _ServiceCardState extends State<ServiceCard> {
                               authorName,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
-                                color: AppColors.onSurface,
+                                color: cs.onSurface,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
                           if (rating > 0) ...[
-                            const Icon(Icons.star_rounded,
-                                size: 14, color: AppColors.ratingStar),
+                            Icon(Icons.star_rounded,
+                                size: 14, color: cs.primary),
                             const SizedBox(width: 2),
                             Text(
                               rating.toStringAsFixed(1),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11,
-                                color: AppColors.muted,
+                                color: cs.onSurfaceVariant,
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
                           ],
                           const SizedBox(width: 4),
-                          const Icon(Icons.chevron_right,
-                              color: AppColors.mutedDark, size: 18),
+                          Icon(Icons.chevron_right,
+                              color: cs.surfaceContainerHighest, size: 18),
                         ],
                       ),
 
-                      // Reply button — visible when active + not my card
-                      if (!_isMyCard && (status == null || status == 'active'))
-                        Padding(
-                          padding: const EdgeInsets.only(top: 12),
-                          child: SizedBox(
-                            width: double.infinity,
-                            child: OutlinedButton(
-                              onPressed: () => _onReply(context),
-                              child: Text(
-                                'Откликнуться',
-                                style: GoogleFonts.cinzel(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  letterSpacing: 0.06,
-                                ),
-                              ),
-                            ),
-                          ),
+                      // Reply / chat button — not my card
+                      if (!_isMyCard)
+                        Observer(
+                          builder: (_) {
+                            final store = sl<ServiceStore>();
+                            final replied = store.hasReplied(widget.service.id);
+                            final canReply = status == null || status == 'active';
+
+                            // Nothing to show if not replied and can't reply
+                            if (!replied && !canReply) return const SizedBox.shrink();
+
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: replied
+                                  ? SizedBox(
+                                      width: double.infinity,
+                                      child: OutlinedButton.icon(
+                                        onPressed: () => _openChat(context),
+                                        icon: const Icon(
+                                          Icons.chat_bubble_outline,
+                                          size: 16,
+                                        ),
+                                        label: const Text('Перейти в чат'),
+                                      ),
+                                    )
+                                  : SizedBox(
+                                      width: double.infinity,
+                                      child: OutlinedButton(
+                                        onPressed: () => _onReply(context),
+                                        child: Text(
+                                          'Откликнуться',
+                                          style: GoogleFonts.cinzel(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                            letterSpacing: 0.06,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                            );
+                          },
                         ),
                     ],
                   ),
@@ -308,17 +354,86 @@ class _ServiceCardState extends State<ServiceCard> {
 
   Future<void> _onReply(BuildContext context) async {
     final store = sl<ServiceStore>();
-    final messenger = ScaffoldMessenger.of(context);
-    await store.createReply(widget.service.id);
-    if (!mounted) return;
-    final err = store.replyError;
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          err == null ? 'Отклик отправлен' : 'Ошибка: $err',
-        ),
-      ),
+    final nav = Navigator.of(context);
+    final snackbar = ScaffoldMessenger.of(context);
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
     );
+    // Wait one frame so the dialog route is fully pushed before any pop.
+    await WidgetsBinding.instance.endOfFrame;
+    try {
+      await store.createReply(widget.service.id);
+      if (!context.mounted) return;
+      await _openChat(context, nav: nav, snackbar: snackbar);
+    } catch (_) {
+      if (!mounted) return;
+      _safePopDialog(nav);
+      final forbidden = store.replyForbidden;
+      snackbar.showSnackBar(SnackBar(
+        content: Text(forbidden
+            ? 'Вы не можете откликнуться на эту задачу'
+            : 'Ошибка отклика'),
+      ));
+    }
+  }
+
+  Future<void> _openChat(
+    BuildContext context, {
+    NavigatorState? nav,
+    ScaffoldMessengerState? snackbar,
+  }) async {
+    final messengerStore = sl<MessengerStore>();
+    final author = widget.service.author;
+    if (author == null || author.uid.isEmpty) return;
+
+    final navigator = nav ?? Navigator.of(context);
+    final messenger = snackbar ?? ScaffoldMessenger.of(context);
+
+    final dialogAlreadyOpen = navigator.canPop();
+    if (!dialogAlreadyOpen) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator()),
+      );
+      await WidgetsBinding.instance.endOfFrame;
+    }
+
+    try {
+      await messengerStore.createChat(
+        userId: author.uid,
+        cardId: widget.service.id,
+      );
+      await messengerStore.loadChats();
+
+      ChatEntity? chat;
+      try {
+        chat = messengerStore.customerChats
+            .firstWhere((c) => c.card.id == widget.service.id);
+      } catch (_) {
+        try {
+          chat = messengerStore.merchantChats
+              .firstWhere((c) => c.card.id == widget.service.id);
+        } catch (_) {}
+      }
+
+      if (chat == null || !mounted) return;
+      messengerStore.selectChat(chat);
+      _safePopDialog(navigator);
+      if (context.mounted) context.push('/chat', extra: messengerStore);
+    } catch (e) {
+      if (!mounted) return;
+      _safePopDialog(navigator);
+      messenger.showSnackBar(SnackBar(content: Text('Ошибка чата: $e')));
+    }
+  }
+
+  void _safePopDialog(NavigatorState nav) {
+    try {
+      if (nav.canPop()) nav.pop();
+    } catch (_) {}
   }
 }
 
@@ -371,18 +486,19 @@ class _Tag extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1A09),
+        color: cs.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.borderSubtle),
+        border: Border.all(color: cs.outlineVariant),
       ),
       child: Text(
         label,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 10,
-          color: AppColors.muted,
+          color: cs.onSurfaceVariant,
           fontWeight: FontWeight.w500,
         ),
       ),
@@ -396,19 +512,20 @@ class _TypeBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.12),
+        color: cs.primary.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: cs.outline),
       ),
       child: Text(
         type,
         style: GoogleFonts.cinzel(
           fontSize: 9,
           fontWeight: FontWeight.w600,
-          color: AppColors.primary,
+          color: cs.primary,
           letterSpacing: 0.08,
         ),
       ),
@@ -422,7 +539,8 @@ class _StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = _resolveColor(status);
+    final cs = Theme.of(context).colorScheme;
+    final color = _resolveColor(status, cs);
     final label = _resolveLabel(status);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -442,13 +560,13 @@ class _StatusBadge extends StatelessWidget {
     );
   }
 
-  static Color _resolveColor(String status) {
-    if (status == 'active') return AppColors.primary;
+  static Color _resolveColor(String status, ColorScheme cs) {
+    if (status == 'active') return cs.primary;
     if (status == 'in-progress') return AppColors.warning;
     if (status == 'completed') return AppColors.success;
-    if (status == 'closed') return AppColors.error;
-    if (status == 'closed-with-bad-result') return AppColors.error;
-    return AppColors.muted;
+    if (status == 'closed') return cs.error;
+    if (status == 'closed-with-bad-result') return cs.error;
+    return cs.onSurfaceVariant;
   }
 
   static String _resolveLabel(String status) {

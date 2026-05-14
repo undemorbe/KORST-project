@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:mobx/mobx.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/glass.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:go_router/go_router.dart';
@@ -80,6 +79,7 @@ class _ServicesHomePageState extends State<ServicesHomePage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -120,8 +120,8 @@ class _ServicesHomePageState extends State<ServicesHomePage> {
         ),
       ),
       body: RefreshIndicator(
-        color: AppColors.primary,
-        backgroundColor: AppColors.surfaceCard,
+        color: cs.primary,
+        backgroundColor: cs.surface,
         onRefresh: _store.loadServices,
         child: CustomScrollView(
           controller: _scrollController,
@@ -187,7 +187,7 @@ class _ServicesHomePageState extends State<ServicesHomePage> {
               pinned: false,
               delegate: _CategoryChipsDelegate(
                 child: Container(
-                  color: AppColors.background,
+                  color: Theme.of(context).scaffoldBackgroundColor,
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
@@ -324,7 +324,8 @@ class _ServicesHomePageState extends State<ServicesHomePage> {
     ServiceCategory? category,
   ) {
     return Observer(
-      builder: (_) {
+      builder: (ctx) {
+        final cs = Theme.of(ctx).colorScheme;
         final isSelected = _store.selectedCategory == category;
         return GestureDetector(
           onTap: () => _store.setCategory(isSelected ? null : category),
@@ -333,11 +334,11 @@ class _ServicesHomePageState extends State<ServicesHomePage> {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
             decoration: BoxDecoration(
               color: isSelected
-                  ? AppColors.primary.withValues(alpha: 0.15)
+                  ? cs.primary.withValues(alpha: 0.15)
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: isSelected ? AppColors.primary : AppColors.borderSubtle,
+                color: isSelected ? cs.primary : cs.outlineVariant,
               ),
             ),
             child: Text(
@@ -345,7 +346,7 @@ class _ServicesHomePageState extends State<ServicesHomePage> {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                color: isSelected ? AppColors.primaryLight : AppColors.onSurface,
+                color: isSelected ? cs.primary : cs.onSurface,
                 letterSpacing: 0.02,
               ),
             ),

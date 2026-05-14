@@ -1,3 +1,5 @@
+import '../../../../core/api/api_constants.dart';
+
 class MessageEntity {
   final String id;
   final String authorId;
@@ -34,15 +36,29 @@ class MessageEntity {
   }
 
   factory MessageEntity.fromJson(Map<String, dynamic> json) {
+    String? normalizeImageUrl(dynamic v) {
+      final raw = v is String ? v.trim() : '';
+      if (raw.isEmpty) return null;
+      if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
+      // Relative URL — use server root, not /api/ sub-path
+      final base = Uri.parse(ApiConstants.baseUrl);
+      final root = '${base.scheme}://${base.host}';
+      final path = raw.startsWith('/') ? raw : '/$raw';
+      return '$root$path';
+    }
+
+    final rawImageUrl =
+        json['imageURL'] as String? ??
+        json['image-url'] as String? ??
+        json['imageUrl'] as String? ??
+        json['image_url'] as String?;
+
     return MessageEntity(
       id: json['id'] as String,
       authorId:
           json['author-id'] as String? ?? json['authorId'] as String? ?? '',
       text: json['text'] as String? ?? '',
-      imageUrl:
-          json['imageURL'] as String? ??
-          json['image-url'] as String? ??
-          json['imageUrl'] as String?,
+      imageUrl: normalizeImageUrl(rawImageUrl),
       isSeen: json['is-seen'] as bool? ?? json['isSeen'] as bool?,
       created: json['created'] != null
           ? DateTime.parse(json['created'] as String)

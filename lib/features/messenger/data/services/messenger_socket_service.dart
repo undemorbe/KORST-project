@@ -105,7 +105,6 @@ class MessengerSocketService with WidgetsBindingObserver implements MessengerSer
       _channel = IOWebSocketChannel.connect(
         uri,
         headers: headers,
-        pingInterval: const Duration(seconds: 30),
         connectTimeout: const Duration(seconds: 8),
       );
       debugPrint('WebSocket: Connection initiated, waiting for ready state...');
@@ -151,7 +150,7 @@ class MessengerSocketService with WidgetsBindingObserver implements MessengerSer
       query.putIfAbsent(ApiConstants.headerUserId, () => userId);
     }
 
-    return uri.replace(queryParameters: query);
+    return uri;
   }
 
   void _handleRawEvent(dynamic raw) {

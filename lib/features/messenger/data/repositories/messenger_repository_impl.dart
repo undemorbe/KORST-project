@@ -266,20 +266,33 @@ class MessengerRepositoryImpl implements MessengerRepository {
     );
   }
 
+  /// Converts relative image URL to absolute using server root (not /api/ path).
+  static String? _normalizeImageUrl(String? raw) {
+    if (raw == null || raw.trim().isEmpty) return null;
+    final url = raw.trim();
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    final base = Uri.parse(ApiConstants.baseUrl);
+    final root = '${base.scheme}://${base.host}';
+    final path = url.startsWith('/') ? url : '/$url';
+    return '$root$path';
+  }
+
   MessageEntity? _mapMessage(dynamic raw) {
     if (raw is! Map) return null;
     final json = Map<String, dynamic>.from(raw);
     final created = json['created'] is String
         ? DateTime.parse(json['created'] as String)
         : DateTime.now();
+    final rawImageUrl =
+        json['imageURL'] as String? ??
+        json['image-url'] as String? ??
+        json['imageUrl'] as String? ??
+        json['image_url'] as String?;
     return MessageEntity(
       id: (json['id'] as String?) ?? '',
       authorId: (json['author-id'] as String?) ?? '',
       text: (json['text'] as String?) ?? '',
-      imageUrl:
-          json['imageURL'] as String? ??
-          json['image-url'] as String? ??
-          json['imageUrl'] as String?,
+      imageUrl: _normalizeImageUrl(rawImageUrl),
       isSeen: json['is-seen'] as bool? ?? json['isSeen'] as bool?,
       created: created,
     );

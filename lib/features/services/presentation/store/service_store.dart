@@ -43,6 +43,9 @@ abstract class _ServiceStore with Store {
   String? executorsError;
 
   @observable
+  ObservableSet<String> repliedCardIds = ObservableSet<String>();
+
+  @observable
   String searchQuery = '';
 
   @observable
@@ -223,13 +226,20 @@ abstract class _ServiceStore with Store {
     }
   }
 
+  bool hasReplied(String cardId) => repliedCardIds.contains(cardId);
+
+  bool get replyForbidden => replyError != null &&
+      (replyError!.contains('403') || replyError!.contains('FORBIDDEN'));
+
   @action
   Future<void> createReply(String cardId) async {
     replyError = null;
     try {
       await _serviceRepository.createReply(cardId);
+      repliedCardIds.add(cardId);
     } catch (e) {
       replyError = e.toString();
+      rethrow;
     }
   }
 

@@ -245,67 +245,6 @@ query: some string - фраза, по которой производится п
 Response аналогичен /get-cards
 
 
-Контракт для создания отклика на объявление
-
-POST …/cards/create-reply
-
-Request:
-{
-    "card-id": "rihgui4bwg"
-}
-
-
-Response:
-{}
-
-
-Контракт для утверждения исполнителя на карточку
-
-PUT …/cards/approve-executor
-
-Request:
-{
-    "card-id": "rihgui4bwg",
-    "executor-id": "rwgrwwrht"
-}
-
-Response:
-{}
-
-
-Контракт для отклонения исполнителя для карточки
-
-PUT …/cards/reject-executor
-
-Request:
-{
-    "card-id": "rihgui4bwg",
-    "executor-id": "rwgrwwrht"
-}
-
-Response:
-{}
-
-
-Контракт для закрытия карточки (только после назначения исполнителя)
-
-Виды статусов:
-completed - карточка выполнена и закрывается
-closed-with-bad-result - закрыть карточку, не помечается как выполненное для исполнителя 
-reopen-with-bad-result - переоткрытие карточки, не помечается как выполненное для исполнителя
-reopen-with-good-result - переоткрытие карточки, помечается как выполненное для исполнителя
-
-PUT …/cards/close
-
-Request:
-{
-    "card-id": "rihgui4bwg",
-    "status": "completed"
-}
-
-Response: 
-{}
-
 
 
 Пользователь
@@ -445,7 +384,14 @@ Response:
             "id": "er'rnt;bwjn'trb",
             ...
         }
-    ]
+    ],
+    // Добавлена статистика по откликами пользователя
+    "replies-info": {
+        "total": 7, // Всего откликов
+        "accepted": 5, // Утвержденные автором объявления отклики
+        "completed": 2, // Завершенные отклики
+        "failed": 0 // Проваленные отклики
+    }
 }.
 
 Контракт для отображения отзывов на пользователя
@@ -649,21 +595,104 @@ Response:
 
 
 
+Отклики на объявления
 
 
+Контракт для создания отклика на объявление
+
+POST …/replies/create-reply
+
+Request:
+{
+    "card-id": "rihgui4bwg"
+}
+
+
+Response:
+{}
+
+
+Контракт для утверждения исполнителя на карточку
+
+PUT …/replies/approve-executor
+
+Request:
+{
+    "card-id": "rihgui4bwg",
+    "executor-id": "rwgrwwrht"
+}
+
+Response:
+{}
+
+
+Контракт для отклонения исполнителя для карточки
+
+PUT …/replies/reject-executor
+
+Request:
+{
+    "card-id": "rihgui4bwg",
+    "executor-id": "rwgrwwrht"
+}
+
+Response:
+{}
+
+
+Контракт для закрытия карточки (только после назначения исполнителя)
+
+Виды статусов:
+completed - карточка выполнена и закрывается
+closed-with-bad-result - закрыть карточку, не помечается как выполненное для исполнителя 
+reopen-with-bad-result - переоткрытие карточки, не помечается как выполненное для исполнителя
+reopen-with-good-result - переоткрытие карточки, помечается как выполненное для исполнителя
+
+PUT …/replies/close
+
+Request:
+{
+    "card-id": "rihgui4bwg",
+    "status": "completed"
+}
+
+Response: 
+{}
+
+
+
+Контракт для получения исполнителей для карточки
+
+GET …/replies/executors
+
+Request (Params):
+card-id: 848a7em9fk3n8kif93
+
+Response:
+{
+    "executors": [
+        {
+            "id": "kefknbkwnkmnwk",
+            "name": "Олег",
+             "surname": "Олегов",
+            "image-url": "https://...",
+            "rating": 4.5
+        },Я 
+        ...
+    ]
+}
 
 Рекламные баннеры
 
 Контракт для размещения рекламного баннера
 
-POST …/banners/post-banner
+POST …/banners/save-banner
 
 ! Content-Type: multipart/form-data
 
 Request:
 image: <file>
 link: https://…
-name: <Название баннера>  - название баннера
 company: <Название компании> - просто формальность, чтобы в теории можно было определять баннеры компании
 
 Response: 
@@ -684,115 +713,49 @@ Request:
 count: 5 - количество баннеров
 
 Response:
-
-
-
-
-WebSocket мессенджер
-
-Подключение
-
-WS …/messenger/ws
-
-! Токен передаётся в header и в query-параметре:
-  Header: access-token: <token>
-  Query:  ?access-token=<token>
-
-Соединение устанавливается при входе пользователя в приложение и держится всё время сессии.
-Переподключение — с экспоненциальной задержкой (1, 2, 4, 8, 16 … 30 сек).
-
-
-Формат входящего события — новое сообщение в чате
-
 {
-    "chat-id": "848a7em9fk3n8kif93",
-    "message": {
-        "id": "vreoubeoor39vr",
-        "author-id": "frjb0ej43v3",
-        "text": "Привет",               // может отсутствовать, если только изображение
-        "imageURL": "https://...",       // присутствует только если есть картинка
-        "created": "2026-01-01T00:00:00Z",
-        "is-seen": false                 // только для исходящих сообщений (автор = текущий пользователь)
-    }
-}
-
-Формат входящего события — обновление чата (например, первое сообщение / смена last-message)
-
-{
-    "chat-id": "848a7em9fk3n8kif93",
-    "chat": {
-        "id": "848a7em9fk3n8kif93",
-        "user": {
-            "id": "vnedbrtednf",
-            "name": "Олег",
-            "surname": "Олегов",
-            "image-url": "http://..."
-        },
-        "last-message": {
-            "id": "ernvrebvsj,r",
-            "author-id": "ernvrebvsj,r",
-            "text": "Привет",
-            "created": "2026-03-16T14:32:10Z",
-            "is-seen": false
-        },
-        "card": {
-            "id": "ireoenfdnvdsrb",
-            "name": "Название",
-            "image-url": "http://..."
-        }
-    }
-    
-}
-Контракт для получения исполнителей для карточки
-
-
-
-GET …/replies/executors
-
-
-
-Request (Params):
-
-card-id: 848a7em9fk3n8kif93
-
-
-
-Response:
-
-{
-
-    "executors": [
-
+    "banners": [
         {
-
-            "id": "kefknbkwnkmnwk",
-
-            "name": "Олег",
-
-             "surname": "Олегов",
-
+            "company": "Какая-то компания",
             "image-url": "https://...",
-
-            "rating": 4.5
-
+            "link": "https://..."
         },
-
         ...
-
     ]
-
 }
 
 
 
-!! Поле data — допустимая обёртка. Если payload приходит внутри data, клиент разворачивает его автоматически:
 
+WebSocket
+
+WebSocket работает по следующему эндпоинту:
+
+GET  …/messenger/websocket
+
+В запросе нужно передавать только access-token в Header
+
+Тебе нужно сделать свой сокет. Работает это примерно так:
+
+Ты делаешь запрос по этому эндпоинту, и вместо того, чтобы прислать что-то в ответ, открывается канал по этому адресу. На него тебе будут приходить сообщения от пользователей.
+
+Если надо будет, могу дополнить еще методами. Например, проверку, работает ли канал или он благополучно сдох.
+
+
+
+Формат сообщения, которое будет поступать на канал:
 {
-    "chat-id": "848a7em9fk3n8kif93",
-    "data": {
-        "message": { ... }   // или "chat": { ... }
-    }
+    "id": "vreoubeoor39vr",
+    "chat-id": "grneuecnwcgbw",
+    "author-id": "frjb0ej43v3",
+    "text": "Привет", // может отсутствовать, если есть только изображение
+    "imageURL": "https://..", // Присутствует только если есть картинка
+    "created": "2026-01-02...",
+    "is-seen": false, // Для этого случая бесполезно, но пусть будет
 }
+
+
+
 
 Поведение клиента при получении события:
 - Если событие содержит message и chat-id совпадает с открытым чатом → вставить сообщение в начало списка (дедупликация по id)
@@ -804,3 +767,29 @@ Response:
 
 
 
+
+
+Android App Links (Universal Links)
+
+Для работы кликабельных ссылок из Telegram и других приложений бэкенд должен хостить:
+
+GET https://2839bc9a-d491-41f2-94d8-c3c98ffedc32.tunnel4.com/.well-known/assetlinks.json
+
+Response (Content-Type: application/json):
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.korst.app",
+      "sha256_cert_fingerprints": [
+        "92:94:0A:7F:41:FC:93:77:8A:A8:71:6B:D9:20:89:2B:A3:F7:6F:E6:71:E1:39:4F:5C:F1:01:2E:57:72:EE:C2"
+      ]
+    }
+  }
+]
+
+Статус: бэкенд задеплоил файл.
+Клиент: intent-filter с android:autoVerify="true" добавлен в AndroidManifest.xml.
+Паттерн ссылки: https://2839bc9a-d491-41f2-94d8-c3c98ffedc32.tunnel4.com/links/service/{id}
+При клике в Telegram → Android открывает приложение → GoRouter роутит на /service/:serviceId.

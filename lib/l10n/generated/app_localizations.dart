@@ -653,13 +653,13 @@ abstract class AppLocalizations {
   /// No description provided for @messagesAsBuyer.
   ///
   /// In en, this message translates to:
-  /// **'As Buyer'**
+  /// **'Как работник'**
   String get messagesAsBuyer;
 
   /// No description provided for @messagesAsSeller.
   ///
   /// In en, this message translates to:
-  /// **'As Seller'**
+  /// **'Как работодатель'**
   String get messagesAsSeller;
 
   /// No description provided for @messagesNoChatsBuyer.
@@ -1025,7 +1025,7 @@ abstract class AppLocalizations {
   /// No description provided for @findServicesNearby.
   ///
   /// In en, this message translates to:
-  /// **'Find the best beauty and health services near you'**
+  /// **'Find the best tasks and performers nearby!'**
   String get findServicesNearby;
 
   /// No description provided for @start.

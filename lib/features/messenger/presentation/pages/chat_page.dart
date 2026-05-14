@@ -1,5 +1,7 @@
+import 'package:korst/core/api/api_constants.dart';
+import 'package:korst/core/api/token_storage.dart';
+import 'package:korst/core/di/injection_container.dart';
 import 'package:korst/core/theme/animated_gradient_background.dart';
-import 'package:korst/core/theme/app_colors.dart';
 import 'package:korst/core/widgets/glass.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/gestures.dart';
@@ -26,13 +28,18 @@ class _ChatPageState extends State<ChatPage> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final ImagePicker _imagePicker = ImagePicker();
+  bool _showAllMessages = false;
 
   MessengerStore get _store => widget.store;
 
   @override
   void initState() {
     super.initState();
-    // Messages are already loaded when chat is selected
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(0);
+      }
+    });
   }
 
   @override
@@ -111,6 +118,16 @@ class _ChatPageState extends State<ChatPage> {
                       );
                     }
 
+                    final now = DateTime.now();
+                    final weekAgo = now.subtract(const Duration(days: 7));
+                    final allMsgs = _store.messages;
+                    final hasOlder = allMsgs.any((m) => m.created.isBefore(weekAgo));
+                    final filtered = _showAllMessages
+                        ? allMsgs.toList()
+                        : allMsgs.where((m) => !m.created.isBefore(weekAgo)).toList();
+                    final displayItems = _buildDisplayItems(filtered);
+                    final hasLoadMore = hasOlder && !_showAllMessages;
+
                     return ListView.builder(
                       controller: _scrollController,
                       reverse: true,
@@ -119,16 +136,34 @@ class _ChatPageState extends State<ChatPage> {
                             MediaQuery.of(context).padding.top +
                             kToolbarHeight +
                             16,
-                        bottom:
-                            120, // Increase padding so floating input doesn't cover last message
+                        bottom: 120,
                         left: 16,
                         right: 16,
                       ),
-                      itemCount: _store.messages.length,
+                      itemCount: displayItems.length + (hasLoadMore ? 1 : 0),
                       itemBuilder: (context, index) {
-                        final message = _store.messages[index];
-                        // Поскольку API /user/me не возвращает id, мы определяем свои сообщения
-                        // проверяя, что authorId не равен id собеседника (chat.user.id)
+                        // reverse: true → index 0 = bottom (newest), last index = top (oldest)
+                        if (hasLoadMore && index == displayItems.length) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Center(
+                              child: TextButton.icon(
+                                onPressed: () =>
+                                    setState(() => _showAllMessages = true),
+                                icon: const Icon(Icons.history, size: 16),
+                                label: const Text('Показать старые сообщения'),
+                              ),
+                            ),
+                          );
+                        }
+                        final item = displayItems[index];
+                        if (item is DateTime) {
+                          return _DateSeparatorWidget(
+                            label: _formatDateLabel(item),
+                          );
+                        }
+                        final message = item as MessageEntity;
+                        // authorId != chat.user.id means message is mine
                         final isMe = message.authorId != chat.user.id;
                         return _MessageBubble(
                           message: message,
@@ -151,22 +186,18 @@ class _ChatPageState extends State<ChatPage> {
 
   Widget _buildInputArea() {
     final l10n = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
+    final glow = cs.primary.withValues(alpha: 0.07);
 
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
         child: DecoratedBox(
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [AppColors.surfaceCard, Color(0xFF12100A)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: cs.surface,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.border),
-            boxShadow: const [
-              BoxShadow(color: AppColors.goldGlow, blurRadius: 12),
-            ],
+            border: Border.all(color: cs.outline),
+            boxShadow: [BoxShadow(color: glow, blurRadius: 12)],
           ),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
@@ -174,9 +205,9 @@ class _ChatPageState extends State<ChatPage> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 IconButton(
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.image_outlined,
-                    color: AppColors.muted,
+                    color: cs.onSurfaceVariant,
                     size: 22,
                   ),
                   onPressed: _pickAndSendImage,
@@ -187,7 +218,7 @@ class _ChatPageState extends State<ChatPage> {
                     decoration: InputDecoration(
                       hintText: l10n.messagesTypeHint,
                       filled: true,
-                      fillColor: AppColors.borderSubtle,
+                      fillColor: cs.surfaceContainerHighest,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
                         borderSide: BorderSide.none,
@@ -204,18 +235,15 @@ class _ChatPageState extends State<ChatPage> {
                         horizontal: 14,
                         vertical: 10,
                       ),
-                      hintStyle: const TextStyle(color: AppColors.muted),
+                      hintStyle: TextStyle(color: cs.onSurfaceVariant),
                     ),
-                    style: const TextStyle(
-                      color: AppColors.onBackground,
-                      fontSize: 15,
-                    ),
+                    style: TextStyle(color: cs.onSurface, fontSize: 15),
                     maxLines: 5,
                     minLines: 1,
                     textInputAction: TextInputAction.send,
                     onSubmitted: (_) => _sendMessage(),
                     onChanged: (text) {
-                      setState(() {}); // To toggle send button state
+                      setState(() {}); // toggle send button state
                     },
                   ),
                 ),
@@ -229,7 +257,9 @@ class _ChatPageState extends State<ChatPage> {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: hasText ? AppColors.primary : AppColors.mutedDark,
+                        color: hasText
+                            ? cs.primary
+                            : cs.surfaceContainerHighest,
                         shape: BoxShape.circle,
                       ),
                       child: IconButton(
@@ -247,8 +277,8 @@ class _ChatPageState extends State<ChatPage> {
                                 Icons.send_rounded,
                                 size: 18,
                                 color: hasText
-                                    ? const Color(0xFF080604)
-                                    : AppColors.muted,
+                                    ? cs.onPrimary
+                                    : cs.onSurfaceVariant,
                               ),
                         onPressed: hasText && !isSending ? _sendMessage : null,
                       ),
@@ -358,9 +388,84 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
+  static bool _sameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+
+  /// Builds display list: messages interleaved with DateTime separators.
+  /// Since ListView is reverse:true, items[0]=newest(bottom), last=oldest(top).
+  /// A DateTime item marks the start of a date group (renders above that group).
+  List<Object> _buildDisplayItems(List<MessageEntity> messages) {
+    final result = <Object>[];
+    for (int i = 0; i < messages.length; i++) {
+      result.add(messages[i]);
+      final isLastInGroup = i + 1 >= messages.length ||
+          !_sameDay(messages[i].created, messages[i + 1].created);
+      if (isLastInGroup) {
+        result.add(messages[i].created);
+      }
+    }
+    return result;
+  }
+
+  String _formatDateLabel(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final d = DateTime(date.year, date.month, date.day);
+    final diff = today.difference(d).inDays;
+    if (diff == 0) return 'Сегодня';
+    if (diff == 1) return 'Вчера';
+    if (diff < 7) {
+      const days = [
+        'Понедельник', 'Вторник', 'Среда', 'Четверг',
+        'Пятница', 'Суббота', 'Воскресенье',
+      ];
+      return days[date.weekday - 1];
+    }
+    const months = [
+      'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+      'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря',
+    ];
+    if (date.year == now.year) {
+      return '${date.day} ${months[date.month - 1]}';
+    }
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
+  }
+
   void _navigateToService(String cardId) {
     // Navigate to service details using go_router
     context.push('/service/$cardId');
+  }
+}
+
+class _DateSeparatorWidget extends StatelessWidget {
+  final String label;
+  const _DateSeparatorWidget({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.outlineVariant;
+    final textColor = Theme.of(context).colorScheme.onSurfaceVariant;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Row(
+        children: [
+          Expanded(child: Divider(color: color, thickness: 1)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                color: textColor,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+          Expanded(child: Divider(color: color, thickness: 1)),
+        ],
+      ),
+    );
   }
 }
 
@@ -379,9 +484,16 @@ class _MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final imageUrl = message.imageUrl;
     final hasImage = imageUrl != null && imageUrl.isNotEmpty;
     final hasText = message.text.trim().isNotEmpty;
+    final glow = cs.primary.withValues(alpha: 0.07);
+
+    final token = sl<TokenStorage>().getAccessToken();
+    final imageHeaders = token != null
+        ? {ApiConstants.headerAccessToken: token}
+        : const <String, String>{};
 
     final borderRadius = BorderRadius.only(
       topLeft: const Radius.circular(16),
@@ -399,21 +511,22 @@ class _MessageBubble extends StatelessWidget {
             : const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: isMe
             ? BoxDecoration(
-                gradient: const LinearGradient(
+                gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [AppColors.mutedDark, AppColors.surfaceCard],
+                  colors: [
+                    cs.surfaceContainerHighest,
+                    cs.surface,
+                  ],
                 ),
                 borderRadius: borderRadius,
-                border: Border.all(color: AppColors.border),
-                boxShadow: const [
-                  BoxShadow(color: AppColors.goldGlow, blurRadius: 8),
-                ],
+                border: Border.all(color: cs.outline),
+                boxShadow: [BoxShadow(color: glow, blurRadius: 8)],
               )
             : BoxDecoration(
-                color: AppColors.surfaceCard,
+                color: cs.surface,
                 borderRadius: borderRadius,
-                border: Border.all(color: AppColors.borderSubtle),
+                border: Border.all(color: cs.outlineVariant),
               ),
         constraints: BoxConstraints(
           maxWidth: MediaQuery.of(context).size.width * 0.75,
@@ -428,6 +541,7 @@ class _MessageBubble extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   child: CachedNetworkImage(
                     imageUrl: imageUrl,
+                    httpHeaders: imageHeaders,
                     width: double.infinity,
                     height: 200,
                     fit: BoxFit.cover,
@@ -447,10 +561,8 @@ class _MessageBubble extends StatelessWidget {
               if (hasText)
                 _buildTextWithLinks(
                   message.text,
-                  TextStyle(
-                    color: isMe ? AppColors.primaryLight : AppColors.onSurface,
-                    fontSize: 15,
-                  ),
+                  TextStyle(color: cs.onSurface, fontSize: 15),
+                  cs.primary,
                 ),
               Padding(
                 padding: hasImage && !hasText
@@ -463,9 +575,9 @@ class _MessageBubble extends StatelessWidget {
                     children: [
                       Text(
                         _formatTime(message.created),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 11,
-                          color: AppColors.muted,
+                          color: cs.onSurfaceVariant,
                         ),
                       ),
                       if (isMe && message.isSeen != null) ...[
@@ -473,7 +585,7 @@ class _MessageBubble extends StatelessWidget {
                         Icon(
                           message.isSeen! ? Icons.done_all : Icons.done,
                           size: 14,
-                          color: AppColors.primary,
+                          color: cs.primary,
                         ),
                       ],
                     ],
@@ -489,6 +601,7 @@ class _MessageBubble extends StatelessWidget {
 
   void _showOptions(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
     showModalBottomSheet(
       context: context,
       builder: (context) => SafeArea(
@@ -496,7 +609,7 @@ class _MessageBubble extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.edit, color: AppColors.primary),
+              leading: Icon(Icons.edit, color: cs.primary),
               title: Text(l10n.messagesEdit),
               onTap: () {
                 Navigator.of(context).pop();
@@ -504,10 +617,10 @@ class _MessageBubble extends StatelessWidget {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.delete, color: AppColors.error),
+              leading: Icon(Icons.delete, color: cs.error),
               title: Text(
                 l10n.delete,
-                style: const TextStyle(color: AppColors.error),
+                style: TextStyle(color: cs.error),
               ),
               onTap: () {
                 Navigator.of(context).pop();
@@ -529,7 +642,8 @@ class _MessageBubble extends StatelessWidget {
     caseSensitive: false,
   );
 
-  Widget _buildTextWithLinks(String text, TextStyle defaultStyle) {
+  Widget _buildTextWithLinks(
+      String text, TextStyle defaultStyle, Color linkColor) {
     final matches = _linkPattern.allMatches(text).toList();
     if (matches.isEmpty) {
       return Text(text, style: defaultStyle);
@@ -549,9 +663,9 @@ class _MessageBubble extends StatelessWidget {
       spans.add(TextSpan(
         text: url,
         style: defaultStyle.copyWith(
-          color: AppColors.primary,
+          color: linkColor,
           decoration: TextDecoration.underline,
-          decorationColor: AppColors.primary,
+          decorationColor: linkColor,
         ),
         recognizer: TapGestureRecognizer()
           ..onTap = () async {

@@ -265,6 +265,11 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
         photoUrl = '$photoUrl?v=${updated.millisecondsSinceEpoch}';
       }
 
+      final repliesRaw = info['replies-info'];
+      final repliesInfo = repliesRaw is Map
+          ? RepliesInfoEntity.fromJson(Map<String, dynamic>.from(repliesRaw))
+          : RepliesInfoEntity.empty;
+
       return UserProfileEntity(
         uid: userId,
         name: info['name'] as String? ?? '',
@@ -280,6 +285,7 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
         updated: updated,
         cards: cards,
         reviews: reviews,
+        repliesInfo: repliesInfo,
       );
     } on DioException catch (e) {
       throw ApiException.fromDioException(e, fallbackMessage: 'Failed to load profile');
@@ -386,6 +392,7 @@ class UserProfileRepositoryImpl implements UserProfileRepository {
       updated: updated,
       category: ServiceCategory.other,
       imageUrl: imageUrl,
+      status: json['status'] as String?,
     );
   }
 }
