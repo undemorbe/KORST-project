@@ -361,7 +361,7 @@ class _ServiceCardState extends State<ServiceCard> {
       barrierDismissible: false,
       builder: (_) => const Center(child: CircularProgressIndicator()),
     );
-    // Wait one frame so the dialog route is fully pushed before any pop.
+    // Wait one frame so the dialog route is fully pushed before any pop..
     await WidgetsBinding.instance.endOfFrame;
     try {
       await store.createReply(widget.service.id);
