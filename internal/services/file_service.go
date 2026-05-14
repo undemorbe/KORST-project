@@ -145,7 +145,7 @@ func (s *FileService) SaveBannerImage(file io.Reader,
 
 // isValidExtension проверяет, является ли расширение валидным
 func (s *FileService) isValidExtension(ext string) bool {
-	validExtensions := []string{".pdf", ".png", ".jpg", ".jpeg"}
+	validExtensions := []string{".pdf", ".png", ".jpg", ".jpeg", ".gif"}
 	ext = strings.ToLower(ext)
 
 	return slices.Contains(validExtensions, ext)

@@ -89,6 +89,7 @@ func main() {
 	reviewHandler := handlers.NewReviewHandler(reviewService, tokenService)
 	replyHandler := handlers.NewReplyHandler(replyService, tokenService)
 	bannerHandler := handlers.NewBannerHandler(bannerService)
+	deepLinkHandler := handlers.NewDeepLinkHandler()
 
 	// Подключение модулей мессенджера
 	chatRepo := messengerRepositories.NewChatRepository(db)
@@ -152,11 +153,11 @@ func main() {
 	replies := api.Group("/replies")
 	{
 		replies.POST("/create-reply", replyHandler.CreateReply)
-		replies.GET("executors", replyHandler.GetExecutors)
+		replies.GET("/executors", replyHandler.GetExecutors)
 
-		replies.POST("/approve-executor", replyHandler.ApproveExecutor)
-		replies.POST("/reject-executor", replyHandler.RejectExecutor)
-		replies.POST("/close", replyHandler.CloseCard)
+		replies.PUT("/approve-executor", replyHandler.ApproveExecutor)
+		replies.PUT("/reject-executor", replyHandler.RejectExecutor)
+		replies.PUT("/close", replyHandler.CloseCard)
 	}
 
 	banners := api.Group("/banners")
@@ -172,7 +173,13 @@ func main() {
 		uploads.Static("/cards", "./uploads/cards")
 		uploads.Static("/messages", "./uploads/messages")
 		uploads.Static("/banners", "./uploads/banners")
+
+		uploads.Static("/app", "./uploads/app")
 	}
+
+	// Маршруты для реализации Deep Links
+	r.GET("/.well-known/assetlinks.json", deepLinkHandler.HandleAssetLinks)
+	r.GET("/links/cards/:id", deepLinkHandler.OpenCard)
 
 	// Запуск сервера
 	logger.Log.Info("Сервер запущен на :5040")
