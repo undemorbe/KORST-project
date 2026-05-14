@@ -3,6 +3,7 @@
 package mocks
 
 import (
+	"io"
 	"korst-backend/internal/messenger/dto/requests"
 	"korst-backend/internal/messenger/dto/responses"
 
@@ -27,8 +28,8 @@ func (m *MockChatService) CreateChat(authorID uuid.UUID, req requests.CreateChat
 }
 
 // GetMessages задает фиктивную реализацию получения всех сообщения из чата
-func (m *MockChatService) GetMessages(chatID uuid.UUID) (responses.GetMessagesReponse, error) {
-	args := m.Called(chatID)
+func (m *MockChatService) GetMessages(chatID uuid.UUID, userID uuid.UUID) (responses.GetMessagesReponse, error) {
+	args := m.Called(chatID, userID)
 	return args.Get(0).(responses.GetMessagesReponse), args.Error(1)
 }
 
@@ -42,6 +43,13 @@ func (m *MockMessageService) SendMessage(authorID uuid.UUID, chatID uuid.UUID, t
 	return args.Error(0)
 }
 
+// SendImage задает фиктивную реализацию отправки изображения пользователю
+func (m *MockMessageService) SendImage(authorID uuid.UUID, chatID uuid.UUID,
+	text string, file io.Reader, fileName string) error {
+	args := m.Called(authorID, chatID, text, file, fileName)
+	return args.Error(0)
+}
+
 // ChangeMessage задает фиктивную реализацию изменения сообщения
 func (m *MockMessageService) ChangeMessage(authorID uuid.UUID, messageID uuid.UUID, text string) error {
 	args := m.Called(authorID, messageID, text)
@@ -52,4 +60,13 @@ func (m *MockMessageService) ChangeMessage(authorID uuid.UUID, messageID uuid.UU
 func (m *MockMessageService) DeleteMessage(authorID uuid.UUID, messageID uuid.UUID) error {
 	args := m.Called(authorID, messageID)
 	return args.Error(0)
+}
+
+// MockHub - структура для передачи
+// фиктивной реализации Hub в тестах
+type MockHub struct{ mock.Mock }
+
+// SendToUser задает фиктивную реализацию отправки сообщения по WebSocket
+func (m *MockHub) SendToUser(userID uuid.UUID, msg []byte) {
+	m.Called(userID, msg)
 }

@@ -2,6 +2,7 @@
 package ports
 
 import (
+	"io"
 	"korst-backend/internal/messenger/dto/requests"
 	"korst-backend/internal/messenger/dto/responses"
 
@@ -18,7 +19,7 @@ type ChatService interface {
 	CreateChat(authorID uuid.UUID, req requests.CreateChatRequest) error
 
 	// GetMessages получает все сообщения в определенном чате
-	GetMessages(chatID uuid.UUID) (responses.GetMessagesReponse, error)
+	GetMessages(chatID uuid.UUID, userID uuid.UUID) (responses.GetMessagesReponse, error)
 }
 
 // MessageService содержит порты для методов работы с сообщениями
@@ -27,9 +28,20 @@ type MessageService interface {
 	// и отправляет его к другому пользователю
 	SendMessage(authorID uuid.UUID, chatID uuid.UUID, text string) error
 
+	// SendImage сохраняет изображение для определенного
+	// чата и отправляет сообщение с ним другому пользователю
+	SendImage(authorID uuid.UUID, chatID uuid.UUID,
+		text string, file io.Reader, fileName string) error
+
 	// ChangeMessage изменяет текст определенного сообщения в чате
 	ChangeMessage(authorID uuid.UUID, messageID uuid.UUID, text string) error
 
 	// DeleteMessage удаляет определенное сообщение из чата
 	DeleteMessage(authorID uuid.UUID, messageID uuid.UUID) error
+}
+
+// Hub содержит порты для методов работы с WebSocket
+type Hub interface {
+	// SendToUser отправляет сообщение определенному пклиенту по WebSocket
+	SendToUser(userID uuid.UUID, msg []byte)
 }

@@ -168,8 +168,10 @@ func (s *CardService) GetCards(key *time.Time, query *string) (
 			err
 	}
 
+	baseURL := os.Getenv("BASE_URL")
+
 	for i := range cards {
-		card, err := s.getCompressedCard(&cards[i])
+		card, err := s.getCompressedCard(&cards[i], baseURL)
 		if err != nil {
 			logger.Log.Warn("Ошибка при обработке карточки: ", err)
 			continue
@@ -282,8 +284,8 @@ func (s *CardService) getAuthor(userID uuid.UUID) (
 }
 
 // getCompressedCard приводит карточку объявления к формату CompressedCard
-func (s *CardService) getCompressedCard(card *entities.Card) (
-	responses.CompressedCard, error) {
+func (s *CardService) getCompressedCard(card *entities.Card,
+	baseURL string) (responses.CompressedCard, error) {
 
 	author, err := s.getCompressedAuthor(card.UserID)
 	if err != nil {
@@ -305,8 +307,6 @@ func (s *CardService) getCompressedCard(card *entities.Card) (
 		CreatedAt: card.CreatedAt,
 		UpdatedAt: card.UpdatedAt,
 	}
-
-	baseURL := os.Getenv("BASE_URL")
 
 	if card.ImageURL != "" {
 		compressedCard.ImageURL = baseURL + card.ImageURL

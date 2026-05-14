@@ -154,6 +154,7 @@ func TestGetMessages(t *testing.T) {
 	authorID := uuid.New()
 	chatID := uuid.New()
 	messageText := "Текст сообщения"
+	accessToken := "access-token"
 
 	responseFromFunc := responses.GetMessagesReponse{
 		Messages: []responses.Message{
@@ -164,7 +165,9 @@ func TestGetMessages(t *testing.T) {
 		},
 	}
 
-	mockChatService.On("GetMessages", chatID).Return(responseFromFunc, nil)
+	mockTokenService.On("DecodeAccessToken", accessToken).Return(authorID, nil)
+
+	mockChatService.On("GetMessages", chatID, authorID).Return(responseFromFunc, nil)
 
 	req := httptest.NewRequest(
 		http.MethodGet,
@@ -172,6 +175,7 @@ func TestGetMessages(t *testing.T) {
 		nil,
 	)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", accessToken)
 
 	writer := httptest.NewRecorder()
 

@@ -24,3 +24,15 @@ func (m *MockFileService) SaveCardImage(file io.Reader, fileName string, cardID 
 	args := m.Called(file, fileName, cardID)
 	return args.String(0), args.Error(1)
 }
+
+// SaveMessageImage задает фиктивную реализацию сохранения изображения в чате
+func (m *MockFileService) SaveMessageImage(file io.Reader, fileName string, messageID uuid.UUID) (string, error) {
+	args := m.Called(file, fileName, messageID)
+	return args.String(0), args.Error(1)
+}
+
+// SaveBannerImage задает фиктивную реализацию сохранения изображения баннера
+func (m *MockFileService) SaveBannerImage(file io.Reader, fileName string, bannerID uuid.UUID) (string, error) {
+	args := m.Called(file, fileName, bannerID)
+	return args.String(0), args.Error(1)
+}

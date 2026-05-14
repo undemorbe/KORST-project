@@ -72,7 +72,7 @@ func (s *UserService) UpdateUserInfo(
 		profile.Description = *req.Description
 	}
 
-	user.Status = "user"
+	user.Status = entities.UserStatusActive
 
 	if req.Contacts != nil {
 		contacts := req.Contacts
@@ -154,8 +154,6 @@ func (s *UserService) SaveImage(userID uuid.UUID,
 func (s *UserService) GetUserInfo(userID uuid.UUID) (
 	responses.GetUserInfoResponse, error) {
 
-	var response responses.GetUserInfoResponse
-
 	user, err := s.userRepo.FindWithCards(userID)
 	if err != nil {
 		logger.Log.Error("Ошибка при поиске пользователя: ", err)
@@ -166,6 +164,73 @@ func (s *UserService) GetUserInfo(userID uuid.UUID) (
 		return responses.GetUserInfoResponse{},
 			errors.ErrorUserNotFound
 	}
+
+	return s.convertUser(user), nil
+}
+
+// GetMyInfo получает расширенную информацию о
+// текущем пользователе для предоставления статистики
+func (s *UserService) GetMyInfo(userID uuid.UUID) (
+	responses.GetMyInfoResponse, error) {
+
+	var response responses.GetMyInfoResponse
+
+	user, err := s.userRepo.FindWithReplies(userID)
+	if err != nil {
+		logger.Log.Error("Ошибка при поиске пользователя: ", err)
+		return responses.GetMyInfoResponse{}, err
+	}
+	if user == nil {
+		logger.Log.Warn("Пользователь с указанным ID не найден")
+		return responses.GetMyInfoResponse{},
+			errors.ErrorUserNotFound
+	}
+
+	response.GetUserInfoResponse = s.convertUser(user)
+
+	var (
+		total     int
+		accepted  int
+		completed int
+		failed    int
+	)
+
+	for _, reply := range user.Replies {
+
+		switch reply.Status {
+
+		case entities.ReplyStatusAccepted:
+			accepted++
+
+		case entities.ReplyStatusCompleted:
+			accepted++
+			completed++
+
+		case entities.ReplyStatusFailed:
+			accepted++
+			failed++
+		}
+
+		total++
+	}
+
+	repliesInfo := responses.RepliesInfo{
+		Total:     total,
+		Accepted:  accepted,
+		Completed: completed,
+		Failed:    failed,
+	}
+
+	response.RepliesInfo = repliesInfo
+
+	return response, nil
+}
+
+// convertUser преобразовывает данные о пользователе
+// к нужному формату для ответа на запрос
+func (s *UserService) convertUser(user *entities.User) responses.GetUserInfoResponse {
+
+	var response responses.GetUserInfoResponse
 
 	response.Name = user.Name
 	response.Surname = user.Surname
@@ -197,15 +262,18 @@ func (s *UserService) GetUserInfo(userID uuid.UUID) (
 
 	cards := user.Cards
 
-	for i := range cards {
-		card := s.getCompressedCard(&cards[i])
+	for _, card := range cards {
+		convertedCard := s.getCompressedCard(&card)
+		convertedCard.Status = string(card.Status)
 
-		response.Cards = append(response.Cards, card)
+		response.Cards = append(response.Cards, convertedCard)
 	}
 
-	return response, nil
+	return response
 }
 
+// getCompressedCard преобразовывает карточку к
+// формату CompressedCard для ответа на запрос
 func (s *UserService) getCompressedCard(
 	card *entities.Card) responses.CompressedCard {
 

@@ -126,10 +126,10 @@ func (s *OTPService) VerifyOTP(rawPhone string, otp string) (
 			return responses.VerifyOTPResponse{}, err
 		}
 
-		status = "notRegistered"
+		status = string(entities.UserStatusNotRegistered)
 
 	} else {
-		status = user.Status
+		status = string(user.Status)
 	}
 
 	accessToken, refreshToken, err := s.tokenService.CreateTokens(user)

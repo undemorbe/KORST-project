@@ -23,6 +23,8 @@ type CompressedCard struct {
 	Currency string  `json:"currency"`
 	Type     string  `json:"type"`
 
+	Status string `json:"status,omitempty"`
+
 	Author *CompressedAuthor `json:"author,omitempty"`
 
 	Tags []string `json:"tags"`
@@ -51,6 +53,8 @@ type CardInfoResponse struct {
 	Price    float64 `json:"price"`
 	Currency string  `json:"currency"`
 	Type     string  `json:"type"`
+
+	Status string `json:"status,omitempty"`
 
 	Author *Author `json:"author"`
 

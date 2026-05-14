@@ -119,3 +119,64 @@ func TestGetUserInfo(t *testing.T) {
 	require.Equal(t, cardName, response.Cards[0].Name)
 	mockUserRepo.AssertExpectations(t)
 }
+
+// TestGetMyInfo тестирует получение расширенной информации о текущем пользователе
+func TestGetMyInfo(t *testing.T) {
+	mockUserRepo := &mockRepositories.MockUserRepo{}
+	mockProfileRepo := &mockRepositories.MockProfileRepo{}
+	mockFileService := &mockService.MockFileService{}
+
+	userService := NewUserService(mockUserRepo, mockProfileRepo, mockFileService)
+
+	userID := uuid.New()
+	name := "Олег"
+	cardName := "Название карточки"
+	telegram := "@oleg"
+
+	profile := &entities.Profile{
+		UserID:   userID,
+		Telegram: telegram,
+	}
+
+	card := entities.Card{
+		Name:   cardName,
+		Status: entities.CardStatusCompleted,
+	}
+
+	replies := []entities.Reply{
+		{Status: entities.ReplyStatusPending},
+		{Status: entities.ReplyStatusRejected},
+		{Status: entities.ReplyStatusAccepted},
+		{Status: entities.ReplyStatusCompleted},
+		{Status: entities.ReplyStatusFailed},
+		{Status: entities.ReplyStatusAccepted},
+		{Status: entities.ReplyStatusCompleted},
+	}
+
+	user := &entities.User{
+		ID:      userID,
+		Name:    name,
+		Profile: profile,
+		Cards:   []entities.Card{card},
+		Replies: replies,
+	}
+
+	mockUserRepo.
+		On("FindWithReplies", userID).
+		Return(user, nil)
+
+	response, err := userService.GetMyInfo(userID)
+
+	require.NoError(t, err)
+	require.Equal(t, name, response.Name)
+	require.Equal(t, telegram, response.Contacts.Telegram)
+	require.Equal(t, cardName, response.Cards[0].Name)
+	require.Equal(t, string(entities.CardStatusCompleted), response.Cards[0].Status)
+
+	require.Equal(t, 7, response.RepliesInfo.Total)
+	require.Equal(t, 5, response.RepliesInfo.Accepted)
+	require.Equal(t, 2, response.RepliesInfo.Completed)
+	require.Equal(t, 1, response.RepliesInfo.Failed)
+
+	mockUserRepo.AssertExpectations(t)
+}

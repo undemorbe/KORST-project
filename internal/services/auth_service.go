@@ -3,6 +3,7 @@ package services
 
 import (
 	"korst-backend/internal/dto/responses"
+	"korst-backend/internal/entities"
 	"korst-backend/internal/errors"
 	"korst-backend/internal/infrastructure/logger"
 	"korst-backend/internal/ports"
@@ -41,15 +42,16 @@ func (s *AuthService) CheckUser(rawPhone string) (
 
 	phone := phonenumbers.Format(num, phonenumbers.E164)
 
+	status := string(entities.UserStatusNotFound)
+
 	user, err := s.userRepo.FindByPhone(phone)
 	if err != nil {
-		return responses.IsUserResponse{Status: "notFound"},
+		return responses.IsUserResponse{Status: status},
 			err
 	}
 
-	status := "notFound"
 	if user != nil {
-		status = user.Status
+		status = string(user.Status)
 	}
 
 	return responses.IsUserResponse{Status: status}, nil

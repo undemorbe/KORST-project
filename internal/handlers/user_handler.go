@@ -138,7 +138,7 @@ func (h *UserHandler) GetMyInfo(c *gin.Context) {
 		return
 	}
 
-	response, err := h.userService.GetUserInfo(userID)
+	response, err := h.userService.GetMyInfo(userID)
 
 	if err != nil {
 		c.Error(err)

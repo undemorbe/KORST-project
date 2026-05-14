@@ -25,7 +25,29 @@ func NewCardRepository(db *gorm.DB) ports.CardRepository {
 func (r *cardRepo) FindByID(cardID uuid.UUID) (*entities.Card, error) {
 	var card entities.Card
 
-	err := r.db.First(&card, cardID).Error
+	err := r.db.
+		Preload("ActiveReply").
+		First(&card, cardID).
+		Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &card, nil
+}
+
+// FindWithReplies находит карточку по ее ID вместе с откликами на нее
+func (r *cardRepo) FindWithReplies(cardID uuid.UUID) (*entities.Card, error) {
+	var card entities.Card
+
+	err := r.db.
+		Preload("ActiveReply").
+		Preload("Replies").
+		First(&card, cardID).
+		Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
@@ -43,7 +65,10 @@ func (r *cardRepo) FindCardsByTime(key *time.Time,
 
 	var cards []entities.Card
 
-	db := r.db.Order("updated_at DESC").Limit(limit)
+	db := r.db.
+		Where("status = ?", string(entities.CardStatusActive)).
+		Order("updated_at DESC").
+		Limit(limit)
 
 	if key != nil {
 		db = db.Where("updated_at < ?", *key)
@@ -72,6 +97,7 @@ func (r *cardRepo) FindCardsByQuery(key *time.Time,
 			OR description ILIKE ?
 			OR tags::text ILIKE ?
 		)`, search, search, search).
+		Where("status = ?", string(entities.CardStatusActive)).
 		Order("updated_at DESC").
 		Limit(limit)
 

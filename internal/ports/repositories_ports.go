@@ -13,8 +13,11 @@ type UserRepository interface {
 	// FindByID находит пользователя по его ID
 	FindByID(userID uuid.UUID) (*entities.User, error)
 
-	// FindWithCards находит пользователя по его ID вместе с карточками
+	// FindWithCards находит пользователя по его ID вместе с АКТИВНЫМИ карточками
 	FindWithCards(userID uuid.UUID) (*entities.User, error)
+
+	// FindWithReplies находит текущего пользователя по его ID со всеми его карточками и откликами
+	FindWithReplies(userID uuid.UUID) (*entities.User, error)
 
 	// FindWithReviews находит пользователя по его ID вместе с отзывами на него
 	FindWithRelatedReviews(userID uuid.UUID) (*entities.User, error)
@@ -66,6 +69,9 @@ type CardRepository interface {
 	// FindByID находит карточку по ее ID
 	FindByID(cardID uuid.UUID) (*entities.Card, error)
 
+	// FindWithReplies находит карточку по ее ID вместе с откликами на нее
+	FindWithReplies(cardID uuid.UUID) (*entities.Card, error)
+
 	// FindСardsByTime находит заданное количество карточек,
 	// которые больше ключа и отсортированны по времени.
 	FindCardsByTime(key *time.Time, limit int) ([]entities.Card, error)
@@ -105,4 +111,29 @@ type ReviewRepository interface {
 
 	// UpdateReview изменяет содержимое отзыва на пользователя в БД
 	UpdateReview(review *entities.Review) error
+}
+
+// ReplyRepository содержит порты для взаимодействия с
+// откликами на объявление в БД
+type ReplyRepository interface {
+	// FindByAuthorAndCard находит отклик на объявление по
+	// его автору и карточке, на которую был оставлен отклик
+	FindByAuthorAndCard(authorID uuid.UUID,
+		cardID uuid.UUID) (*entities.Reply, error)
+
+	// Createreply создает новый объект отклика в БД
+	CreateReply(reply *entities.Reply) error
+
+	// UpdateReply изменяет статус отклика на объявление в БД
+	UpdateReply(reply *entities.Reply) error
+}
+
+// BannerRepository содержит порты для взаимодействия
+// с рекламными баннерами в БД
+type BannerRepository interface {
+	// FindBanners находит count случайных баннеров из всех записей в БД
+	FindBanners(count int) ([]entities.Banner, error)
+
+	// CreateBanner создает новый объект рекламного баннера в БД
+	CreateBanner(banner *entities.Banner) error
 }

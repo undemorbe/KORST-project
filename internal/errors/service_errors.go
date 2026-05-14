@@ -54,6 +54,11 @@ var (
 		Message: "Сообщение не найдено",
 	}
 
+	ErrorReplyNotFound = AppError{
+		Code:    CodeNotFound,
+		Message: "Отклик на объявление не найден",
+	}
+
 	ErrorReviewExists = AppError{
 		Code:    CodeReviewExists,
 		Message: "Отзыв для указанного пользователя уже существует",

@@ -51,6 +51,12 @@ func main() {
 	}
 	logger.Log.Info("Миграции успешно применены")
 
+	// Подключение Hub для работы WebSocket
+	hub := messengerServices.NewHub()
+
+	// Запуск Hub для WebSocket
+	go hub.Run()
+
 	// Подключение хранилища
 	storage := storage.NewLocalStorage(os.Getenv("BASE_PATH"))
 
@@ -61,6 +67,8 @@ func main() {
 	cardRepo := repositories.NewCardRepository(db)
 	profileRepo := repositories.NewProfileRepository(db)
 	reviewRepo := repositories.NewReviewRepository(db)
+	replyRepo := repositories.NewReplyRepository(db)
+	bannerRepo := repositories.NewBannerRepository(db)
 
 	// Подключение общих сервисов
 	tokenService := services.NewTokenService(userRepo, refreshTokenRepo)
@@ -70,6 +78,8 @@ func main() {
 	cardService := services.NewCardService(cardRepo, userRepo, fileService)
 	userService := services.NewUserService(userRepo, profileRepo, fileService)
 	reviewService := services.NewReviewService(userRepo, profileRepo, reviewRepo)
+	replyService := services.NewReplyService(userRepo, cardRepo, replyRepo)
+	bannerService := services.NewBannerService(bannerRepo, fileService)
 
 	// Подключение общих хэндлеров
 	authHandler := handlers.NewAuthHandler(authService, tokenService)
@@ -77,16 +87,20 @@ func main() {
 	cardHandler := handlers.NewCardHandler(cardService, tokenService)
 	userHandler := handlers.NewUserHandler(userService, tokenService)
 	reviewHandler := handlers.NewReviewHandler(reviewService, tokenService)
+	replyHandler := handlers.NewReplyHandler(replyService, tokenService)
+	bannerHandler := handlers.NewBannerHandler(bannerService)
+	deepLinkHandler := handlers.NewDeepLinkHandler()
 
 	// Подключение модулей мессенджера
 	chatRepo := messengerRepositories.NewChatRepository(db)
 	messageRepo := messengerRepositories.NewMessageRepository(db)
 
-	chatService := messengerServices.NewChatService(userRepo, cardRepo, chatRepo)
-	messageService := messengerServices.NewMessageService(userRepo, chatRepo, messageRepo)
+	chatService := messengerServices.NewChatService(userRepo, cardRepo, chatRepo, messageRepo)
+	messageService := messengerServices.NewMessageService(userRepo, chatRepo, messageRepo, fileService, hub)
 
 	chatHandler := messengerHandlers.NewChatHandler(chatService, tokenService)
 	messageHandler := messengerHandlers.NewMessageHandler(messageService, tokenService)
+	wsHandler := messengerHandlers.NewWSHandler(hub, tokenService)
 
 	// Регистрация маршрутов
 	api := r.Group("/api")
@@ -129,8 +143,27 @@ func main() {
 		messenger.POST("/create-chat", chatHandler.CreateChat)
 
 		messenger.POST("/send-message", messageHandler.SendMessage)
+		messenger.POST("/send-image", messageHandler.SendImage)
 		messenger.PUT("/change-message", messageHandler.ChangeMessage)
 		messenger.DELETE("/delete-message", messageHandler.DeleteMessage)
+
+		messenger.GET("/websocket", wsHandler.Handle)
+	}
+
+	replies := api.Group("/replies")
+	{
+		replies.POST("/create-reply", replyHandler.CreateReply)
+		replies.GET("/executors", replyHandler.GetExecutors)
+
+		replies.PUT("/approve-executor", replyHandler.ApproveExecutor)
+		replies.PUT("/reject-executor", replyHandler.RejectExecutor)
+		replies.PUT("/close", replyHandler.CloseCard)
+	}
+
+	banners := api.Group("/banners")
+	{
+		banners.POST("/save-banner", bannerHandler.SaveBanner)
+		banners.GET("/get-banners", bannerHandler.GetBanners)
 	}
 
 	// Маршруты для получения изображений
@@ -138,7 +171,15 @@ func main() {
 	{
 		uploads.Static("/profiles", "./uploads/profiles")
 		uploads.Static("/cards", "./uploads/cards")
+		uploads.Static("/messages", "./uploads/messages")
+		uploads.Static("/banners", "./uploads/banners")
+
+		uploads.Static("/app", "./uploads/app")
 	}
+
+	// Маршруты для реализации Deep Links
+	r.GET("/.well-known/assetlinks.json", deepLinkHandler.HandleAssetLinks)
+	r.GET("/links/cards/:id", deepLinkHandler.OpenCard)
 
 	// Запуск сервера
 	logger.Log.Info("Сервер запущен на :5040")

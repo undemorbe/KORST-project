@@ -16,8 +16,10 @@ type Message struct {
 	ChatID   uuid.UUID `gorm:"type:uuid;uniqueIndex"`
 	AuthorID uuid.UUID `gorm:"type:uuid;uniqueIndex"`
 
-	Text string `gorm:"not null"`
+	Text     string
+	ImageURL string
 
+	IsSeen    bool      `gorm:"not null"`
 	CreatedAt time.Time `gorm:"not null"`
 }
 

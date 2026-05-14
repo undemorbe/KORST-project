@@ -25,6 +25,17 @@ func (m *MockCardRepo) FindByID(cardID uuid.UUID) (*entities.Card, error) {
 	return args.Get(0).(*entities.Card), args.Error(1)
 }
 
+// FindWithReplies находит карточку по ее ID вместе с откликами на нее
+func (m *MockCardRepo) FindWithReplies(cardID uuid.UUID) (*entities.Card, error) {
+	args := m.Called(cardID)
+
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+
+	return args.Get(0).(*entities.Card), args.Error(1)
+}
+
 // FindСardsByTime задает фиктивную реализацию пагинации по времени
 func (m *MockCardRepo) FindCardsByTime(key *time.Time, limit int) ([]entities.Card, error) {
 	args := m.Called(key, limit)

@@ -103,7 +103,15 @@ func (h *ChatHandler) GetMessages(c *gin.Context) {
 		return
 	}
 
-	response, err := h.chatService.GetMessages(chatID)
+	accessToken := c.GetHeader("Authorization")
+
+	userID, err := h.tokenService.DecodeAccessToken(accessToken)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response, err := h.chatService.GetMessages(chatID, userID)
 
 	if err != nil {
 		c.Error(err)

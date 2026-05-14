@@ -85,6 +85,11 @@ type UserService interface {
 	// о каком-то конкретном пользователе
 	GetUserInfo(userID uuid.UUID) (
 		responses.GetUserInfoResponse, error)
+
+	// GetMyInfo получает расширенную информацию о
+	// текущем пользователе для предоставления статистики
+	GetMyInfo(userID uuid.UUID) (
+		responses.GetMyInfoResponse, error)
 }
 
 // ReviewService содержит порты для методов для
@@ -112,4 +117,50 @@ type FileService interface {
 	// хранилище и возвращает ссылку на него
 	SaveCardImage(file io.Reader,
 		fileName string, cardID uuid.UUID) (string, error)
+
+	// SaveMessageImage сохраняет изображение для сообщения
+	// в хранилище и возвращает ссылку на него
+	SaveMessageImage(file io.Reader,
+		fileName string, messageID uuid.UUID) (string, error)
+
+	// SaveBannerImage сохраняет изображение для баннера
+	// в хранилище и возвращает ссылку на него
+	SaveBannerImage(file io.Reader,
+		fileName string, bannerID uuid.UUID) (string, error)
+}
+
+// ReplyService содержит порты для методов для
+// работы с откликами на карточки объявлений
+type ReplyService interface {
+	// CreateReply создает отклик на определенной объявление
+	CreateReply(authorID uuid.UUID, cardID uuid.UUID) error
+
+	// GetExecutors получает всех исполниелей для определенной карточки
+	GetExecutors(cardID uuid.UUID) (
+		responses.GetExecutorsResponse, error)
+
+	// ApproveExecutor yтверждает исполнителя для определенной
+	// карточки (меняет статус отклика и карточки)
+	ApproveExecutor(authorID uuid.UUID,
+		cardID uuid.UUID, executorID uuid.UUID) error
+
+	// RejectExecutor отклоняет отклик исполнителя на объявление
+	// (меняет статус отклика на объявление)
+	RejectExecutor(authorID uuid.UUID,
+		cardID uuid.UUID, executorID uuid.UUID) error
+
+	// CloseCard закрывает (или открывает карточку заново) с определенным статусом
+	CloseCard(authorID uuid.UUID, cardID uuid.UUID, status string) error
+}
+
+// BannerService содержит порты для методов
+// для сохранения и получения рекламных баннеров
+type BannerService interface {
+	// SaveBanner сохраняет изображение баннера в локальное
+	// хранилище и сохраняет объект баннера в БД
+	SaveBanner(company string, link string,
+		file io.Reader, fileName string) error
+
+	// GetBanners получает и обрабатывает count случайных баннеров из БД
+	GetBanners(count *int) (responses.GetBannersResponse, error)
 }
