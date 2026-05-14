@@ -44,7 +44,7 @@ https:*
 .claude
 /coverage/
 .superpowers
-docs/superpowers
+/docs/superpowers
 # Symbolication related
 app.*.symbols
 
