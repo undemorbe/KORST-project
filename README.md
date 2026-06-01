@@ -1,5 +1,7 @@
 # KORST Project
 
+Презентация по проекта: https://canva.link/fvqthe6w6uqvkhi
+
 Сервис бронирования услуг.
 
 ## Ветки
