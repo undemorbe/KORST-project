@@ -698,4 +698,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get failedToLoadCardImage => 'Failed to load card image';
+
+  @override
+  String get onboardSlide1Title => 'Welcome to Korst';
+
+  @override
+  String get onboardSlide1Subtitle =>
+      'Find the best specialists and interesting tasks near you';
+
+  @override
+  String get onboardSlide2Title => 'Post Your Services';
+
+  @override
+  String get onboardSlide2Subtitle =>
+      'Create service cards and find clients without intermediaries';
+
+  @override
+  String get onboardSlide3Title => 'Reply & Chat';
+
+  @override
+  String get onboardSlide3Subtitle =>
+      'One click — chat with the client opens instantly. Discuss details right in the app';
+
+  @override
+  String get onboardSlide4Title => 'Ratings & Trust';
+
+  @override
+  String get onboardSlide4Subtitle =>
+      'Real reviews and ratings help you choose the best performers';
+
+  @override
+  String get onboardSlide5Title => 'Everything in Real Time';
+
+  @override
+  String get onboardSlide5Subtitle =>
+      'WebSocket chat with no delays and instant notifications for new messages';
 }

@@ -71,23 +71,23 @@ class _ServiceDetailsPageState extends State<ServiceDetailsPage> {
     final author = service.author;
     if (author == null || author.uid.isEmpty) return;
 
-    // Show loading indicator
+    // rootNavigator: true matches showDialog's default navigator level
+    final nav = Navigator.of(context, rootNavigator: true);
+    final snackbar = ScaffoldMessenger.of(context);
+
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) => const Center(child: CircularProgressIndicator()),
     );
+    await WidgetsBinding.instance.endOfFrame;
 
     try {
       await _serviceStore.createReply(service.id);
 
-      // Create the chat
       await messengerStore.createChat(userId: author.uid, cardId: service.id);
-
-      // Reload chats to get the newly created chat
       await messengerStore.loadChats();
 
-      // Find and select the chat for this service
       final chat = messengerStore.merchantChats.firstWhere(
         (c) => c.card.id == service.id,
         orElse: () => messengerStore.customerChats.firstWhere(
@@ -97,15 +97,14 @@ class _ServiceDetailsPageState extends State<ServiceDetailsPage> {
       );
       messengerStore.selectChat(chat);
 
+      if (nav.canPop()) nav.pop();
       if (!mounted) return;
-      Navigator.of(context).pop(); // Close loading
-      // Navigate to chat
       context.push('/chat', extra: messengerStore);
     } catch (_) {
+      if (nav.canPop()) nav.pop();
       if (!mounted) return;
-      Navigator.of(context).pop(); // Close loading
       final forbidden = _serviceStore.replyForbidden;
-      ScaffoldMessenger.of(context).showSnackBar(
+      snackbar.showSnackBar(
         SnackBar(
           content: Text(
             forbidden
@@ -122,14 +121,17 @@ class _ServiceDetailsPageState extends State<ServiceDetailsPage> {
     final author = service.author;
     if (author == null || author.uid.isEmpty) return;
 
+    final nav = Navigator.of(context, rootNavigator: true);
+    final snackbar = ScaffoldMessenger.of(context);
+
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) => const Center(child: CircularProgressIndicator()),
     );
+    await WidgetsBinding.instance.endOfFrame;
 
     try {
-      // Try to find existing chat; if absent, create it
       await messengerStore.loadChats();
 
       ChatEntity? chat;
@@ -160,15 +162,13 @@ class _ServiceDetailsPageState extends State<ServiceDetailsPage> {
       }
 
       messengerStore.selectChat(chat);
+      if (nav.canPop()) nav.pop();
       if (!mounted) return;
-      Navigator.of(context).pop();
       context.push('/chat', extra: messengerStore);
     } catch (e) {
+      if (nav.canPop()) nav.pop();
       if (!mounted) return;
-      Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ошибка: $e')),
-      );
+      snackbar.showSnackBar(SnackBar(content: Text('Ошибка: $e')));
     }
   }
 

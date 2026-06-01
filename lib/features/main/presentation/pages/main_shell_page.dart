@@ -4,6 +4,7 @@ import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobx/mobx.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/glass.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../messenger/presentation/store/messenger_store.dart';
@@ -20,13 +21,21 @@ class MainShellPage extends StatefulWidget {
 class _MainShellPageState extends State<MainShellPage>
     with SingleTickerProviderStateMixin {
   final MessengerStore _store = sl<MessengerStore>();
-  OverlayEntry? _bannerEntry;
   ReactionDisposer? _reactionDisposer;
   Timer? _dismissTimer;
+  IncomingMessageInfo? _currentInfo;
+  late AnimationController _fadeCtrl;
+  late Animation<double> _fadeAnim;
 
   @override
   void initState() {
     super.initState();
+    _fadeCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 280),
+    );
+    _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeInOut);
+
     _reactionDisposer = reaction(
       (_) => _store.incomingMessage,
       (IncomingMessageInfo? info) {
@@ -41,36 +50,22 @@ class _MainShellPageState extends State<MainShellPage>
   void dispose() {
     _reactionDisposer?.call();
     _dismissTimer?.cancel();
-    _bannerEntry?.remove();
-    _bannerEntry = null;
+    _fadeCtrl.dispose();
     super.dispose();
   }
 
   void _showBanner(IncomingMessageInfo info) {
-    _bannerEntry?.remove();
-    _bannerEntry = null;
     _dismissTimer?.cancel();
-
-    _bannerEntry = OverlayEntry(
-      builder: (ctx) => _IncomingBanner(
-        info: info,
-        onTap: () {
-          _dismissBanner();
-          _goBranch(2);
-        },
-        onDismiss: _dismissBanner,
-      ),
-    );
-
-    Overlay.of(context).insert(_bannerEntry!);
-
+    setState(() => _currentInfo = info);
+    _fadeCtrl.forward(from: 0);
     _dismissTimer = Timer(const Duration(seconds: 4), _dismissBanner);
   }
 
   void _dismissBanner() {
-    _bannerEntry?.remove();
-    _bannerEntry = null;
     _dismissTimer?.cancel();
+    _fadeCtrl.reverse().then((_) {
+      if (mounted) setState(() => _currentInfo = null);
+    });
   }
 
   void _goBranch(int index) {
@@ -88,7 +83,23 @@ class _MainShellPageState extends State<MainShellPage>
     return Scaffold(
       extendBodyBehindAppBar: true,
       extendBody: true,
-      body: widget.navigationShell,
+      body: Stack(
+        children: [
+          widget.navigationShell,
+          if (_currentInfo != null)
+            FadeTransition(
+              opacity: _fadeAnim,
+              child: _NotificationBar(
+                info: _currentInfo!,
+                onTap: () {
+                  _dismissBanner();
+                  _goBranch(2);
+                },
+                onDismiss: _dismissBanner,
+              ),
+            ),
+        ],
+      ),
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(14, 0, 14, 12),
         child: Glass(
@@ -163,141 +174,102 @@ class _MainShellPageState extends State<MainShellPage>
   }
 }
 
-class _IncomingBanner extends StatefulWidget {
+// ── Notification bar — fades in/out at top of screen ─────────────────────────
+
+class _NotificationBar extends StatelessWidget {
   final IncomingMessageInfo info;
   final VoidCallback onTap;
   final VoidCallback onDismiss;
 
-  const _IncomingBanner({
+  const _NotificationBar({
     required this.info,
     required this.onTap,
     required this.onDismiss,
   });
 
   @override
-  State<_IncomingBanner> createState() => _IncomingBannerState();
-}
-
-class _IncomingBannerState extends State<_IncomingBanner>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animCtrl;
-  late Animation<Offset> _slideAnim;
-  late Animation<double> _fadeAnim;
-
-  @override
-  void initState() {
-    super.initState();
-    _animCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
-    _slideAnim = Tween<Offset>(
-      begin: const Offset(0, -1),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut));
-    _fadeAnim = CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut);
-    _animCtrl.forward();
-  }
-
-  @override
-  void dispose() {
-    _animCtrl.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final topPad = MediaQuery.of(context).padding.top;
-    final cs = Theme.of(context).colorScheme;
-    return Positioned(
-      top: topPad + 8,
-      left: 16,
-      right: 16,
-      child: Material(
-        color: Colors.transparent,
-        child: SlideTransition(
-          position: _slideAnim,
-          child: FadeTransition(
-            opacity: _fadeAnim,
-            child: GestureDetector(
-              onTap: widget.onTap,
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                decoration: BoxDecoration(
-                  color: cs.surfaceContainerHighest,
-                  borderRadius: const BorderRadius.all(Radius.circular(12)),
-                  border: Border(
-                    left: BorderSide(color: cs.primary, width: 4),
-                    top: BorderSide(color: cs.outlineVariant),
-                    right: BorderSide(color: cs.outlineVariant),
-                    bottom: BorderSide(color: cs.outlineVariant),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: cs.shadow.withValues(alpha: 0.18),
-                      blurRadius: 16,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Row(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final bannerBg =
+        isDark ? const Color(0xFF332B12) : AppColors.lSurfaceCard;
+    final textPrimary =
+        isDark ? AppColors.onBackground : AppColors.lOnSurface;
+    final textSecondary = isDark
+        ? AppColors.muted
+        : AppColors.lOnSurface.withValues(alpha: 0.65);
+
+    return Material(
+      color: bannerBg,
+      elevation: 6,
+      shadowColor: AppColors.primary.withValues(alpha: 0.3),
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: EdgeInsets.fromLTRB(16, topPad + 10, 8, 14),
+          decoration: const BoxDecoration(
+            border: Border(
+              bottom: BorderSide(color: AppColors.primary, width: 2),
+            ),
+          ),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.chat_bubble_rounded,
+                color: AppColors.primary,
+                size: 20,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.chat_bubble_rounded,
-                      color: cs.primary,
-                      size: 20,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.info.senderName,
-                            style: TextStyle(
-                              color: cs.onSurface,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 15,
-                            ),
-                            maxLines: 1,
-                          ),
-                          if (widget.info.cardName.isNotEmpty)
-                            Text(
-                              widget.info.cardName,
-                              style: TextStyle(
-                                color: cs.onSurfaceVariant,
-                                fontSize: 11,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          Text(
-                            widget.info.text,
-                            style: TextStyle(
-                              color: cs.onSurfaceVariant,
-                              fontSize: 12,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
+                    Text(
+                      info.senderName,
+                      style: TextStyle(
+                        color: textPrimary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    IconButton(
-                      onPressed: widget.onDismiss,
-                      icon: Icon(
-                        Icons.close,
-                        color: cs.onSurfaceVariant,
-                        size: 18,
+                    if (info.cardName.isNotEmpty)
+                      Text(
+                        info.cardName,
+                        style: TextStyle(
+                          color: textSecondary,
+                          fontSize: 11,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
+                    Text(
+                      info.text,
+                      style: TextStyle(
+                        color: textSecondary,
+                        fontSize: 12,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
-            ),
+              IconButton(
+                onPressed: onDismiss,
+                icon: Icon(
+                  Icons.close,
+                  color: textSecondary,
+                  size: 18,
+                ),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              const SizedBox(width: 8),
+            ],
           ),
         ),
       ),

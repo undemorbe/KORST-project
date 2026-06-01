@@ -227,5 +227,15 @@
   "failedToLoadCard": "加载卡片失败",
   "failedToCreateCard": "创建卡片失败",
   "failedToUpdateCard": "更新卡片失败",
-  "failedToLoadCardImage": "加载卡片图片失败"
+  "failedToLoadCardImage": "加载卡片图片失败",
+  "onboardSlide1Title": "欢迎来到 Korst",
+  "onboardSlide1Subtitle": "在您附近找到最好的专家和有趣的任务",
+  "onboardSlide2Title": "发布您的服务",
+  "onboardSlide2Subtitle": "创建服务卡片，直接找到客户，无需中间商",
+  "onboardSlide3Title": "回复与聊天",
+  "onboardSlide3Subtitle": "一键即可与客户开启聊天，直接在应用内讨论细节",
+  "onboardSlide4Title": "评分与信任",
+  "onboardSlide4Subtitle": "真实评价和评分帮助您选择最优秀的执行者",
+  "onboardSlide5Title": "一切实时进行",
+  "onboardSlide5Subtitle": "WebSocket 聊天无延迟，新消息即时通知"
 }

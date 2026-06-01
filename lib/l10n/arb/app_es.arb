@@ -227,5 +227,15 @@
   "failedToLoadCard": "Failed to load card",
   "failedToCreateCard": "Failed to create card",
   "failedToUpdateCard": "Failed to update card",
-  "failedToLoadCardImage": "Failed to load card image"
+  "failedToLoadCardImage": "Failed to load card image",
+  "onboardSlide1Title": "Bienvenido a Korst",
+  "onboardSlide1Subtitle": "Encuentra a los mejores especialistas y tareas cerca de ti",
+  "onboardSlide2Title": "Publica tus servicios",
+  "onboardSlide2Subtitle": "Crea tarjetas de servicio y encuentra clientes sin intermediarios",
+  "onboardSlide3Title": "Responde y chatea",
+  "onboardSlide3Subtitle": "Un clic — el chat con el cliente se abre al instante en la app",
+  "onboardSlide4Title": "Calificaciones y confianza",
+  "onboardSlide4Subtitle": "Las reseñas reales te ayudan a elegir a los mejores ejecutores",
+  "onboardSlide5Title": "Todo en tiempo real",
+  "onboardSlide5Subtitle": "Chat WebSocket sin retrasos y notificaciones instantáneas de nuevos mensajes"
 }

@@ -354,22 +354,26 @@ class _ServiceCardState extends State<ServiceCard> {
 
   Future<void> _onReply(BuildContext context) async {
     final store = sl<ServiceStore>();
-    final nav = Navigator.of(context);
+    // rootNavigator: true matches showDialog's default — same navigator level
+    final nav = Navigator.of(context, rootNavigator: true);
     final snackbar = ScaffoldMessenger.of(context);
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) => const Center(child: CircularProgressIndicator()),
     );
-    // Wait one frame so the dialog route is fully pushed before any pop..
+    // Wait one frame so the dialog route is fully pushed before any pop.
     await WidgetsBinding.instance.endOfFrame;
     try {
       await store.createReply(widget.service.id);
-      if (!context.mounted) return;
+      if (!mounted) {
+        _safePopDialog(nav);
+        return;
+      }
       await _openChat(context, nav: nav, snackbar: snackbar);
     } catch (_) {
-      if (!mounted) return;
       _safePopDialog(nav);
+      if (!mounted) return;
       final forbidden = store.replyForbidden;
       snackbar.showSnackBar(SnackBar(
         content: Text(forbidden
@@ -388,7 +392,8 @@ class _ServiceCardState extends State<ServiceCard> {
     final author = widget.service.author;
     if (author == null || author.uid.isEmpty) return;
 
-    final navigator = nav ?? Navigator.of(context);
+    // Always use root navigator to match showDialog's default
+    final navigator = nav ?? Navigator.of(context, rootNavigator: true);
     final messenger = snackbar ?? ScaffoldMessenger.of(context);
 
     final dialogAlreadyOpen = navigator.canPop();
@@ -419,13 +424,13 @@ class _ServiceCardState extends State<ServiceCard> {
         } catch (_) {}
       }
 
+      _safePopDialog(navigator);
       if (chat == null || !mounted) return;
       messengerStore.selectChat(chat);
-      _safePopDialog(navigator);
       if (context.mounted) context.push('/chat', extra: messengerStore);
     } catch (e) {
-      if (!mounted) return;
       _safePopDialog(navigator);
+      if (!mounted) return;
       messenger.showSnackBar(SnackBar(content: Text('Ошибка чата: $e')));
     }
   }

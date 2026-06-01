@@ -1465,6 +1465,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to load card image'**
   String get failedToLoadCardImage;
+
+  /// No description provided for @onboardSlide1Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Korst'**
+  String get onboardSlide1Title;
+
+  /// No description provided for @onboardSlide1Subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Find the best specialists and interesting tasks near you'**
+  String get onboardSlide1Subtitle;
+
+  /// No description provided for @onboardSlide2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Post Your Services'**
+  String get onboardSlide2Title;
+
+  /// No description provided for @onboardSlide2Subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create service cards and find clients without intermediaries'**
+  String get onboardSlide2Subtitle;
+
+  /// No description provided for @onboardSlide3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Reply & Chat'**
+  String get onboardSlide3Title;
+
+  /// No description provided for @onboardSlide3Subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'One click — chat with the client opens instantly. Discuss details right in the app'**
+  String get onboardSlide3Subtitle;
+
+  /// No description provided for @onboardSlide4Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Ratings & Trust'**
+  String get onboardSlide4Title;
+
+  /// No description provided for @onboardSlide4Subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Real reviews and ratings help you choose the best performers'**
+  String get onboardSlide4Subtitle;
+
+  /// No description provided for @onboardSlide5Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything in Real Time'**
+  String get onboardSlide5Title;
+
+  /// No description provided for @onboardSlide5Subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'WebSocket chat with no delays and instant notifications for new messages'**
+  String get onboardSlide5Subtitle;
 }
 
 class _AppLocalizationsDelegate

@@ -227,5 +227,15 @@
   "failedToLoadCard": "Не удалось загрузить карточку",
   "failedToCreateCard": "Не удалось создать карточку",
   "failedToUpdateCard": "Не удалось обновить карточку",
-  "failedToLoadCardImage": "Не удалось загрузить изображение карточки"
+  "failedToLoadCardImage": "Не удалось загрузить изображение карточки",
+  "onboardSlide1Title": "Добро пожаловать в Korst",
+  "onboardSlide1Subtitle": "Найди лучших специалистов и интересные задачи рядом с тобой",
+  "onboardSlide2Title": "Публикуй свои услуги",
+  "onboardSlide2Subtitle": "Создавай карточки услуг и находи клиентов без посредников",
+  "onboardSlide3Title": "Откликайся и общайся",
+  "onboardSlide3Subtitle": "Один клик — и чат с заказчиком открыт. Обсуждай детали прямо в приложении",
+  "onboardSlide4Title": "Рейтинги и доверие",
+  "onboardSlide4Subtitle": "Реальные отзывы и оценки помогают выбрать лучших исполнителей",
+  "onboardSlide5Title": "Всё в реальном времени",
+  "onboardSlide5Subtitle": "WebSocket-чат без задержек и мгновенные уведомления о новых сообщениях"
 }

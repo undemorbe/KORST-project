@@ -5,8 +5,11 @@ import '../../domain/entities/service_category.dart';
 import '../../domain/entities/review_entity.dart';
 import '../../domain/entities/executor_entity.dart';
 import '../../domain/repositories/service_repository.dart';
+import '../../../../core/storage/local_storage.dart';
 
 part 'service_store.g.dart';
+
+const _kRepliedCardIdsKey = 'replied_card_ids';
 
 enum SortOption { newest, priceAsc, priceDesc, rating }
 
@@ -15,8 +18,26 @@ class ServiceStore = _ServiceStore with _$ServiceStore;
 
 abstract class _ServiceStore with Store {
   final ServiceRepository _serviceRepository;
+  final LocalStorageService _storage;
 
-  _ServiceStore(this._serviceRepository);
+  _ServiceStore(this._serviceRepository, this._storage) {
+    _loadRepliedIds();
+  }
+
+  void _loadRepliedIds() {
+    try {
+      final raw = _storage.get(_kRepliedCardIdsKey, defaultValue: <String>[]);
+      if (raw is List) {
+        repliedCardIds = ObservableSet.of(raw.whereType<String>());
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _saveRepliedIds() async {
+    try {
+      await _storage.put(_kRepliedCardIdsKey, repliedCardIds.toList());
+    } catch (_) {}
+  }
 
   @observable
   ObservableList<ServiceEntity> services = ObservableList<ServiceEntity>();
@@ -231,12 +252,23 @@ abstract class _ServiceStore with Store {
   bool get replyForbidden => replyError != null &&
       (replyError!.contains('403') || replyError!.contains('FORBIDDEN'));
 
+  /// Called after chats load — marks cards that already have a chat as replied.
+  @action
+  void syncRepliedFromCardIds(Iterable<String> cardIds) {
+    var changed = false;
+    for (final id in cardIds) {
+      if (id.isNotEmpty && repliedCardIds.add(id)) changed = true;
+    }
+    if (changed) _saveRepliedIds();
+  }
+
   @action
   Future<void> createReply(String cardId) async {
     replyError = null;
     try {
       await _serviceRepository.createReply(cardId);
       repliedCardIds.add(cardId);
+      await _saveRepliedIds();
     } catch (e) {
       replyError = e.toString();
       rethrow;

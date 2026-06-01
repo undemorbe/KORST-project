@@ -7,6 +7,9 @@ import '../../domain/entities/chat_entity.dart';
 import '../../domain/entities/chats_response.dart';
 import '../../domain/entities/message_entity.dart';
 import '../../domain/repositories/messenger_repository.dart';
+import '../../../../core/di/injection_container.dart' as di;
+import '../../../../core/storage/local_storage.dart';
+import '../../../services/presentation/store/service_store.dart';
 
 part 'messenger_store.g.dart';
 
@@ -16,9 +19,18 @@ class MessengerStore = _MessengerStore with _$MessengerStore;
 abstract class _MessengerStore with Store {
   final MessengerRepository _messengerRepository;
   final MessengerServiceInterface _messengerSocketService;
+  final _LocalUnreadStorage _unreadStorage;
   StreamSubscription<MessengerSocketEvent>? _socketSubscription;
 
-  _MessengerStore(this._messengerRepository, this._messengerSocketService);
+  _MessengerStore(this._messengerRepository, this._messengerSocketService)
+      : _unreadStorage = _LocalUnreadStorage(di.sl()) {
+    _loadUnreadCounts();
+  }
+
+  void _loadUnreadCounts() {
+    final saved = _unreadStorage.load();
+    if (saved.isNotEmpty) unreadCounts.addAll(saved);
+  }
 
   // Set from outside when user logs in
   String? _myUserId;
@@ -67,11 +79,23 @@ abstract class _MessengerStore with Store {
       final ChatsResponse response = await _messengerRepository.getChats();
       merchantChats = ObservableList.of(response.merchantChats);
       customerChats = ObservableList.of(response.customerChats);
+      _syncRepliedCardIds();
     } catch (e) {
       errorMessage = e.toString();
     } finally {
       isLoading = false;
     }
+  }
+
+  /// Sync card IDs from loaded chats → ServiceStore.repliedCardIds
+  void _syncRepliedCardIds() {
+    try {
+      final cardIds = [
+        ...merchantChats.map((c) => c.card.id),
+        ...customerChats.map((c) => c.card.id),
+      ].where((id) => id.isNotEmpty);
+      di.sl<ServiceStore>().syncRepliedFromCardIds(cardIds);
+    } catch (_) {}
   }
 
   @action
@@ -226,6 +250,7 @@ abstract class _MessengerStore with Store {
     selectedChat = chat;
     if (chat != null) {
       unreadCounts.remove(chat.id);
+      _unreadStorage.save(unreadCounts);
       _incomingMessageObs.value = null;
       loadMessages(chat.id);
     } else {
@@ -295,6 +320,7 @@ abstract class _MessengerStore with Store {
       if (msg != null && MessengerEventParser.isIncoming(event, _myUserId)) {
         if (selectedChat?.id != event.chatId) {
           unreadCounts[event.chatId] = (unreadCounts[event.chatId] ?? 0) + 1;
+          _unreadStorage.save(unreadCounts);
           final chat = _findChat(event.chatId) ?? event.chat;
           if (chat != null) {
             _incomingMessageObs.value = IncomingMessageInfo(
@@ -358,4 +384,28 @@ class IncomingMessageInfo {
     required this.text,
     required this.cardName,
   });
+}
+
+// ── Hive persistence for unread counts ───────────────────────────────────────
+class _LocalUnreadStorage {
+  static const _key = 'chat_unread_counts';
+  final LocalStorageService _storage;
+
+  _LocalUnreadStorage(this._storage);
+
+  Map<String, int> load() {
+    try {
+      final raw = _storage.get(_key, defaultValue: <String, dynamic>{});
+      if (raw is Map) {
+        return raw.map((k, v) => MapEntry(k.toString(), (v as num).toInt()));
+      }
+    } catch (_) {}
+    return {};
+  }
+
+  void save(Map<String, int> counts) {
+    try {
+      _storage.put(_key, Map<String, dynamic>.from(counts));
+    } catch (_) {}
+  }
 }

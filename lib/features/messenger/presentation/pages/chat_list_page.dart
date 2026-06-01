@@ -107,76 +107,77 @@ class _ChatListPageState extends State<ChatListPage>
           ),
         ],
       ),
-      floatingActionButton: Observer(
-        builder: (_) => _store.isLoading
-            ? const SizedBox.shrink()
-            : Padding(
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).padding.bottom - 4,
-                  right: 1,
-                ),
-                
-                  child: FloatingActionButton(
-                    heroTag: 'fab_retry_chat_list_page',
-                    onPressed: _store.loadChats,
-                    child: const Icon(Icons.refresh),
-                  
-                ),
-              ),
-      ),
+     
     );
   }
 
   Widget _buildChatList(List<ChatEntity> chats, String type) {
     final l10n = AppLocalizations.of(context)!;
     if (chats.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      return RefreshIndicator(
+        onRefresh: _store.loadChats,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
           children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceCard,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.borderSubtle),
-                boxShadow: const [
-                  BoxShadow(color: AppColors.goldGlow, blurRadius: 12),
-                ],
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.5,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceCard,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.borderSubtle),
+                        boxShadow: const [
+                          BoxShadow(color: AppColors.goldGlow, blurRadius: 12),
+                        ],
+                      ),
+                      child: Icon(
+                        type == 'customer'
+                            ? Icons.work_outline
+                            : Icons.person_outline,
+                        size: 48,
+                        color: AppColors.muted,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      type == 'customer'
+                          ? l10n.messagesNoChatsBuyer
+                          : l10n.messagesNoChatsSeller,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: AppColors.muted),
+                    ),
+                  ],
+                ),
               ),
-              child: Icon(
-                type == 'customer' ? Icons.work_outline : Icons.person_outline,
-                size: 48,
-                color: AppColors.muted,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              type == 'customer'
-                  ? l10n.messagesNoChatsBuyer
-                  : l10n.messagesNoChatsSeller,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.muted),
             ),
           ],
         ),
       );
     }
 
-    return ListView.builder(
-      padding: EdgeInsets.only(
-        top: 0,
-        bottom: MediaQuery.of(context).padding.bottom + 100,
+    return RefreshIndicator(
+      onRefresh: _store.loadChats,
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.only(
+          top: 0,
+          bottom: MediaQuery.of(context).padding.bottom + 100,
+        ),
+        itemCount: chats.length,
+        itemBuilder: (context, index) {
+          final chat = chats[index];
+          return _ChatListTile(
+            chat: chat,
+            store: _store,
+            onTap: () => _openChat(chat),
+          );
+        },
       ),
-      itemCount: chats.length,
-      itemBuilder: (context, index) {
-        final chat = chats[index];
-        return _ChatListTile(
-          chat: chat,
-          store: _store,
-          onTap: () => _openChat(chat),
-        );
-      },
     );
   }
 

@@ -692,4 +692,34 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get failedToLoadCardImage => '加载卡片图片失败';
+
+  @override
+  String get onboardSlide1Title => '欢迎来到 Korst';
+
+  @override
+  String get onboardSlide1Subtitle => '在您附近找到最好的专家和有趣的任务';
+
+  @override
+  String get onboardSlide2Title => '发布您的服务';
+
+  @override
+  String get onboardSlide2Subtitle => '创建服务卡片，直接找到客户，无需中间商';
+
+  @override
+  String get onboardSlide3Title => '回复与聊天';
+
+  @override
+  String get onboardSlide3Subtitle => '一键即可与客户开启聊天，直接在应用内讨论细节';
+
+  @override
+  String get onboardSlide4Title => '评分与信任';
+
+  @override
+  String get onboardSlide4Subtitle => '真实评价和评分帮助您选择最优秀的执行者';
+
+  @override
+  String get onboardSlide5Title => '一切实时进行';
+
+  @override
+  String get onboardSlide5Subtitle => 'WebSocket 聊天无延迟，新消息即时通知';
 }

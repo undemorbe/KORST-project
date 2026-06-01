@@ -698,4 +698,39 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get failedToLoadCardImage => 'Failed to load card image';
+
+  @override
+  String get onboardSlide1Title => 'Willkommen bei Korst';
+
+  @override
+  String get onboardSlide1Subtitle =>
+      'Finde die besten Spezialisten und interessante Aufgaben in deiner Nähe';
+
+  @override
+  String get onboardSlide2Title => 'Biete deine Dienste an';
+
+  @override
+  String get onboardSlide2Subtitle =>
+      'Erstelle Servicekarten und finde Kunden ohne Vermittler';
+
+  @override
+  String get onboardSlide3Title => 'Reagiere & chatte';
+
+  @override
+  String get onboardSlide3Subtitle =>
+      'Ein Klick — der Chat öffnet sich sofort. Besprecht Details direkt in der App';
+
+  @override
+  String get onboardSlide4Title => 'Bewertungen & Vertrauen';
+
+  @override
+  String get onboardSlide4Subtitle =>
+      'Echte Bewertungen helfen dir, die besten Ausführenden zu wählen';
+
+  @override
+  String get onboardSlide5Title => 'Alles in Echtzeit';
+
+  @override
+  String get onboardSlide5Subtitle =>
+      'WebSocket-Chat ohne Verzögerungen und sofortige Benachrichtigungen';
 }

@@ -101,7 +101,7 @@ Future<void> init() async {
     () => ServiceRepositoryImpl(sl()),
   );
   // sl.registerLazySingleton(() => GetServices(sl())); // Removed as we use Repo directly in Store
-  sl.registerLazySingleton(() => ServiceStore(sl()));
+  sl.registerLazySingleton(() => ServiceStore(sl(), sl()));
 
   // Features - Users
   sl.registerLazySingleton<UserProfileRepository>(

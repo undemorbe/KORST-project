@@ -701,4 +701,39 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get failedToLoadCardImage =>
       'Не удалось загрузить изображение карточки';
+
+  @override
+  String get onboardSlide1Title => 'Добро пожаловать в Korst';
+
+  @override
+  String get onboardSlide1Subtitle =>
+      'Найди лучших специалистов и интересные задачи рядом с тобой';
+
+  @override
+  String get onboardSlide2Title => 'Публикуй свои услуги';
+
+  @override
+  String get onboardSlide2Subtitle =>
+      'Создавай карточки услуг и находи клиентов без посредников';
+
+  @override
+  String get onboardSlide3Title => 'Откликайся и общайся';
+
+  @override
+  String get onboardSlide3Subtitle =>
+      'Один клик — и чат с заказчиком открыт. Обсуждай детали прямо в приложении';
+
+  @override
+  String get onboardSlide4Title => 'Рейтинги и доверие';
+
+  @override
+  String get onboardSlide4Subtitle =>
+      'Реальные отзывы и оценки помогают выбрать лучших исполнителей';
+
+  @override
+  String get onboardSlide5Title => 'Всё в реальном времени';
+
+  @override
+  String get onboardSlide5Subtitle =>
+      'WebSocket-чат без задержек и мгновенные уведомления о новых сообщениях';
 }
